@@ -1,0 +1,353 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-inter: var(--font-yekan-bakh);
+  --font-playpen: var(--font-yekan-bakh);
+  --font-sans: var(--font-yekan-bakh), sans-serif;
+  --font-display: var(--font-yekan-bakh), sans-serif;
+  --font-arabic: var(--font-yekan-bakh), sans-serif;
+  --color-background: #111416;
+  --color-foreground: #e1e2e5;
+  --color-panel: #191c1e;
+  --color-raised: #1d2022;
+  --color-primary: #374a4a;
+  --color-primary-hover: #213434;
+  --color-accent: #b2f800;
+  --color-ink: #111416;
+  --color-pine: #272a2c;
+  --color-leaf: #374a4a;
+  --color-mint: #c2caad;
+  --color-patch: #424a33;
+  --color-lime: #b2f800;
+}
+
+html[lang="fa"],
+html[lang="fa"] body {
+  --font-sans: var(--font-yekan-bakh), sans-serif;
+  --font-display: var(--font-yekan-bakh), sans-serif;
+  font-family: var(--font-yekan-bakh), sans-serif;
+}
+
+html {
+  font-family: var(--font-yekan-bakh), sans-serif;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.25rem;
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+body {
+  font-family: var(--font-yekan-bakh), sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  overflow-x: clip;
+  max-width: 100vw;
+  -webkit-tap-highlight-color: transparent;
+}
+
+section[id] {
+  scroll-margin-top: 5.25rem;
+}
+
+/* ─── Unified Responsive Smooth Scroll & Containment ──────────────────────── */
+/* Ensure nested scrollable containers do not bleed scroll into window */
+[data-lenis-prevent],
+[data-scroll-prevent],
+dialog,
+.modal-scroll,
+.drawer-scroll,
+.jodit-wysiwyg,
+.jodit-dialog__content {
+  overscroll-behavior: contain;
+}
+
+/* Accessibility: Strictly disable smooth scroll animation when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Global Smooth Interactive Micro-Interactions ───────────────────────── */
+a,
+button,
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 250ms;
+}
+
+/* ─── Accessibility: Full reduced-motion respect ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Rich Styling for Article HTML Content (.jodit-content) */
+.jodit-content {
+  color: #d1e2d9;
+}
+
+/* Headings */
+.jodit-content h1,
+.jodit-content h2,
+.jodit-content h3,
+.jodit-content h4,
+.jodit-content h5,
+.jodit-content h6 {
+  color: #ffffff;
+  font-weight: 800;
+  margin-top: 1.8rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  scroll-margin-top: 5.5rem;
+}
+
+.jodit-content h2 {
+  font-size: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(159, 196, 176, 0.2);
+  color: #9fc4b0;
+}
+
+.jodit-content h3 {
+  font-size: 1.25rem;
+  color: #7ba390;
+}
+
+/* Links */
+.jodit-content a {
+  color: #9fc4b0;
+  text-decoration: underline;
+  text-decoration-color: rgba(159, 196, 176, 0.4);
+  text-underline-offset: 4px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.jodit-content a:hover {
+  color: #ffffff;
+  text-decoration-color: #9fc4b0;
+  background-color: rgba(159, 196, 176, 0.1);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* Blockquotes (نقل قول‌ها) */
+.jodit-content blockquote {
+  margin: 1.8rem 0;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(21, 39, 31, 0.8) 0%, rgba(15, 30, 26, 0.9) 100%);
+  border-right: 4px solid #9fc4b0;
+  border-left: none;
+  border-radius: 16px;
+  color: #e7f0eb;
+  font-style: italic;
+  font-size: 1.05rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+html[lang="en"] .jodit-content blockquote {
+  border-left: 4px solid #9fc4b0;
+  border-right: none;
+}
+
+.jodit-content blockquote p {
+  margin: 0;
+  line-height: 1.8;
+}
+
+/* Images & Captions (تصاویر و عکس‌های محتوا) */
+.jodit-content img,
+.jodit-content figure img,
+.jodit-content p img {
+  max-width: min(100%, 750px) !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: cover !important;
+  height: auto !important;
+  border-radius: 24px;
+  margin: 2.5rem auto !important;
+  display: block !important;
+  border: 1px solid rgba(159, 196, 176, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.jodit-content img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 25px 50px -12px rgba(159, 196, 176, 0.15);
+}
+
+.jodit-content figure {
+  margin: 2rem 0;
+  text-align: center;
+  max-width: 100%;
+}
+
+.jodit-content figcaption {
+  font-size: 0.85rem;
+  color: #8ab3a0;
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
+/* Tables (جداول) */
+.jodit-content table {
+  width: 100%;
+  max-width: 100%;
+  margin: 2rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 20px;
+  overflow-x: auto;
+  display: block;
+  border: 1px solid rgba(159, 196, 176, 0.2);
+  background: rgba(15, 30, 26, 0.6);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+}
+
+.jodit-content th,
+.jodit-content td {
+  padding: 1rem 1.25rem;
+  text-align: right;
+  border-bottom: 1px solid rgba(159, 196, 176, 0.1);
+  font-size: 0.9rem;
+}
+
+html[lang="en"] .jodit-content th,
+html[lang="en"] .jodit-content td {
+  text-align: left;
+}
+
+.jodit-content th {
+  background: rgba(25, 48, 39, 0.9);
+  color: #9fc4b0;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.jodit-content tr:last-child td {
+  border-bottom: none;
+}
+
+.jodit-content tr:nth-child(even) {
+  background: rgba(21, 39, 31, 0.4);
+}
+
+.jodit-content tr:hover {
+  background: rgba(159, 196, 176, 0.08);
+}
+
+/* Lists (لیست‌ها) */
+.jodit-content ul,
+.jodit-content ol {
+  margin: 1.25rem 0;
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+html[lang="en"] .jodit-content ul,
+html[lang="en"] .jodit-content ol {
+  padding-left: 1.5rem;
+  padding-right: 0;
+}
+
+.jodit-content ul li {
+  list-style-type: disc;
+  margin-bottom: 0.5rem;
+}
+
+.jodit-content ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.5rem;
+}
+
+/* Code & Pre (کدها) */
+.jodit-content pre {
+  background: #060d0b;
+  border: 1px solid rgba(159, 196, 176, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem;
+  overflow-x: auto;
+  direction: ltr;
+  text-align: left;
+  margin: 1.5rem 0;
+}
+
+.jodit-content code {
+  font-family: monospace;
+  background: rgba(159, 196, 176, 0.15);
+  color: #9fc4b0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.85em;
+}
+
+/* ─── Premium Glassmorphism & Soft Neumorphism Utilities ─────────────────── */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(25, 28, 30, 0.75) 0%, rgba(18, 20, 22, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 16px 36px -10px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-panel-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(178, 248, 0, 0.25);
+  background: linear-gradient(135deg, rgba(30, 34, 36, 0.82) 0%, rgba(20, 23, 25, 0.9) 100%);
+  box-shadow: 
+    0 24px 50px -12px rgba(0, 0, 0, 0.75),
+    0 0 20px -4px rgba(178, 248, 0, 0.12),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.neumorph-concave {
+  background: linear-gradient(145deg, rgba(17, 20, 22, 0.9), rgba(25, 28, 30, 0.7));
+  box-shadow: 
+    inset 2px 2px 5px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.04),
+    0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.neumorph-convex {
+  background: linear-gradient(145deg, rgba(32, 36, 38, 0.8), rgba(20, 23, 25, 0.9));
+  box-shadow: 
+    4px 4px 10px rgba(0, 0, 0, 0.5),
+    -2px -2px 6px rgba(255, 255, 255, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+

@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int        @id @default(autoincrement())
+  email      String     @unique
+  password   String
+  name       String?
+  role       Role       @default(USER)
+  isActive   Boolean    @default(true)
+  phone      String?
+  department String?
+  position   String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  auditLogs  AuditLog[]
+
+  @@map("users")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  targetId  Int?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String
+  filename  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("media")
+}
+
+model HeroSlide {
+  id         Int      @id @default(autoincrement())
+  title      String   @default("")
+  titleEn    String   @default("")
+  subtitle   String   @default("")
+  subtitleEn String   @default("")
+  ctaText    String   @default("")
+  ctaTextEn  String   @default("")
+  ctaLink    String   @default("")
+  ctaText2   String   @default("")
+  ctaText2En String   @default("")
+  ctaLink2   String   @default("")
+  imageUrl   String?
+  imageAlt   String?
+  position   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@map("hero_slide")
+}
+
+model Service {
+  id         Int      @id @default(autoincrement())
+  title      String   @default("")
+  titleEn    String   @default("")
+  subtitle   String   @default("")
+  subtitleEn String   @default("")
+  imageUrl   String?
+  imageAlt   String?
+  position   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@map("services")
+}
+
+model Stat {
+  id        Int      @id @default(autoincrement())
+  kind      String   @default("number")
+  valueFa   String   @default("")
+  valueEn   String   @default("")
+  labelFa   String   @default("")
+  labelEn   String   @default("")
+  descFa    String   @default("")
+  descEn    String   @default("")
+  position  Int      @default(0)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("stats")
+}
+
+model AboutContent {
+  id          Int      @id @default(1)
+  eyebrowFa   String   @default("")
+  eyebrowEn   String   @default("")
+  titleFa     String   @default("")
+  titleEn     String   @default("")
+  ctaFa       String   @default("")
+  ctaEn       String   @default("")
+  ctaLink     String   @default("#contact")
+  imageUrl    String?
+  imageAlt    String?
+  subTitleFa  String   @default("")
+  subTitleEn  String   @default("")
+  paragraphFa String   @default("")
+  paragraphEn String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("about_content")
+}
+
+model Feature {
+  id        Int      @id @default(autoincrement())
+  titleFa   String   @default("")
+  titleEn   String   @default("")
+  icon      String   @default("team")
+  position  Int      @default(0)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("features")
+}
+
+model CaseStudy {
+  id            Int      @id @default(autoincrement())
+  titleFa       String   @default("")
+  titleEn       String   @default("")
+  categoryFa    String   @default("")
+  categoryEn    String   @default("")
+  projectType   String   @default("website")
+  descriptionFa String   @default("")
+  descriptionEn String   @default("")
+  liveUrl       String   @default("#")
+  position      Int      @default(0)
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  @@map("case_studies")
+}
+
+model PricingCategory {
+  id        Int           @id @default(autoincrement())
+  titleFa   String        @default("")
+  titleEn   String        @default("")
+  slug      String        @unique
+  position  Int           @default(0)
+  plans     PricingPlan[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("pricing_categories")
+}
+
+model PricingPlan {
+  id              Int             @id @default(autoincrement())
+  categoryId      Int
+  category        PricingCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  nameFa          String          @default("")
+  nameEn          String          @default("")
+  badgeFa         String          @default("")
+  badgeEn         String          @default("")
+  priceType       String          @default("numeric") // "numeric" | "contact"
+  priceFa         String          @default("")
+  priceEn         String          @default("")
+  discountPriceFa String          @default("") // Off / Sale price (optional)
+  discountPriceEn String          @default("")
+  periodFa        String          @default("")
+  periodEn        String          @default("")
+  descriptionFa   String          @default("")
+  descriptionEn   String          @default("")
+  featuresFa      String[]        @default([])
+  featuresEn      String[]        @default([])
+  popular         Boolean         @default(false)
+  ctaFa           String          @default("")
+  ctaEn           String          @default("")
+  ctaLink         String          @default("#contact")
+  position        Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@map("pricing_plans")
+}
+
+model ContactContent {
+  id             Int      @id @default(1)
+  eyebrowFa      String   @default("شروع همکاری و مشاوره اختصاصی")
+  eyebrowEn      String   @default("LET'S WORK TOGETHER")
+  titleFa        String   @default("آماده‌اید برای برند خود انقلاب دیجیتال بسازید؟")
+  titleEn        String   @default("Ready to transform your brand's digital reach?")
+  descriptionFa  String   @default("فرم زیر را پر کنید تا متخصصان ارشد آن‌ساپ آنالیز رایگان، نمونه‌کارها و برنامه رشد اختصاصی شما را ارسال کنند.")
+  descriptionEn  String   @default("Fill out the form to receive a complimentary audit and personalized digital strategy from our senior growth team.")
+  phone          String   @default("۰۲۱ - ۹۱۰۰ ۰۰۰۰")
+  phoneLabelFa   String   @default("تماس مستقیم فوری")
+  phoneLabelEn   String   @default("Direct Call")
+  email          String   @default("info@onsupp.ir")
+  emailLabelFa   String   @default("ایمیل مشاوره")
+  emailLabelEn   String   @default("Consultation Email")
+  responseTimeFa String   @default("پاسخگویی سریع کمتر از ۲ ساعت کاری")
+  responseTimeEn String   @default("Guaranteed response time within 2 hours")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("contact_content")
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String?
+  service   String   @default("seo")
+  message   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([read])
+  @@index([createdAt])
+  @@map("contact_submissions")
+}
+
+model Article {
+  id         Int     @id @default(autoincrement())
+  titleFa    String  @default("")
+  titleEn    String  @default("")
+  slug       String  @unique
+  language   String  @default("fa")
+  categoryFa String  @default("آموزش سئو")
+  categoryEn String  @default("SEO Tutorial")
+  excerptFa  String  @default("")
+  excerptEn  String  @default("")
+  contentFa  String  @default("")
+  contentEn  String  @default("")
+  readTimeFa String  @default("۵ دقیقه مطالعه")
+  readTimeEn String  @default("5 min read")
+  imageUrl   String  @default("")
+  author     String  @default("آن‌ساپ")
+  published  Boolean @default(true)
+
+  // Optional 1-to-1 Translation Link to an Article in another language
+  translationId  Int?      @unique
+  translation    Article?  @relation("ArticleTranslation", fields: [translationId], references: [id], onDelete: SetNull)
+  translatedFrom Article?  @relation("ArticleTranslation")
+
+  // SEO Meta Fields
+  metaTitleFa  String @default("")
+  metaTitleEn  String @default("")
+  metaDescFa   String @default("")
+  metaDescEn   String @default("")
+  keywordsFa   String @default("")
+  keywordsEn   String @default("")
+  canonicalUrl String @default("")
+  ogImage      String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments Comment[]
+  faqs     ArticleFaq[]
+
+  @@index([published])
+  @@index([createdAt])
+  @@index([language])
+  @@map("articles")
+}
+
+model ArticleFaq {
+  id        Int      @id @default(autoincrement())
+  articleId Int
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId])
+  @@map("article_faqs")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  articleId Int
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  content   String
+  approved  Boolean  @default(false)
+  reply     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId])
+  @@index([approved])
+  @@map("comments")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  HR
+  EMPLOYEE
+  CONTENT_SEO_MANAGER
+  SUPPORT
+  PROJECT_MANAGER
+  USER
+}

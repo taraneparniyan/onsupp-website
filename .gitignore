@@ -1,0 +1,54 @@
+﻿# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+target/
+.turbo/
+coverage/
+
+# Uploads and user-generated files
+apps/backend/uploads/
+uploads/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+scratch/
+*.tmp
+*.bak
+
+# TypeScript
+*.tsbuildinfo
+
+# Unused root files
+/a.txt
+/b.txt
+/c.txt
+
+# Docker config pending review
+/docker-compose.yml
