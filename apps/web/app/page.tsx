@@ -20,7 +20,7 @@ export default function HomePage() {
         <Hero />
 
         {/* 2. Statistics / Trust strip: immediately below Hero */}
-        <div className="w-full bg-[#131618] border-b border-white/5">
+        <div className="w-full bg-raised border-b border-foreground/10">
           <div className="mx-auto w-full max-w-[1600px] px-6 sm:px-12 lg:px-24 py-6 sm:py-8">
             <StatsBanner />
           </div>

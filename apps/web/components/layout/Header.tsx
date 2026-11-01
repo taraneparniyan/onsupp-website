@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import NavLinks from "@/components/layout/NavLinks";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { scrollToSection, scrollToTop, setScrollLocked } from "@/lib/scroll";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { lang, toggleLanguage } = useLanguage();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const isRtl = lang === "fa";
 
@@ -156,6 +158,7 @@ export default function Header() {
           {/* Desktop Light / Dark Theme Toggle Button */}
           <button
             type="button"
+            onClick={toggleTheme}
             aria-label={isRtl ? "تغییر حالت روشن و تاریک" : "Toggle light and dark mode"}
             title={isRtl ? "تغییر حالت روشن / تاریک" : "Light / Dark mode"}
             className="hidden lg:flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-raised/80 text-foreground/75 transition-all duration-300 hover:border-mint/35 hover:bg-panel hover:text-mint active:scale-95 cursor-pointer"
@@ -169,7 +172,7 @@ export default function Header() {
               strokeLinejoin="round"
               viewBox="0 0 24 24"
             >
-              <circle cx="12" cy="12" r="4" />
+              {resolvedTheme === "dark" ? <circle cx="12" cy="12" r="4" /> : <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />}
               <path d="M12 2v2" />
               <path d="M12 20v2" />
               <path d="m4.93 4.93 1.41 1.41" />
@@ -297,7 +300,8 @@ export default function Header() {
 
                 <button
                   type="button"
-                  aria-label={isRtl ? "تغییر حالت روشن و تاریک" : "Toggle light and dark mode"}
+                  onClick={toggleTheme}
+            aria-label={isRtl ? "تغییر حالت روشن و تاریک" : "Toggle light and dark mode"}
                   title={isRtl ? "تغییر حالت روشن / تاریک" : "Light / Dark mode"}
                   className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-foreground/10 bg-raised/80 text-foreground/75 transition-all duration-300 hover:border-mint/35 hover:bg-panel hover:text-mint active:scale-95"
                 >
@@ -310,7 +314,7 @@ export default function Header() {
                     strokeLinejoin="round"
                     viewBox="0 0 24 24"
                   >
-                    <circle cx="12" cy="12" r="4" />
+                    {resolvedTheme === "dark" ? <circle cx="12" cy="12" r="4" /> : <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />}
                     <path d="M12 2v2" />
                     <path d="M12 20v2" />
                     <path d="m4.93 4.93 1.41 1.41" />

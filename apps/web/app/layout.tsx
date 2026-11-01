@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import SmoothScroll from "@/components/layout/SmoothScroll";
 
 const yekanBakh = localFont({
@@ -55,13 +56,30 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#091413",
+  themeColor: "#F8F9FA",
 };
 
 export const metadata: Metadata = {
   title: "Onsupp | Digital Marketing Agency",
   description: "Professional digital marketing solutions for your business growth",
 };
+
+// Anti-FOUC (Flash of Unstyled Theme) inline script
+const themeScript = `
+  (function() {
+    try {
+      var saved = localStorage.getItem('onsupp-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    } catch (e) {}
+  })();
+`;
 
 export default function RootLayout({
   children,
@@ -73,14 +91,20 @@ export default function RootLayout({
       lang="fa"
       dir="rtl"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${yekanBakh.variable} ${yekanBakh.className}`}
     >
-      <LanguageProvider>
-        <body className="min-h-screen font-sans text-foreground bg-background antialiased w-full">
-          <SmoothScroll />
-          {children}
-        </body>
-      </LanguageProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <ThemeProvider>
+        <LanguageProvider>
+          <body className="min-h-screen font-sans text-foreground bg-background antialiased w-full transition-colors duration-200">
+            <SmoothScroll />
+            {children}
+          </body>
+        </LanguageProvider>
+      </ThemeProvider>
     </html>
   );
 }

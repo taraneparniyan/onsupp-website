@@ -6,19 +6,72 @@
   --font-sans: var(--font-yekan-bakh), sans-serif;
   --font-display: var(--font-yekan-bakh), sans-serif;
   --font-arabic: var(--font-yekan-bakh), sans-serif;
-  --color-background: #111416;
-  --color-foreground: #e1e2e5;
-  --color-panel: #191c1e;
-  --color-raised: #1d2022;
-  --color-primary: #374a4a;
-  --color-primary-hover: #213434;
-  --color-accent: #b2f800;
-  --color-ink: #111416;
-  --color-pine: #272a2c;
-  --color-leaf: #374a4a;
-  --color-mint: #c2caad;
-  --color-patch: #424a33;
-  --color-lime: #b2f800;
+
+  /* ─── Light Mode Default Semantic Tokens ───────────────────────────────── */
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-base);
+  --color-panel: var(--surface-card);
+  --color-raised: var(--surface-raised);
+  --color-primary: var(--brand-primary);
+  --color-primary-hover: var(--brand-primary-hover);
+  --color-accent: var(--brand-accent);
+  --color-accent-hover: var(--brand-accent-hover);
+  --color-ink: var(--btn-text);
+  --color-pine: var(--color-pine-token);
+  --color-leaf: var(--brand-accent);
+  --color-mint: var(--brand-accent);
+  --color-patch: var(--border-neutral);
+  --color-lime: var(--brand-primary);
+
+  /* Explicit Semantic Palette Tokens */
+  --color-burgundy: var(--brand-primary);
+  --color-forest: var(--brand-accent);
+  --color-charcoal: var(--text-base);
+}
+
+:root {
+  /* LIGHT THEME TOKENS */
+  --bg-base: #F8F9FA;
+  --surface-card: #FFFFFF;
+  --surface-raised: #F1F3F5;
+  --text-base: #1F1F1E;
+  --text-muted: #5C5F62;
+  --border-subtle: rgba(31, 31, 30, 0.09);
+  --border-neutral: #E5E7EB;
+
+  /* Primary Burgundy (#4F0001) */
+  --brand-primary: #4F0001;
+  --brand-primary-hover: #380001;
+
+  /* Secondary Forest Green (#38534A) */
+  --brand-accent: #38534A;
+  --brand-accent-hover: #2B413A;
+
+  --btn-text: #FFFFFF;
+  --color-pine-token: #1F1F1E;
+}
+
+html.dark,
+[data-theme="dark"] {
+  /* DARK THEME TOKENS */
+  --bg-base: #141414;
+  --surface-card: #1F1F1E;
+  --surface-raised: #282827;
+  --text-base: #F5F5F2;
+  --text-muted: #A3A3A0;
+  --border-subtle: rgba(245, 245, 242, 0.12);
+  --border-neutral: #333332;
+
+  /* Accessible lighter Burgundy variation for dark canvas (#B66B70) */
+  --brand-primary: #B66B70;
+  --brand-primary-hover: #C97F84;
+
+  /* Accessible lighter Forest Green variation for dark canvas (#8FA99B) */
+  --brand-accent: #8FA99B;
+  --brand-accent-hover: #A4BDB0;
+
+  --btn-text: #141414;
+  --color-pine-token: #F5F5F2;
 }
 
 html[lang="fa"],
@@ -34,12 +87,14 @@ html {
   scroll-padding-top: 5.25rem;
   overflow-x: clip;
   max-width: 100vw;
+  background-color: var(--bg-base);
+  color: var(--text-base);
 }
 
 body {
   font-family: var(--font-yekan-bakh), sans-serif;
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--bg-base);
+  color: var(--text-base);
   overflow-x: clip;
   max-width: 100vw;
   -webkit-tap-highlight-color: transparent;
@@ -50,7 +105,6 @@ section[id] {
 }
 
 /* ─── Unified Responsive Smooth Scroll & Containment ──────────────────────── */
-/* Ensure nested scrollable containers do not bleed scroll into window */
 [data-lenis-prevent],
 [data-scroll-prevent],
 dialog,
@@ -61,7 +115,6 @@ dialog,
   overscroll-behavior: contain;
 }
 
-/* Accessibility: Strictly disable smooth scroll animation when user prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
   html,
   body,
@@ -76,12 +129,11 @@ button,
 input,
 select,
 textarea {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  transition-duration: 250ms;
+  transition-duration: 200ms;
 }
 
-/* ─── Accessibility: Full reduced-motion respect ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;
@@ -96,7 +148,6 @@ textarea {
   }
 }
 
-
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -106,73 +157,75 @@ textarea {
   display: none;
 }
 
-/* Rich Styling for Article HTML Content (.jodit-content) */
+/* ─── Rich Editorial Styling for Article HTML Content (.jodit-content) ───── */
 .jodit-content {
-  color: #d1e2d9;
+  color: var(--text-base);
+  line-height: 1.85;
+  font-size: 1.05rem;
 }
 
-/* Headings */
 .jodit-content h1,
 .jodit-content h2,
 .jodit-content h3,
 .jodit-content h4,
 .jodit-content h5,
 .jodit-content h6 {
-  color: #ffffff;
+  color: var(--text-base);
   font-weight: 800;
-  margin-top: 1.8rem;
+  margin-top: 2rem;
   margin-bottom: 1rem;
   line-height: 1.4;
   scroll-margin-top: 5.5rem;
 }
 
+.jodit-content h1 {
+  font-size: 1.85rem;
+  letter-spacing: -0.02em;
+}
+
 .jodit-content h2 {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgba(159, 196, 176, 0.2);
-  color: #9fc4b0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-base);
 }
 
 .jodit-content h3 {
   font-size: 1.25rem;
-  color: #7ba390;
+  color: var(--brand-accent);
 }
 
-/* Links */
 .jodit-content a {
-  color: #9fc4b0;
+  color: var(--brand-primary);
   text-decoration: underline;
-  text-decoration-color: rgba(159, 196, 176, 0.4);
+  text-decoration-color: var(--border-subtle);
   text-underline-offset: 4px;
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .jodit-content a:hover {
-  color: #ffffff;
-  text-decoration-color: #9fc4b0;
-  background-color: rgba(159, 196, 176, 0.1);
+  color: var(--brand-primary-hover);
+  background-color: var(--border-subtle);
   border-radius: 4px;
   padding: 0 4px;
 }
 
-/* Blockquotes (نقل قول‌ها) */
 .jodit-content blockquote {
   margin: 1.8rem 0;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(21, 39, 31, 0.8) 0%, rgba(15, 30, 26, 0.9) 100%);
-  border-right: 4px solid #9fc4b0;
+  background: var(--surface-raised);
+  border-right: 4px solid var(--brand-primary);
   border-left: none;
-  border-radius: 16px;
-  color: #e7f0eb;
+  border-radius: 8px;
+  color: var(--text-base);
   font-style: italic;
-  font-size: 1.05rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  font-size: 1.02rem;
   position: relative;
 }
 
 html[lang="en"] .jodit-content blockquote {
-  border-left: 4px solid #9fc4b0;
+  border-left: 4px solid var(--brand-primary);
   border-right: none;
 }
 
@@ -181,7 +234,6 @@ html[lang="en"] .jodit-content blockquote {
   line-height: 1.8;
 }
 
-/* Images & Captions (تصاویر و عکس‌های محتوا) */
 .jodit-content img,
 .jodit-content figure img,
 .jodit-content p img {
@@ -190,17 +242,10 @@ html[lang="en"] .jodit-content blockquote {
   aspect-ratio: 16 / 9 !important;
   object-fit: cover !important;
   height: auto !important;
-  border-radius: 24px;
-  margin: 2.5rem auto !important;
+  border-radius: 12px;
+  margin: 2rem auto !important;
   display: block !important;
-  border: 1px solid rgba(159, 196, 176, 0.2);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.jodit-content img:hover {
-  transform: scale(1.01);
-  box-shadow: 0 25px 50px -12px rgba(159, 196, 176, 0.15);
+  border: 1px solid var(--border-subtle);
 }
 
 .jodit-content figure {
@@ -211,31 +256,29 @@ html[lang="en"] .jodit-content blockquote {
 
 .jodit-content figcaption {
   font-size: 0.85rem;
-  color: #8ab3a0;
+  color: var(--text-muted);
   margin-top: 0.75rem;
   font-style: italic;
 }
 
-/* Tables (جداول) */
 .jodit-content table {
   width: 100%;
   max-width: 100%;
   margin: 2rem 0;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 20px;
+  border-radius: 12px;
   overflow-x: auto;
   display: block;
-  border: 1px solid rgba(159, 196, 176, 0.2);
-  background: rgba(15, 30, 26, 0.6);
-  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
 }
 
 .jodit-content th,
 .jodit-content td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1.15rem;
   text-align: right;
-  border-bottom: 1px solid rgba(159, 196, 176, 0.1);
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 0.9rem;
 }
 
@@ -245,11 +288,11 @@ html[lang="en"] .jodit-content td {
 }
 
 .jodit-content th {
-  background: rgba(25, 48, 39, 0.9);
-  color: #9fc4b0;
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
+  background: var(--surface-raised);
+  color: var(--text-base);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.3px;
 }
 
 .jodit-content tr:last-child td {
@@ -257,14 +300,13 @@ html[lang="en"] .jodit-content td {
 }
 
 .jodit-content tr:nth-child(even) {
-  background: rgba(21, 39, 31, 0.4);
+  background: var(--surface-raised);
 }
 
 .jodit-content tr:hover {
-  background: rgba(159, 196, 176, 0.08);
+  background: var(--border-subtle);
 }
 
-/* Lists (لیست‌ها) */
 .jodit-content ul,
 .jodit-content ol {
   margin: 1.25rem 0;
@@ -288,11 +330,11 @@ html[lang="en"] .jodit-content ol {
   margin-bottom: 0.5rem;
 }
 
-/* Code & Pre (کدها) */
 .jodit-content pre {
-  background: #060d0b;
-  border: 1px solid rgba(159, 196, 176, 0.2);
-  border-radius: 16px;
+  background: var(--surface-card);
+  color: var(--text-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   padding: 1.25rem;
   overflow-x: auto;
   direction: ltr;
@@ -302,52 +344,82 @@ html[lang="en"] .jodit-content ol {
 
 .jodit-content code {
   font-family: monospace;
-  background: rgba(159, 196, 176, 0.15);
-  color: #9fc4b0;
+  background: var(--surface-raised);
+  color: var(--brand-primary);
   padding: 0.2rem 0.4rem;
-  border-radius: 6px;
-  font-size: 0.85em;
+  border-radius: 4px;
+  font-size: 0.88em;
 }
 
-/* ─── Premium Glassmorphism & Soft Neumorphism Utilities ─────────────────── */
+.jodit-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* ─── Flat Minimalist Design System Utilities ────────────────────────────── */
+
+.flat-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.flat-card-hover {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.flat-card-hover:hover {
+  border-color: var(--brand-primary);
+}
+
+.editorial-rule {
+  width: 100%;
+  height: 1px;
+  background-color: var(--border-subtle);
+}
+
+.editorial-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: var(--surface-raised);
+  color: var(--brand-accent);
+  border: 1px solid var(--border-subtle);
+  letter-spacing: 0.02em;
+}
+
+.editorial-badge-burgundy {
+  background-color: var(--surface-raised);
+  color: var(--brand-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Legacy Utilities Mapped Cleanly to Flat Tokens */
 .glass-panel {
-  background: linear-gradient(135deg, rgba(25, 28, 30, 0.75) 0%, rgba(18, 20, 22, 0.85) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 16px 36px -10px rgba(0, 0, 0, 0.6),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
 }
 
 .glass-panel-hover {
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease;
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(178, 248, 0, 0.25);
-  background: linear-gradient(135deg, rgba(30, 34, 36, 0.82) 0%, rgba(20, 23, 25, 0.9) 100%);
-  box-shadow: 
-    0 24px 50px -12px rgba(0, 0, 0, 0.75),
-    0 0 20px -4px rgba(178, 248, 0, 0.12),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5);
+  border-color: var(--brand-primary);
 }
 
 .neumorph-concave {
-  background: linear-gradient(145deg, rgba(17, 20, 22, 0.9), rgba(25, 28, 30, 0.7));
-  box-shadow: 
-    inset 2px 2px 5px rgba(0, 0, 0, 0.5),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.04),
-    0 1px 1px rgba(255, 255, 255, 0.05);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
 }
 
 .neumorph-convex {
-  background: linear-gradient(145deg, rgba(32, 36, 38, 0.8), rgba(20, 23, 25, 0.9));
-  box-shadow: 
-    4px 4px 10px rgba(0, 0, 0, 0.5),
-    -2px -2px 6px rgba(255, 255, 255, 0.05),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
 }
-
