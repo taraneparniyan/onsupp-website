@@ -1,11 +1,13 @@
+
 @import "tailwindcss";
 
 @theme inline {
-  --font-inter: var(--font-yekan-bakh);
-  --font-playpen: var(--font-yekan-bakh);
-  --font-sans: var(--font-yekan-bakh), sans-serif;
-  --font-display: var(--font-yekan-bakh), sans-serif;
-  --font-arabic: var(--font-yekan-bakh), sans-serif;
+  --font-inter: var(--font-gendy);
+  --font-playpen: var(--font-gendy);
+  --font-sans: var(--font-vazirmatn), sans-serif;
+  --font-display: var(--font-gendy), sans-serif;
+  --font-arabic: var(--font-vazirmatn), sans-serif;
+
   --color-background: #111416;
   --color-foreground: #e1e2e5;
   --color-panel: #191c1e;
@@ -21,15 +23,15 @@
   --color-lime: #b2f800;
 }
 
-html[lang="fa"],
-html[lang="fa"] body {
-  --font-sans: var(--font-yekan-bakh), sans-serif;
-  --font-display: var(--font-yekan-bakh), sans-serif;
-  font-family: var(--font-yekan-bakh), sans-serif;
+html[lang="fa"] {
+  font-family: var(--font-vazirmatn), sans-serif;
+}
+
+html[lang="en"] {
+  font-family: var(--font-gendy), sans-serif;
 }
 
 html {
-  font-family: var(--font-yekan-bakh), sans-serif;
   scroll-behavior: smooth;
   scroll-padding-top: 5.25rem;
   overflow-x: clip;
@@ -37,7 +39,7 @@ html {
 }
 
 body {
-  font-family: var(--font-yekan-bakh), sans-serif;
+  font-family: var(--font-sans);
   background: var(--color-background);
   color: var(--color-foreground);
   overflow-x: clip;
@@ -45,8 +47,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-section[id] {
-  scroll-margin-top: 5.25rem;
+html[lang="fa"] body {
+  font-family: var(--font-vazirmatn), sans-serif;
+}
+
+html[lang="en"] body {
+  font-family: var(--font-gendy), sans-serif;
 }
 
 /* ─── Unified Responsive Smooth Scroll & Containment ──────────────────────── */

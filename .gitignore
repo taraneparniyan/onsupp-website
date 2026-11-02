@@ -49,6 +49,3 @@ scratch/
 /a.txt
 /b.txt
 /c.txt
-
-# Docker config pending review
-/docker-compose.yml

@@ -1,53 +1,21 @@
+
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import SmoothScroll from "@/components/layout/SmoothScroll";
 
-const yekanBakh = localFont({
-  src: [
-    {
-      path: "./fonts/YekanBakh-Hairline.ttf",
-      weight: "100",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Light.ttf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Medium.ttf",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Heavy.ttf",
-      weight: "800",
-      style: "normal",
-    },
-    {
-      path: "./fonts/YekanBakh-Fat.ttf",
-      weight: "900",
-      style: "normal",
-    },
-  ],
-  variable: "--font-yekan-bakh",
+const vazirmatn = localFont({
+  src: "./fonts/Vazirmatn[wght].woff2",
+  variable: "--font-vazirmatn",
+  weight: "100 900",
+  display: "swap",
+});
+
+const gendy = localFont({
+  src: "./fonts/Gendy.woff",
+  variable: "--font-gendy",
+  weight: "400",
   display: "swap",
 });
 
@@ -73,10 +41,10 @@ export default function RootLayout({
       lang="fa"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${yekanBakh.variable} ${yekanBakh.className}`}
+      className={`${vazirmatn.variable} ${gendy.variable}`}
     >
       <LanguageProvider>
-        <body className="min-h-screen font-sans text-foreground bg-background antialiased w-full">
+        <body className="min-h-screen text-foreground bg-background antialiased w-full">
           <SmoothScroll />
           {children}
         </body>

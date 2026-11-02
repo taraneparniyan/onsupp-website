@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: onsupp
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: .docker/backend.Dockerfile
+    env_file:
+      - apps/backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+
+  web:
+    build:
+      context: .
+      dockerfile: .docker/web.Dockerfile
+    env_file:
+      - apps/web/.env.local
+    depends_on:
+      - backend
+    ports:
+      - "3003:3000"
+
+  image-manager:
+    build:
+      context: ./services/image-manager
+      dockerfile: Dockerfile
+    environment:
+      - RUST_LOG=info
+    ports:
+      - "8080:8080"
+
+volumes:
+  pg_data:

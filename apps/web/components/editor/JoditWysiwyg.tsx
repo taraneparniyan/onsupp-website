@@ -228,7 +228,7 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
         background: "#121416",
         color: "#e1e2e5",
         borderColor: "rgba(225, 226, 229, 0.1)",
-        fontFamily: "var(--font-yekan-bakh), sans-serif",
+        fontFamily: "var(--font-vazirmatn), sans-serif",
       },
     }),
     [placeholder, direction]
