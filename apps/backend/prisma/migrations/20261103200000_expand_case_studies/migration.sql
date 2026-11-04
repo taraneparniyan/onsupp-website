@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "case_studies"
+  ADD COLUMN IF NOT EXISTS "slug" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "client" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "clientEn" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "taglineFa" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "taglineEn" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "imageUrl" TEXT,
+  ADD COLUMN IF NOT EXISTS "secondaryImage" TEXT,
+  ADD COLUMN IF NOT EXISTS "featured" BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS "year" TEXT NOT NULL DEFAULT '۲۰۲۵';
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "case_studies_position_idx" ON "case_studies"("position");
+CREATE INDEX IF NOT EXISTS "case_studies_slug_idx" ON "case_studies"("slug");

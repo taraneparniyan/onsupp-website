@@ -4,15 +4,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: onsupp
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tarane2005}
+      POSTGRES_DB: ${POSTGRES_DB:-onsupp_redesign}
     ports:
       - "5434:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,11 +23,16 @@ services:
       dockerfile: .docker/backend.Dockerfile
     env_file:
       - apps/backend/.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-tarane2005}@db:5432/${POSTGRES_DB:-onsupp_redesign}?schema=public
+      - PORT=3001
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "3001:3001"
+    volumes:
+      - backend_uploads:/app/apps/backend/uploads
 
   web:
     build:
@@ -35,6 +40,9 @@ services:
       dockerfile: .docker/web.Dockerfile
     env_file:
       - apps/web/.env.local
+    environment:
+      - BACKEND_URL=http://backend:3001
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
     depends_on:
       - backend
     ports:
@@ -51,3 +59,4 @@ services:
 
 volumes:
   pg_data:
+  backend_uploads:

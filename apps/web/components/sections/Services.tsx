@@ -1,24 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import { EASE_PREMIUM } from "@/lib/motion";
 import { scrollToSection } from "@/lib/scroll";
 
-const AUTOPLAY_INTERVAL_MS = 4000;
-const CLONE_COUNT = 4;
-const TRANSITION_DURATION_MS = 600;
+const CLONE_COUNT = 7;
+const TRANSITION_DURATION_MS = 550;
+const STEP_INTERVAL_MS = 2500; // Rhythmic pause between automatic transitions
 
 // Safe SSR layout effect
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Service Definition & Canonical Data ───────────────────────────────────────
 
-type ServiceItem = {
+export interface ServiceItem {
   id: number;
   slug: string;
   href: string;
@@ -26,353 +26,188 @@ type ServiceItem = {
   tagEn: string;
   titleFa: string;
   titleEn: string;
-  subtitleFa: string;
-  subtitleEn: string;
-  featuresFa: string[];
-  featuresEn: string[];
-  iconType: "web" | "seo" | "instagram" | "video" | "animation" | "crm" | "software";
-};
+  image: string;
+  objectPosition?: string;
+}
 
-// ─── 7 Core Services ─────────────────────────────────────────────────────────
-
-const ALL_SERVICES: ServiceItem[] = [
+const SERVICES_DATA: ServiceItem[] = [
   {
     id: 1,
-    slug: "web-design",
-    href: "#contact",
-    tagFa: "وبسایت",
-    tagEn: "Web Design",
-    titleFa: "طراحی سایت و وب‌اپلیکیشن",
-    titleEn: "Custom Web Design & Apps",
-    subtitleFa: "طراحی و توسعه وب‌سایت‌ها و وب‌اپلیکیشن‌های سریع و واکنش‌گرا با معماری Next.js و تمرکز بر تجربه کاربری روان و بهبود نرخ تبدیل.",
-    subtitleEn: "Fast, responsive websites and web applications built with Next.js and React, focused on seamless UX and conversion.",
-    featuresFa: ["طراحی رابط کاربری اختصاصی UI/UX", "کدنویسی استاندارد با Next.js و React", "بهینه‌سازی سرعت و شاخص‌های Core Web Vitals"],
-    featuresEn: ["Bespoke UI/UX design systems", "Modern Next.js & React stack", "Core Web Vitals optimization"],
-    iconType: "web",
-  },
-  {
-    id: 2,
-    slug: "seo",
-    href: "#contact",
-    tagFa: "سئو",
-    tagEn: "SEO Growth",
-    titleFa: "سئو تکنیکال و رشد ارگانیک",
-    titleEn: "Technical SEO & Organic Growth",
-    subtitleFa: "بهینه‌سازی ساختار فنی سایت، تدوین استراتژی کلمات کلیدی هدفمند و بهبود جایگاه ارگانیک برای جذب ورودی مرتبط و پایدار.",
-    subtitleEn: "Technical audits, structured content strategy, and targeted keyword optimization to grow qualified organic traffic.",
-    featuresFa: ["آدیت فنی و اصلاح ساختار سایت", "پژوهش کلمات کلیدی و تحلیل رقبا", "تدوین استراتژی محتوا و اعتبار دامنه"],
-    featuresEn: ["Comprehensive technical SEO audits", "Keyword research & competitor analysis", "Content strategy & authority building"],
-    iconType: "seo",
-  },
-  {
-    id: 3,
-    slug: "instagram",
-    href: "#contact",
-    tagFa: "فضای مجازی",
+    slug: "social-identity",
+    href: "/services?category=social-identity",
+    tagFa: "فضای مجازی و هویت",
     tagEn: "Social & Identity",
     titleFa: "مدیریت و هویت‌سازی فضای مجازی",
     titleEn: "Social Media & Brand Identity",
-    subtitleFa: "طراحی برند و مدیریت استراتژی محتوا، طراحی محتوای گرافیکی و سینمایی پویا و مدیریت جامع صفحات مجازی برای رشد هدفمند و تعامل با مخاطب.",
-    subtitleEn: "Brand design & strategy, dynamic visual content creation, and comprehensive social media management.",
-    featuresFa: ["طراحی برند و مدیریت استراتژی", "طراحی محتوای گرافیکی و سینمایی پویا", "مدیریت و کنترل صفحه مجازی"],
-    featuresEn: ["Brand design & strategy management", "Dynamic graphic & cinematic content design", "Social page management & monitoring"],
-    iconType: "instagram",
+    image: "/images/services/social-identity.webp",
+    objectPosition: "center center",
+  },
+  {
+    id: 2,
+    slug: "studio-production",
+    href: "/services?category=studio-production",
+    tagFa: "استودیو و تیزر",
+    tagEn: "Studio & Film",
+    titleFa: "تصویربرداری و استودیو",
+    titleEn: "Studio Production & Videography",
+    image: "/images/services/studio-production.webp",
+    objectPosition: "center center",
+  },
+  {
+    id: 3,
+    slug: "animation-motion",
+    href: "/services?category=animation-motion",
+    tagFa: "انیمیشن و VFX",
+    tagEn: "Dynamic Motion",
+    titleFa: "انیمیشن و موشن گرافیک",
+    titleEn: "Animation & Motion Graphics",
+    image: "/images/services/animation-motion.webp",
+    objectPosition: "center center",
   },
   {
     id: 4,
-    slug: "video-production",
-    href: "#contact",
-    tagFa: "تصویربرداری",
-    tagEn: "Studio & Video",
-    titleFa: "تصویربرداری و استودیو",
-    titleEn: "Studio Production & Videography",
-    subtitleFa: "تصویربرداری صنعتی و تبلیغاتی با استانداردهای سینمایی، ساخت پادکست‌های تعاملی و تدوین و پست‌تولید حرفه‌ای.",
-    subtitleEn: "Commercial & industrial videography, interactive podcasts, and structured post-production.",
-    featuresFa: ["تصویربرداری صنعتی و تبلیغاتی", "ساخت پادکست و محتوای بلند تعاملی", "تدوین و پست‌تولید"],
-    featuresEn: ["Commercial & industrial videography", "Podcasts & interactive long-form content", "Editing & advanced post-production"],
-    iconType: "video",
+    slug: "web-development",
+    href: "/services?category=web-development",
+    tagFa: "تکنولوژی و وب",
+    tagEn: "Web Engineering",
+    titleFa: "طراحی سایت و وب‌اپلیکیشن",
+    titleEn: "Custom Web Design & Apps",
+    image: "/images/services/web-development.webp",
+    objectPosition: "center center",
   },
   {
     id: 5,
-    slug: "animation",
-    href: "#contact",
-    tagFa: "انیمیشن",
-    tagEn: "Animation & Motion",
-    titleFa: "انیمیشن و موشن گرافیک",
-    titleEn: "Animation & Motion Graphics",
-    subtitleFa: "تولید انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های ویژه سینمایی و موشن‌گرافیک‌های صنعتی، آموزشی و تعاملی برای معرفی شفاف خدمات و محصولات.",
-    subtitleEn: "2D & 3D character animation, cinematic visual effects (VFX), and interactive motion graphics.",
-    featuresFa: ["انیمیشن دوبعدی و سه‌بعدی", "جلوه‌های ویژه سینمایی", "موشن گرافیک صنعتی، آموزشی و تعاملی"],
-    featuresEn: ["2D & 3D animation", "Cinematic visual effects (VFX)", "Industrial, educational & interactive motion"],
-    iconType: "animation",
+    slug: "technical-seo",
+    href: "/services?category=technical-seo",
+    tagFa: "سئو و رشد ارگانیک",
+    tagEn: "Technical SEO",
+    titleFa: "سئو تکنیکال و رشد ارگانیک",
+    titleEn: "Technical SEO & Organic Growth",
+    image: "/images/services/technical-seo.webp",
+    objectPosition: "center center",
   },
   {
     id: 6,
-    slug: "crm",
-    href: "#contact",
-    tagFa: "CRM",
-    tagEn: "CRM Systems",
+    slug: "crm-automation",
+    href: "/services?category=crm-automation",
+    tagFa: "اتوماسیون و فروش",
+    tagEn: "CRM & Systems",
     titleFa: "استقرار CRM و اتوماسیون فروش",
     titleEn: "CRM Implementation & Automation",
-    subtitleFa: "پیاده‌سازی و سفارشی‌سازی سیستم مدیریت ارتباط با مشتری، ساختاردهی به فرآیند پیگیری سرنخ‌ها و گزارش‌گیری شفاف فروش.",
-    subtitleEn: "CRM setup, workflow automation, lead tracking, and structured sales pipeline reporting for growing teams.",
-    featuresFa: ["راه‌اندازی و پیکربندی اختصاصی CRM", "اتوماسیون ثبت و پیگیری سرنخ‌های فروش", "داشبوردهای گزارش‌گیری عملکرد تیم فروش"],
-    featuresEn: ["Tailored CRM configuration", "Automated lead follow-up workflows", "Sales pipeline & performance reporting"],
-    iconType: "crm",
+    image: "/images/services/crm-automation.webp",
+    objectPosition: "center center",
   },
   {
     id: 7,
-    slug: "programming",
-    href: "#contact",
-    tagFa: "برنامه‌نویسی",
+    slug: "custom-software",
+    href: "/services?category=custom-software",
+    tagFa: "سامانه‌های سفارشی",
     tagEn: "Custom Software",
     titleFa: "برنامه‌نویسی و سامانه‌های اختصاصی",
     titleEn: "Custom Software & Web Systems",
-    subtitleFa: "توسعه سامانه‌های تحت وب، پنل‌های مدیریتی اختصاصی و یکپارچه‌سازی امن با وب‌سرویس‌ها و درگاه‌های سازمانی.",
-    subtitleEn: "Full-stack web software engineering, custom management portals, database design, and secure API integrations.",
-    featuresFa: ["توسعه Full-Stack اختصاصی و مقیاس‌پذیر", "طراحی ساختار دیتابیس و پنل مدیریتی", "اتصال امن به APIها و سرویس‌های بیرونی"],
-    featuresEn: ["Scalable full-stack development", "Database & admin portal architecture", "Secure third-party API integrations"],
-    iconType: "software",
+    image: "/images/services/custom-software.webp",
+    objectPosition: "center center",
   },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Rectangular Editorial Service Card with 20% Gray Gradient ───────────────
 
-const toFaDigits = (num: number): string => {
-  const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  return num
-    .toString()
-    .padStart(2, "0")
-    .replace(/\d/g, (d) => faDigits[parseInt(d, 10)]);
-};
-
-// ─── Service Icons ───────────────────────────────────────────────────────────
-
-const ServiceIcon = ({ type }: { type: ServiceItem["iconType"] }) => {
-  switch (type) {
-    case "web":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-          <line x1="12" y1="17" x2="12" y2="21" />
-          <circle cx="6" cy="7" r="1" fill="currentColor" />
-          <circle cx="9" cy="7" r="1" fill="currentColor" />
-        </svg>
-      );
-    case "seo":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          <polyline points="11 8 13 10 11 14" />
-        </svg>
-      );
-    case "instagram":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-        </svg>
-      );
-    case "video":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="23 7 16 12 23 17 23 7" />
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-        </svg>
-      );
-    case "animation":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      );
-    case "crm":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      );
-    case "software":
-      return (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="16 18 22 12 16 6" />
-          <polyline points="8 6 2 12 8 18" />
-          <line x1="14" y1="4" x2="10" y2="20" strokeWidth="1.5" />
-        </svg>
-      );
-  }
-};
-
-// ─── Service Card Component ──────────────────────────────────────────────────
-
-const ServiceCard = React.memo(function ServiceCard({
+function RectangularServiceCard({
   service,
   isRtl,
+  wasDraggedRef,
 }: {
   service: ServiceItem;
   isRtl: boolean;
+  wasDraggedRef?: React.MutableRefObject<boolean>;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
-
   return (
-    <motion.div
-      whileHover={
-        prefersReducedMotion
-          ? undefined
-          : {
-              y: -6,
-              transition: { duration: 0.28, ease: EASE_PREMIUM },
-            }
-      }
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-      className="w-full h-full relative z-10 hover:z-20"
-    >
+    <div className="group relative h-full w-full select-none">
       <Link
         href={service.href}
         onClick={(e) => {
+          if (wasDraggedRef?.current) {
+            e.preventDefault();
+            return;
+          }
           if (service.href.includes("#") && scrollToSection(service.href)) {
             e.preventDefault();
           }
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="group relative flex flex-col justify-between min-h-[360px] sm:min-h-[380px] h-full rounded-2xl sm:rounded-3xl glass-panel glass-panel-hover p-6 sm:p-7 overflow-hidden block w-full transition-all duration-300"
+        className="relative flex flex-col justify-end h-[255px] sm:h-[270px] lg:h-[285px] xl:h-[295px] rounded-2xl sm:rounded-[22px] overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_45px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1.5 cursor-pointer block"
       >
-        {/* Subtle Ambient Background Glow on Hover */}
-        <motion.div
-          initial={false}
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1.2 : 0.9,
-          }}
-          transition={{ duration: 0.45, ease: EASE_PREMIUM }}
-          className={`absolute -top-20 ${
-            isRtl ? "-left-20" : "-right-20"
-          } w-48 h-48 rounded-full bg-lime/[0.08] blur-3xl pointer-events-none`}
+        {/* Full-bleed background 3D image (80% completely clear and unobstructed) */}
+        <Image
+          src={service.image}
+          alt={isRtl ? service.titleFa : service.titleEn}
+          fill
+          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 32vw"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          style={{ objectPosition: service.objectPosition || "center center" }}
+          loading="eager"
         />
 
-        {/* Top Accent Beam Line (Glass light edge) */}
-        <motion.div
-          initial={false}
-          animate={{
-            opacity: isHovered ? 1 : 0.4,
-            scaleX: isHovered ? 1 : 0.6,
-          }}
-          transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-          className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-lime/50 to-transparent pointer-events-none origin-center"
+        {/* ── Gray Gradient covering approximately 20% of the rectangle ── */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[28%] sm:h-[24%] lg:h-[21%] bg-gradient-to-t from-[#1A1D20]/95 via-[#2A2E32]/70 via-50% to-transparent"
         />
 
-        <div>
-          {/* Top Meta Bar */}
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-3">
-              {/* Icon Container with Soft Neumorphic Inset / Bevel & Micro-interaction */}
-              <motion.div
-                animate={
-                  isHovered && !prefersReducedMotion
-                    ? { scale: 1.08, rotate: [0, -2, 2, 0] }
-                    : { scale: 1, rotate: 0 }
-                }
-                transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-                className="flex h-11 w-11 items-center justify-center rounded-xl neumorph-convex border border-white/10 text-white transition-all duration-300 group-hover:border-lime/40 group-hover:text-lime shadow-md"
-              >
-                <ServiceIcon type={service.iconType} />
-              </motion.div>
-
-              {/* Category Pill with Frosted Glass Pill */}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] backdrop-blur-md border border-white/10 text-[11px] font-semibold text-white/60 group-hover:text-white/90 group-hover:border-white/20 shadow-inner transition-colors">
-                <span className="w-1.5 h-1.5 rounded-full bg-lime/60 group-hover:bg-lime transition-colors" />
-                {isRtl ? service.tagFa : service.tagEn}
-              </span>
-            </div>
-
-            {/* Corner Arrow Link Icon with soft Neumorphic Convex style */}
-            <motion.div
-              animate={
-                isHovered && !prefersReducedMotion
-                  ? { x: isRtl ? -2 : 2, y: -2 }
-                  : { x: 0, y: 0 }
-              }
-              transition={{ duration: 0.25, ease: EASE_PREMIUM }}
-              className="flex h-8 w-8 items-center justify-center rounded-lg neumorph-concave border border-white/10 text-white/50 transition-all duration-300 group-hover:text-lime group-hover:border-lime/40 shadow-sm"
+        {/* Card Content within the 20% gray gradient zone */}
+        <div className="relative z-10 p-4 sm:p-5 flex items-end justify-between gap-3 w-full">
+          <div className="min-w-0 flex-1">
+            {/* Category Tag */}
+            <span
+              className={`block text-[10px] sm:text-[11px] font-semibold text-white/75 uppercase mb-1 tracking-wider ${
+                isRtl
+                  ? "font-[family-name:var(--font-vazirmatn)]"
+                  : "font-[family-name:var(--font-gendy)]"
+              }`}
             >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7m10 0v10" />
-              </svg>
-            </motion.div>
+              {isRtl ? service.tagFa : service.tagEn}
+            </span>
+
+            {/* Service Title */}
+            <h3
+              className={`text-base sm:text-lg lg:text-[19px] font-bold text-white leading-snug tracking-tight drop-shadow-md group-hover:text-mint transition-colors line-clamp-2 ${
+                isRtl
+                  ? "font-[family-name:var(--font-vazirmatn)]"
+                  : "font-[family-name:var(--font-gendy)]"
+              }`}
+            >
+              {isRtl ? service.titleFa : service.titleEn}
+            </h3>
           </div>
 
-          {/* Bold Service Title */}
-          <h3 className="font-display text-lg sm:text-xl lg:text-[22px] font-bold leading-tight text-white transition-colors duration-300 group-hover:text-white">
-            {isRtl ? service.titleFa : service.titleEn}
-          </h3>
-
-          {/* Description */}
-          <p className="mt-2.5 text-xs sm:text-[13px] leading-relaxed text-foreground/65 transition-colors duration-300 group-hover:text-foreground/80 line-clamp-2">
-            {isRtl ? service.subtitleFa : service.subtitleEn}
-          </p>
-
-          {/* 3 Compact Feature Bullets */}
-          <div className="mt-4 pt-3.5 border-t border-white/5 flex flex-col gap-2">
-            {(isRtl ? service.featuresFa : service.featuresEn).map((feat, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 text-[11px] sm:text-xs text-foreground/60 group-hover:text-foreground/80 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5 text-lime/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span className="truncate">{feat}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom Action Strip */}
-        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-          <span className="text-xs font-semibold text-white/50 group-hover:text-lime transition-colors">
-            {isRtl ? "بررسی و ثبت سفارش" : "Explore Service"}
-          </span>
-
-          <motion.span
-            animate={
-              isHovered && !prefersReducedMotion
-                ? { x: isRtl ? -3 : 3 }
-                : { x: 0 }
-            }
-            transition={{ duration: 0.25, ease: EASE_PREMIUM }}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-lime"
-          >
+          {/* Minimalist Circular Arrow Button (Bottom-left in RTL) */}
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white shadow-md transition-all duration-300 group-hover:bg-white group-hover:text-black group-hover:scale-105">
             <svg
-              className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`}
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${
+                isRtl
+                  ? "group-hover:-translate-x-0.5 group-hover:-translate-y-0.5"
+                  : "rotate-90 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              }`}
               fill="none"
-              stroke="currentColor"
               viewBox="0 0 24 24"
-              strokeWidth="2.5"
+              stroke="currentColor"
+              strokeWidth="2.2"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d={
+                  isRtl
+                    ? "M17 17L7 7M7 7H17M7 7V17"
+                    : "M7 17L17 7M17 7H7M17 7V17"
+                }
+              />
             </svg>
-          </motion.span>
+          </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
-});
+}
 
 // ─── Main Services Component ─────────────────────────────────────────────────
 
@@ -381,41 +216,32 @@ export default function Services() {
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
-  const sectionRef = useRef<HTMLElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const totalServices = SERVICES_DATA.length;
 
-  const [isInView, setIsInView] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isTouching, setIsTouching] = useState(false);
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const resetSafetyTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const totalServices = ALL_SERVICES.length;
-
-  // Build the circular track with clones: [CLONE_COUNT at start, 7 real items, CLONE_COUNT at end]
+  // Cloned items for seamless continuous stepping (1 full clone set before and after)
   const trackItems = useMemo(() => {
-    const clonesBefore = ALL_SERVICES.slice(-CLONE_COUNT);
-    const clonesAfter = ALL_SERVICES.slice(0, CLONE_COUNT);
+    const clonesBefore = SERVICES_DATA.slice(-CLONE_COUNT);
+    const clonesAfter = SERVICES_DATA.slice(0, CLONE_COUNT);
     return [
       ...clonesBefore.map((s, i) => ({ ...s, trackKey: `clone-start-${i}-${s.id}` })),
-      ...ALL_SERVICES.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
+      ...SERVICES_DATA.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
       ...clonesAfter.map((s, i) => ({ ...s, trackKey: `clone-end-${i}-${s.id}` })),
     ];
   }, []);
 
-  // Track state: trackIndex starts at CLONE_COUNT (4) which points to real item 0
   const [trackIndex, setTrackIndex] = useState(CLONE_COUNT);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
+  const transitionSafetyTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Active logical service index (0..6)
-  const activeIndex = ((trackIndex - CLONE_COUNT) % totalServices + totalServices) % totalServices;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
-  // Measured width of one slide + gap (the exact horizontal step per card)
+  // Measured width of one slide + gap (exact horizontal step per card)
   const [step, setStep] = useState(0);
+
+  // Pause autoplay on hover or touch
+  const [isPaused, setIsPaused] = useState(false);
 
   const updateDimensions = useCallback(() => {
     if (!trackRef.current || !containerRef.current) return;
@@ -429,6 +255,7 @@ export default function Services() {
     const gap =
       parseFloat(trackStyle.gap) ||
       parseFloat(trackStyle.columnGap) ||
+      parseFloat(trackStyle.rowGap) ||
       24;
 
     const newStep = slideWidth + gap;
@@ -437,349 +264,339 @@ export default function Services() {
     }
   }, []);
 
-  // Measure on layout / resize
   useIsomorphicLayoutEffect(() => {
     updateDimensions();
-  }, [updateDimensions]);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-
-    const ro = new ResizeObserver(() => {
-      // Temporarily disable transition during resize to prevent animation artifacts
-      setIsTransitioning(false);
-      isTransitioningRef.current = false;
+    const handleResize = () => {
       updateDimensions();
-    });
+    };
 
-    ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", handleResize, { passive: true });
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && containerRef.current) {
+      ro = new ResizeObserver(() => {
+        updateDimensions();
+      });
+      ro.observe(containerRef.current);
+    }
+
+    const timer = setTimeout(updateDimensions, 100);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (ro) ro.disconnect();
+      clearTimeout(timer);
+    };
   }, [updateDimensions]);
 
-  // Clean transition reset when language/direction switches
+  // Keep ref synchronized
   useEffect(() => {
-    setIsTransitioning(false);
-    isTransitioningRef.current = false;
-  }, [isRtl]);
+    isTransitioningRef.current = isTransitioning;
+  }, [isTransitioning]);
 
-  // Transition handlers
+  // Safe stepping action with debouncing and instant snap protection
+  const triggerStep = useCallback(
+    (direction: 1 | -1) => {
+      if (isTransitioningRef.current) return;
+
+      if (transitionSafetyTimer.current) {
+        clearTimeout(transitionSafetyTimer.current);
+      }
+
+      setIsTransitioning(true);
+      isTransitioningRef.current = true;
+      setTrackIndex((prev) => prev + direction);
+
+      transitionSafetyTimer.current = setTimeout(() => {
+        setIsTransitioning(false);
+        isTransitioningRef.current = false;
+      }, TRANSITION_DURATION_MS + 80);
+    },
+    []
+  );
+
   const nextSlide = useCallback(() => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-    setIsTransitioning(true);
-    setTrackIndex((prev) => prev + 1);
-
-    if (resetSafetyTimeout.current) clearTimeout(resetSafetyTimeout.current);
-    resetSafetyTimeout.current = setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, TRANSITION_DURATION_MS + 150);
-  }, []);
+    triggerStep(1);
+  }, [triggerStep]);
 
   const prevSlide = useCallback(() => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-    setIsTransitioning(true);
-    setTrackIndex((prev) => prev - 1);
+    triggerStep(-1);
+  }, [triggerStep]);
 
-    if (resetSafetyTimeout.current) clearTimeout(resetSafetyTimeout.current);
-    resetSafetyTimeout.current = setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, TRANSITION_DURATION_MS + 150);
-  }, []);
+  // Handle seamless teleporting when stepping into cloned boundaries
+  const handleTransitionEnd = useCallback(
+    (e?: React.TransitionEvent<HTMLDivElement>) => {
+      if (e && e.target !== trackRef.current) return;
 
-  const goToSlide = useCallback((targetIndex: number) => {
-    if (isTransitioningRef.current) return;
-    const targetTrackIndex = CLONE_COUNT + targetIndex;
-    if (targetTrackIndex === trackIndex) return;
-    isTransitioningRef.current = true;
-    setIsTransitioning(true);
-    setTrackIndex(targetTrackIndex);
-  }, [trackIndex]);
-
-  // Seamless boundary wrap when transition finishes
-  const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
-    if (e.target !== trackRef.current || e.propertyName !== "transform") return;
-
-    isTransitioningRef.current = false;
-
-    setTrackIndex((current) => {
-      if (current >= CLONE_COUNT + totalServices) {
-        // Slid past the last real item into the clones: snap back to the start clones seamlessly
-        setIsTransitioning(false);
-        return current - totalServices;
-      } else if (current < CLONE_COUNT) {
-        // Slid before the first real item into the leading clones: snap forward to matching real item
-        setIsTransitioning(false);
-        return current + totalServices;
+      if (transitionSafetyTimer.current) {
+        clearTimeout(transitionSafetyTimer.current);
+        transitionSafetyTimer.current = null;
       }
-      setIsTransitioning(false);
-      return current;
-    });
-  };
 
-  // Touch Swipe handlers
+      setIsTransitioning(false);
+      isTransitioningRef.current = false;
+
+      // Teleport boundaries
+      if (trackIndex >= CLONE_COUNT + totalServices) {
+        setTrackIndex(CLONE_COUNT);
+      } else if (trackIndex < CLONE_COUNT) {
+        setTrackIndex(CLONE_COUNT + totalServices - 1);
+      }
+    },
+    [trackIndex, totalServices]
+  );
+
+  // Autoplay loop with smooth pause on hover
+  useEffect(() => {
+    if (prefersReducedMotion || isPaused) return;
+
+    const interval = setInterval(() => {
+      triggerStep(1);
+    }, STEP_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion, isPaused, triggerStep]);
+
+  // Touch Swipe Gesture Support
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef<number>(0);
+  const wasDraggedRef = useRef<boolean>(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
-    setIsTouching(true);
+    setIsPaused(true);
     touchStartX.current = e.touches[0].clientX;
     touchDeltaX.current = 0;
+    wasDraggedRef.current = false;
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+    if (Math.abs(touchDeltaX.current) > 10) {
+      wasDraggedRef.current = true;
+    }
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     if (touchStartX.current !== null) {
       const delta = touchDeltaX.current;
-      const swipeThreshold = 40;
-      if (isRtl) {
-        if (delta > swipeThreshold) {
-          nextSlide();
-        } else if (delta < -swipeThreshold) {
-          prevSlide();
-        }
-      } else {
-        if (delta < -swipeThreshold) {
-          nextSlide();
-        } else if (delta > swipeThreshold) {
-          prevSlide();
+      const threshold = 40;
+
+      if (Math.abs(delta) > threshold) {
+        if (delta < 0) {
+          if (isRtl) prevSlide();
+          else nextSlide();
+        } else {
+          if (isRtl) nextSlide();
+          else prevSlide();
         }
       }
+
+      setTimeout(() => {
+        wasDraggedRef.current = false;
+      }, 50);
     }
     touchStartX.current = null;
     touchDeltaX.current = 0;
+    setIsPaused(false);
+  }, [isRtl, nextSlide, prevSlide]);
 
-    touchTimeoutRef.current = setTimeout(() => {
-      setIsTouching(false);
-    }, 500);
-  }, [nextSlide, prevSlide, isRtl]);
+  // Pointer / Mouse Drag Support
+  const isPointerDown = useRef(false);
+  const pointerStartX = useRef<number | null>(null);
+  const pointerDeltaX = useRef<number>(0);
 
-  // IntersectionObserver to pause autoplay when scrolled out of view
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { threshold: 0.15 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    setIsPaused(true);
+    isPointerDown.current = true;
+    pointerStartX.current = e.clientX;
+    pointerDeltaX.current = 0;
+    wasDraggedRef.current = false;
   }, []);
 
-  // Main Autoplay Effect: slides by exactly 1 card every 4s, pauses on hover, touch, or reduced motion
-  useEffect(() => {
-    if (prefersReducedMotion || !isInView || isHovered || isTouching) {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      return;
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isPointerDown.current || pointerStartX.current === null) return;
+    pointerDeltaX.current = e.clientX - pointerStartX.current;
+    if (Math.abs(pointerDeltaX.current) > 10) {
+      wasDraggedRef.current = true;
     }
-
-    timerRef.current = setTimeout(() => {
-      nextSlide();
-    }, AUTOPLAY_INTERVAL_MS);
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [
-    prefersReducedMotion,
-    isInView,
-    isHovered,
-    isTouching,
-    trackIndex,
-    nextSlide,
-  ]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
-      if (resetSafetyTimeout.current) clearTimeout(resetSafetyTimeout.current);
-    };
   }, []);
+
+  const handlePointerUp = useCallback(() => {
+    if (isPointerDown.current && pointerStartX.current !== null) {
+      const delta = pointerDeltaX.current;
+      const threshold = 50;
+
+      if (Math.abs(delta) > threshold) {
+        if (delta < 0) {
+          if (isRtl) prevSlide();
+          else nextSlide();
+        } else {
+          if (isRtl) nextSlide();
+          else prevSlide();
+        }
+      }
+
+      setTimeout(() => {
+        wasDraggedRef.current = false;
+      }, 50);
+    }
+    isPointerDown.current = false;
+    pointerStartX.current = null;
+    pointerDeltaX.current = 0;
+    setIsPaused(false);
+  }, [isRtl, nextSlide, prevSlide]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (isRtl) nextSlide();
+        else prevSlide();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (isRtl) prevSlide();
+        else nextSlide();
+      }
+    },
+    [isRtl, nextSlide, prevSlide]
+  );
 
   return (
     <section
-      ref={sectionRef}
       id="services"
-      className="w-full px-2 sm:px-[10px] py-16 sm:py-20 lg:py-24 relative overflow-hidden bg-[#141719] border-b border-white/5"
+      aria-label={isRtl ? "خدمات تخصصی آن‌ساپ" : "OnSupp Core Capabilities"}
+      className="relative w-full py-20 sm:py-24 lg:py-28 overflow-hidden bg-[#160B0E] dark:bg-[#12080B] text-white border-y border-white/[0.08] transition-colors duration-500"
       dir={isRtl ? "rtl" : "ltr"}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onPointerEnter={(e) => {
-        if (e.pointerType !== "touch") setIsHovered(true);
-      }}
-      onPointerLeave={(e) => {
-        if (e.pointerType !== "touch") setIsHovered(false);
-      }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Ambient background glows */}
-      <div className="absolute top-1/4 start-1/6 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-10 end-1/6 w-[350px] h-[350px] bg-mint/5 rounded-full blur-[70px] pointer-events-none" />
-
-      <div className="relative z-10 w-full px-4 sm:px-8 lg:px-16">
-        <ScrollReveal>
-          {/* ── Section Header ───────────────────────────────────────────── */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
+      <div className="relative z-10 w-full max-w-[1520px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14">
+        {/* ── Section Header (Editorial High-Contrast Style, Strictly No Star) ── */}
+        <ScrollReveal once viewportMargin="0px">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8 sm:mb-12">
             <div>
-              <div className="inline-flex items-center gap-3 text-sm font-bold tracking-widest text-mint uppercase">
-                <span className="h-px w-10 bg-mint/50" />
-                <span>{isRtl ? "خدمات تخصصی آن‌ساپ" : "Core Capabilities"}</span>
+              {/* Eyebrow - Matching About Us Section Pattern */}
+              <div className="inline-flex items-center gap-3 mb-2 text-xs sm:text-sm font-bold tracking-widest text-[#D4A5A8] uppercase">
+                <span className="h-px w-10 bg-[#D4A5A8]/60" />
+                <span>{isRtl ? "خدمات تخصصی" : "SELECTED SERVICES"}</span>
               </div>
-              <h2 className="mt-4 sm:mt-6 font-display text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-[1.15]">
-                {isRtl ? "معماری جامع خدمات دیجیتال" : "Engineered for Digital Growth"}
+
+              {/* Headline (Clean without any star character) */}
+              <h2
+                className={`text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-white ${
+                  isRtl
+                    ? "font-[family-name:var(--font-vazirmatn)]"
+                    : "font-[family-name:var(--font-gendy)]"
+                }`}
+              >
+                {isRtl ? "معماری جامع خدمات دیجیتال" : "CORE CAPABILITIES"}
               </h2>
             </div>
 
-            {/* Desktop Navigation Controls (Slide Dots & Arrows) */}
-            <div
-              className="hidden lg:flex items-center gap-4 self-end"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalServices }).map((_, idx) => (
-                  <motion.button
-                    key={idx}
-                    type="button"
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => goToSlide(idx)}
-                    aria-label={`Go to slide ${idx + 1}`}
-                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                      activeIndex === idx
-                        ? "w-8 bg-lime shadow-[0_0_10px_rgba(178,248,0,0.4)]"
-                        : "w-2 bg-white/20 hover:bg-white/40"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <motion.button
-                  type="button"
-                  whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.92 }}
-                  onClick={prevSlide}
-                  aria-label={isRtl ? "اسلاید قبلی" : "Previous slide"}
-                  className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl glass-panel text-white/75 transition-all duration-200 hover:border-lime/40 hover:text-lime shadow-lg cursor-pointer"
+            {/* Trailing View All Link & Navigation Arrows */}
+            <div className="flex items-center gap-5 self-start sm:self-end">
+              <Link
+                href="/services"
+                className={`group inline-flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wider text-white/80 hover:text-white uppercase transition-colors ${
+                  isRtl
+                    ? "font-[family-name:var(--font-vazirmatn)]"
+                    : "font-[family-name:var(--font-gendy)]"
+                }`}
+              >
+                <span>{isRtl ? "مشاهده همه خدمات" : "VIEW ALL SERVICES"}</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                    isRtl ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
                 >
-                  <svg className={`w-5 h-5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+
+              {/* Discreet Prev & Next Navigation Buttons */}
+              <div className="flex items-center gap-1.5 border-s border-white/15 ps-4">
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  aria-label={isRtl ? "خدمت قبلی" : "Previous service"}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
-                </motion.button>
+                </button>
 
-                <motion.button
+                <button
                   type="button"
-                  whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.92 }}
                   onClick={nextSlide}
-                  aria-label={isRtl ? "اسلاید بعدی" : "Next slide"}
-                  className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl glass-panel text-white/75 transition-all duration-200 hover:border-lime/40 hover:text-lime shadow-lg cursor-pointer"
+                  aria-label={isRtl ? "خدمت بعدی" : "Next service"}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
                 >
-                  <svg className={`w-5 h-5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
-                </motion.button>
+                </button>
               </div>
-            </div>
-          </div>
-
-          {/* ── Continuous Horizontal Carousel Track (Digikala Style) ── */}
-          <div
-            ref={containerRef}
-            className="w-full overflow-hidden pt-3.5 pb-2 -mt-3.5 select-none"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onTouchCancel={handleTouchEnd}
-          >
-            <div
-              ref={trackRef}
-              onTransitionEnd={handleTransitionEnd}
-              style={{
-                transform:
-                  step > 0
-                    ? `translateX(${isRtl ? "" : "-"}${trackIndex * step}px)`
-                    : undefined,
-                transition:
-                  isTransitioning && !prefersReducedMotion
-                    ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`
-                    : "none",
-              }}
-              className="flex w-full items-stretch gap-6 xl:gap-8 will-change-transform"
-              dir={isRtl ? "rtl" : "ltr"}
-            >
-              {trackItems.map((service) => (
-                <div
-                  key={service.trackKey}
-                  className="shrink-0 flex-shrink-0 w-full lg:w-[calc((100%-2*1.5rem)/3)] xl:w-[calc((100%-2*2rem)/3)] flex flex-col relative hover:z-20 transition-all duration-200"
-                  dir={isRtl ? "rtl" : "ltr"}
-                >
-                  <ServiceCard service={service} isRtl={isRtl} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Mobile Navigation Strip (Counter 01 / 07 + Left/Right Buttons) ── */}
-          <div className="flex lg:hidden items-center justify-between mt-5 pt-4 border-t border-white/10">
-            {/* Counter 01 / 07 */}
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-lime tracking-wider" dir="ltr">
-                {isRtl
-                  ? `${toFaDigits(activeIndex + 1)} / ${toFaDigits(totalServices)}`
-                  : `${String(activeIndex + 1).padStart(2, "0")} / ${String(totalServices).padStart(2, "0")}`}
-              </span>
-              <span className="text-xs text-white/40">
-                {isRtl ? "خدمات" : "Services"}
-              </span>
-            </div>
-
-            {/* Clear, Prominent Mobile Navigation Buttons */}
-            <div className="flex items-center gap-2.5">
-              <motion.button
-                type="button"
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.88 }}
-                onClick={prevSlide}
-                aria-label={isRtl ? "خدمت قبلی" : "Previous service"}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl glass-panel text-white shadow-lg hover:border-lime/40 hover:text-lime transition-all cursor-pointer"
-              >
-                <svg className={`w-5 h-5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </motion.button>
-
-              <motion.button
-                type="button"
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.88 }}
-                onClick={nextSlide}
-                aria-label={isRtl ? "خدمت بعدی" : "Next service"}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl glass-panel text-white shadow-lg hover:border-lime/40 hover:text-lime transition-all cursor-pointer"
-              >
-                <svg className={`w-5 h-5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </motion.button>
             </div>
           </div>
         </ScrollReveal>
+
+        {/* ── Continuous Horizontal Carousel Track (Stepped 3-Card Window on Desktop) ── */}
+        <div
+          ref={containerRef}
+          className="w-full overflow-hidden pt-2 pb-2 -my-2 select-none cursor-grab active:cursor-grabbing focus:outline-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          role="region"
+          aria-label={isRtl ? "اسلایدر خدمات آن‌ساپ" : "OnSupp Services Slider"}
+        >
+          <div
+            ref={trackRef}
+            onTransitionEnd={handleTransitionEnd}
+            style={{
+              transform:
+                step > 0
+                  ? `translateX(${isRtl ? "" : "-"}${trackIndex * step}px)`
+                  : undefined,
+              transition:
+                isTransitioning && !prefersReducedMotion
+                  ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+                  : "none",
+            }}
+            className="flex w-full items-stretch gap-5 md:gap-5 lg:gap-6 will-change-transform"
+            dir={isRtl ? "rtl" : "ltr"}
+          >
+            {trackItems.map((service) => (
+              <div
+                key={service.trackKey}
+                className="shrink-0 flex-shrink-0 w-full sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2*1.5rem)/3)] flex flex-col relative"
+                dir={isRtl ? "rtl" : "ltr"}
+              >
+                <RectangularServiceCard
+                  service={service}
+                  isRtl={isRtl}
+                  wasDraggedRef={wasDraggedRef}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

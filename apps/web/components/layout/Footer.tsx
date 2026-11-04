@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { scrollToSection, scrollToTop as smoothScrollToTop } from "@/lib/scroll";
+import { BACKEND_URL } from "@/config/api";
+
+const toFaDigits = (val: string | number): string =>
+  String(val).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]);
 
 type ContactInfo = {
   phone: string;
@@ -18,9 +23,9 @@ type ContactInfo = {
 };
 
 const DEFAULT_CONTACT: ContactInfo = {
-  phone: "021 - 9100 0000",
-  phoneLabelFa: "تماس مستقیم",
-  phoneLabelEn: "Direct Call",
+  phone: "",
+  phoneLabelFa: "تلفن",
+  phoneLabelEn: "Phone",
   email: "info@onsupp.ir",
   emailLabelFa: "ایمیل رسمی",
   emailLabelEn: "Official Email",
@@ -28,141 +33,46 @@ const DEFAULT_CONTACT: ContactInfo = {
   responseTimeEn: "Consultation response during business hours",
 };
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
+
+// Column 1: Quick Links
 const QUICK_LINKS = [
   { nameFa: "صفحه اصلی", nameEn: "Home", href: "/" },
+  { nameFa: "گالری تصاویر و نمونه‌کارها", nameEn: "Portfolio & Gallery", href: "/portfolio" },
   { nameFa: "خدمات تخصصی", nameEn: "Our Services", href: "/services" },
-  { nameFa: "نمونه‌کارها", nameEn: "Portfolio", href: "/portfolio" },
-  { nameFa: "پلن‌ها و تعرفه‌ها", nameEn: "Pricing Plans", href: "/pricing" },
-  { nameFa: "مقالات", nameEn: "Articles", href: "/blog" },
-  { nameFa: "درباره آن‌ساپ", nameEn: "About Us", href: "/#about" },
-  { nameFa: "تماس و مشاوره", nameEn: "Contact Us", href: "/#contact" },
+  { nameFa: "مقالات و اخبار", nameEn: "Articles & News", href: "/blog" },
+  { nameFa: "درباره ما", nameEn: "About Us", href: "/about" },
+  { nameFa: "تماس با ما", nameEn: "Contact Us", href: "/#contact" },
 ];
 
-const CORE_SERVICES = [
-  {
-    nameFa: "مدیریت و هویت‌سازی فضای مجازی",
-    nameEn: "Social Media & Brand Identity",
-    href: "/services?category=social-identity",
-  },
-  {
-    nameFa: "تصویربرداری و استودیو",
-    nameEn: "Studio Production & Videography",
-    href: "/services?category=studio-production",
-  },
-  {
-    nameFa: "انیمیشن و موشن گرافیک",
-    nameEn: "Animation & Motion Graphics",
-    href: "/services?category=animation-motion",
-  },
-  {
-    nameFa: "طراحی سایت و وب‌اپلیکیشن",
-    nameEn: "Custom Web Design & Apps",
-    href: "/services?category=web-development",
-  },
-  {
-    nameFa: "سئو تکنیکال و رتبه‌بندی گوگل",
-    nameEn: "Technical SEO & Search Growth",
-    href: "/services?category=technical-seo",
-  },
-  {
-    nameFa: "استقرار CRM و اتوماسیون فروش",
-    nameEn: "CRM & Sales Automation",
-    href: "/services?category=crm-automation",
-  },
-  {
-    nameFa: "برنامه‌نویسی و سامانه‌های اختصاصی",
-    nameEn: "Custom Software Engineering",
-    href: "/services?category=custom-software",
-  },
-];
+// Column 2: Office & Studio Address
+const OFFICE_ADDRESS = {
+  titleFa: "آدرس و نشانی",
+  titleEn: "Office Address",
+  labelFa: "دفتر مرکزی:",
+  labelEn: "Headquarters:",
+  streetFa: "عظیمیه، میدان کوه نورد، گلستان ۲۱",
+  streetEn: "Golestan 21, Kouhnavard Sq, Azimiyeh",
+  cityFa: "البرز، کرج، منطقه عظیمیه",
+  cityEn: "Alborz, Karaj, Azimiyeh District",
+};
 
-const SOCIAL_LINKS = [
-  {
-    id: "instagram",
-    labelFa: "اینستاگرام آن‌ساپ",
-    labelEn: "OnSupp Instagram",
-    href: "/#contact",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        viewBox="0 0 24 24"
-      >
-        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-      </svg>
-    ),
-  },
-  {
-    id: "linkedin",
-    labelFa: "لینکدین آن‌ساپ",
-    labelEn: "OnSupp LinkedIn",
-    href: "/#contact",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        viewBox="0 0 24 24"
-      >
-        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-        <rect width="4" height="12" x="2" y="9" />
-        <circle cx="4" cy="4" r="2" />
-      </svg>
-    ),
-  },
-  {
-    id: "telegram",
-    labelFa: "تلگرام آن‌ساپ",
-    labelEn: "OnSupp Telegram",
-    href: "/#contact",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        viewBox="0 0 24 24"
-      >
-        <path d="m22 2-7 20-4-9-9-4Z" />
-        <path d="M22 2 11 13" />
-      </svg>
-    ),
-  },
-  {
-    id: "email",
-    labelFa: "ارسال ایمیل به آن‌ساپ",
-    labelEn: "Email OnSupp",
-    href: "mailto:info@onsupp.ir",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        viewBox="0 0 24 24"
-      >
-        <rect width="20" height="16" x="2" y="4" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-    ),
-  },
-];
+// Column 3: Working Hours & Channels
+const CONTACT_DETAILS = {
+  hoursTitleFa: "ساعات کاری:",
+  hoursTitleEn: "Working Hours:",
+  hoursFa: "شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰",
+  hoursEn: "Sat - Wed: 09:00 - 18:00",
+  phoneLabelFa: "تلفن:",
+  phoneLabelEn: "Phone:",
+  phoneValue: "", // جلوی تلفن خالی بماند
+  telegramLabelFa: "تلگرام:",
+  telegramLabelEn: "Telegram:",
+  telegramHandle: "onsupp_web",
+  telegramUrl: "https://t.me/onsupp_web",
+  emailValue: "info@onsupp.ir",
+  instagramUrl: "https://instagram.com/onsupp_web",
+};
 
 export default function Footer() {
   const { lang } = useLanguage();
@@ -177,7 +87,7 @@ export default function Footer() {
         if (data) {
           setContact((prev) => ({
             ...prev,
-            phone: data.phone || prev.phone,
+            phone: "", // Keep empty as instructed
             phoneLabelFa: data.phoneLabelFa || prev.phoneLabelFa,
             phoneLabelEn: data.phoneLabelEn || prev.phoneLabelEn,
             email: data.email || prev.email,
@@ -189,7 +99,7 @@ export default function Footer() {
         }
       })
       .catch(() => {
-        /* retain default verified contact details */
+        /* retain defaults */
       });
   }, []);
 
@@ -212,270 +122,234 @@ export default function Footer() {
     }
   };
 
-  const scrollToTop = () => {
-    smoothScrollToTop({ clearHash: true });
+  const handleConsultationClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/" || pathname === "") {
+      e.preventDefault();
+      scrollToSection("#contact");
+    }
   };
 
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer
-      dir={isRtl ? "rtl" : "ltr"}
-      className="mt-auto w-full border-t border-white/[0.07] bg-[#121517] text-foreground relative overflow-hidden"
-    >
-      {/* Subtle Top Border Accent Line */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-mint/25 to-transparent"
-        aria-hidden="true"
-      />
+    <>
+      <footer
+        dir={isRtl ? "rtl" : "ltr"}
+        className="mt-auto w-full bg-[#38534A] dark:bg-[#17221E] text-white relative overflow-hidden select-none border-t border-white/10 transition-colors duration-500"
+      >
+        {/* Subtle Top Border Highlight Accent */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          aria-hidden="true"
+        />
 
-      {/* Restrained Ambient Olive/Neutral Glow */}
-      <div
-        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-64 w-[640px] rounded-full bg-primary/8 blur-[120px]"
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-6 sm:px-12 lg:px-24 pt-14 sm:pt-18 lg:pt-20 pb-8 sm:pb-10">
-        {/* ── Main 4-Column Footer Grid ─────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 sm:pb-16 border-b border-white/[0.07]">
-          {/* Column 1: Brand Identity, Short Bio & Social Links (4 cols on lg) */}
-          <div className="lg:col-span-4 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              {/* Brand Logo */}
-              <Link
-                href="/"
-                className="inline-flex items-center gap-3 group focus:outline-none"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-mint/25 bg-[#1b2220] text-mint font-display font-bold text-lg shadow-inner transition-colors duration-300 group-hover:border-mint/50 group-hover:bg-primary/40">
-                  O
+        <div className="relative z-10 mx-auto w-full max-w-[1550px] px-6 sm:px-10 lg:px-16 pt-14 sm:pt-16 lg:pt-20 pb-8 sm:pb-10">
+          {/* ── Top Centered Brand Identity ── */}
+          <div className="flex flex-col items-center justify-center text-center mb-12 sm:mb-16">
+            <Link
+              href="/"
+              onClick={(e) => handleAnchorClick(e, "/")}
+              className="group inline-flex flex-col items-center focus:outline-none"
+              aria-label="OnSupp Agency"
+            >
+              {/* Sleek Brand Typography */}
+              <div className="flex items-center gap-3">
+                <span className="text-xl sm:text-2xl lg:text-[26px] font-bold tracking-[0.22em] text-white uppercase font-serif transition-colors group-hover:text-white/90">
+                  ONSUPP AGENCY
                 </span>
-                <span className="text-2xl font-display font-bold text-white tracking-wide transition-opacity group-hover:opacity-90">
-                  Onsupp
-                </span>
-              </Link>
+              </div>
+              {/* Elegant script/italic subtitle */}
+              <span className="mt-1 text-xs sm:text-sm text-white/75 font-serif italic tracking-widest transition-colors group-hover:text-white">
+                Creative Digital Marketing & Software Engineering
+              </span>
+            </Link>
+          </div>
 
-              {/* Short Company Description */}
-              <p className="text-sm leading-7 text-foreground/65 max-w-sm">
-                {isRtl
-                  ? "آژانس خلاقیت، مهندسی نرم‌افزار و دیجیتال مارکتینگ آن‌ساپ؛ ما استراتژی داده‌محور، فناوری مدرن و طراحی هدفمند را ترکیب می‌کنیم تا برند شما در فضای دیجیتال رشد پایداری را تجربه کند."
-                  : "OnSupp Digital Marketing & Software Engineering Agency. We combine data-driven strategy, modern web architecture, and purposeful design to scale forward-thinking brands."}
-              </p>
+          {/* ── Main 4-Column Grid ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8 pb-12 sm:pb-16 border-b border-white/12">
+            {/* Column 1 (Far Right in RTL): دسترسی سریع (Quick Links) */}
+            <div className="lg:col-span-2 space-y-4">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                {isRtl ? "دسترسی سریع" : "Quick Links"}
+              </h3>
+              <ul className="space-y-2.5">
+                {QUICK_LINKS.map((link) => (
+                  <li key={link.href + link.nameEn}>
+                    <Link
+                      href={link.href}
+                      onClick={(e) => handleAnchorClick(e, link.href)}
+                      className="block text-xs sm:text-[13px] text-white/80 hover:text-white transition-colors duration-200 py-0.5 leading-relaxed"
+                    >
+                      {isRtl ? link.nameFa : link.nameEn}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Social Media Links */}
-            <div className="space-y-3 pt-1">
-              <span className="block text-xs font-semibold tracking-wider text-foreground/45 uppercase">
-                {isRtl ? "شبکه‌های اجتماعی و ارتباطی" : "Connect With Us"}
-              </span>
-              <div className="flex items-center gap-2.5">
-                {SOCIAL_LINKS.map((item) => {
-                  const href =
-                    item.id === "email" ? `mailto:${contact.email}` : item.href;
-                  return (
-                    <Link
-                      key={item.id}
-                      href={href}
-                      onClick={(e) => handleAnchorClick(e, href)}
-                      aria-label={isRtl ? item.labelFa : item.labelEn}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.08] bg-[#181c1e] text-foreground/65 transition-all duration-300 hover:-translate-y-0.5 hover:border-mint/35 hover:bg-[#212826] hover:text-mint"
-                    >
-                      {item.icon}
-                    </Link>
-                  );
-                })}
+            {/* Column 2: آدرس و نشانی دفتر مرکزی */}
+            <div className="lg:col-span-3 space-y-4">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                {isRtl ? OFFICE_ADDRESS.titleFa : OFFICE_ADDRESS.titleEn}
+              </h3>
+              <div className="space-y-3.5 text-xs sm:text-[13px] leading-relaxed">
+                <div className="space-y-1">
+                  <span className="font-bold text-white block">
+                    {isRtl ? OFFICE_ADDRESS.labelFa : OFFICE_ADDRESS.labelEn}
+                  </span>
+                  <p className="text-white/85 font-light leading-relaxed">
+                    {isRtl ? OFFICE_ADDRESS.streetFa : OFFICE_ADDRESS.streetEn}
+                  </p>
+                </div>
+                <div className="space-y-1 pt-0.5">
+                  <p className="text-white/70 font-light">
+                    {isRtl ? OFFICE_ADDRESS.cityFa : OFFICE_ADDRESS.cityEn}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Column 2: Quick Links / Important Pages (2 cols on lg) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-mint/80" />
-              <span>{isRtl ? "صفحات مهم" : "Quick Links"}</span>
-            </h3>
-            <ul className="space-y-2.5">
-              {QUICK_LINKS.map((link) => (
-                <li key={link.href + link.nameEn}>
-                  <Link
-                    href={link.href}
-                    onClick={(e) => handleAnchorClick(e, link.href)}
-                    className="group inline-flex items-center gap-2 text-sm text-foreground/65 transition-colors duration-200 hover:text-mint py-0.5"
+            {/* Column 3: ساعات کاری، تلفن و تلگرام */}
+            <div className="lg:col-span-3 space-y-4">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                {isRtl ? "ساعات کاری و ارتباط" : "Hours & Contact"}
+              </h3>
+              <div className="space-y-3 text-xs sm:text-[13px] leading-relaxed">
+                <div className="space-y-1">
+                  <span className="font-bold text-white block">
+                    {isRtl ? CONTACT_DETAILS.hoursTitleFa : CONTACT_DETAILS.hoursTitleEn}
+                  </span>
+                  <p className="text-white/85 font-light">
+                    {isRtl ? CONTACT_DETAILS.hoursFa : CONTACT_DETAILS.hoursEn}
+                  </p>
+                </div>
+
+                {/* جلوی تلفن خالی باشد طبق درخواست کاربر */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <span className="font-bold text-white">
+                    {isRtl ? CONTACT_DETAILS.phoneLabelFa : CONTACT_DETAILS.phoneLabelEn}
+                  </span>
+                  <span className="text-white/60"></span>
+                </div>
+
+                {/* تلگرام onsupp_web */}
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white">
+                    {isRtl ? CONTACT_DETAILS.telegramLabelFa : CONTACT_DETAILS.telegramLabelEn}
+                  </span>
+                  <a
+                    href={CONTACT_DETAILS.telegramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/95 hover:text-white underline underline-offset-4 dir-ltr font-mono text-xs transition-colors"
                   >
-                    <span className="h-px w-0 bg-mint transition-all duration-200 group-hover:w-2.5" />
-                    <span>{isRtl ? link.nameFa : link.nameEn}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+                    @{CONTACT_DETAILS.telegramHandle}
+                  </a>
+                </div>
+              </div>
 
-          {/* Column 3: Core Services (3 cols on lg) */}
-          <div className="lg:col-span-3 space-y-4">
-            <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-mint/80" />
-              <span>{isRtl ? "خدمات اصلی" : "Core Services"}</span>
-            </h3>
-            <ul className="space-y-2.5">
-              {CORE_SERVICES.map((service) => (
-                <li key={service.nameEn}>
-                  <Link
-                    href={service.href}
-                    onClick={(e) => handleAnchorClick(e, service.href)}
-                    className="group inline-flex items-center gap-2 text-sm text-foreground/65 transition-colors duration-200 hover:text-mint py-0.5"
-                  >
-                    <span className="h-px w-0 bg-mint transition-all duration-200 group-hover:w-2.5" />
-                    <span>{isRtl ? service.nameFa : service.nameEn}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Contact Channels & Consultation CTA (3 cols on lg) */}
-          <div className="lg:col-span-3 space-y-4">
-            <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-mint/80" />
-              <span>{isRtl ? "راه‌های ارتباطی" : "Contact Channels"}</span>
-            </h3>
-
-            <div className="space-y-3">
-              {/* Direct Phone */}
-              <a
-                href={`tel:${contact.phone.replace(/\s+/g, "")}`}
-                className="group flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-[#171b1d] p-3.5 transition-all duration-300 hover:border-mint/30 hover:bg-[#1c2123]"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-[#202726] text-mint transition-colors group-hover:bg-primary/40">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
+              {/* آیکون‌های گرد ارتباطی مطابق رفرنس فوتر */}
+              <div className="pt-2 flex items-center gap-2.5">
+                {/* Telegram */}
+                <a
+                  href={CONTACT_DETAILS.telegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Telegram: onsupp_web"
+                  title="تلگرام: onsupp_web"
+                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4Z" />
+                    <path d="M22 2 11 13" />
                   </svg>
-                </span>
-                <div className="min-w-0">
-                  <span className="block text-[11px] font-medium text-foreground/50">
-                    {isRtl ? contact.phoneLabelFa : contact.phoneLabelEn}
-                  </span>
-                  <span
-                    dir="ltr"
-                    className="block truncate text-sm font-bold text-white transition-colors group-hover:text-mint"
-                  >
-                    {isRtl
-                      ? contact.phone.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)])
-                      : contact.phone}
-                  </span>
-                </div>
-              </a>
+                </a>
 
-              {/* Official Email */}
-              <a
-                href={`mailto:${contact.email}`}
-                className="group flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-[#171b1d] p-3.5 transition-all duration-300 hover:border-mint/30 hover:bg-[#1c2123]"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-[#202726] text-mint transition-colors group-hover:bg-primary/40">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
+                {/* Instagram */}
+                <a
+                  href={CONTACT_DETAILS.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram: onsupp_web"
+                  title="اینستاگرام آن‌ساپ"
+                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                   </svg>
-                </span>
-                <div className="min-w-0">
-                  <span className="block text-[11px] font-medium text-foreground/50">
-                    {isRtl ? contact.emailLabelFa : contact.emailLabelEn}
-                  </span>
-                  <span
-                    dir="ltr"
-                    className="block truncate text-sm font-bold text-white transition-colors group-hover:text-mint"
-                  >
-                    {contact.email}
-                  </span>
-                </div>
-              </a>
+                </a>
 
-              {/* Response Time & Consultation Link */}
-              <div className="pt-1 flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-xs text-foreground/55">
-                  <span className="h-2 w-2 rounded-full bg-mint/80 shrink-0" />
-                  <span>
-                    {isRtl ? contact.responseTimeFa : contact.responseTimeEn}
-                  </span>
-                </div>
+                {/* Email */}
+                <a
+                  href={`mailto:${CONTACT_DETAILS.emailValue}`}
+                  aria-label="Email: info@onsupp.ir"
+                  title="ایمیل رسمی آن‌ساپ"
+                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </a>
 
+                {/* Phone Handset Icon */}
+                <div
+                  aria-label="Phone"
+                  title="تلفن"
+                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/70"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 4 (Far Left in RTL): زیبایی جاودانه / بیانیه برند + دو دکمه اکشن */}
+            <div className="lg:col-span-4 space-y-4">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                {isRtl ? "زیبایی جاودانه" : "Timeless Impact"}
+              </h3>
+              <p className="text-xs sm:text-[13px] text-white/90 leading-relaxed font-light">
+                {isRtl
+                  ? "ما باور داریم تمایز و درخشش در فضای دیجیتال یک اتفاق تصادفی نیست، بلکه انتخابی آگاهانه و استراتژیک است. با تلفیق هنر، فناوری و دانش داده‌محور، اصالت و هویت برند شما را به بالاترین سطح ممکن ارتقا می‌دهیم."
+                  : "We believe true distinction in the digital sphere is never accidental, but a conscious strategic choice. By harmonizing creative art, engineering, and data-driven insight, we elevate your brand to unprecedented heights."}
+              </p>
+
+              {/* Stacked Action Buttons */}
+              <div className="pt-2 flex flex-col gap-2.5 max-w-[280px]">
+                {/* Button 1: Solid Crisp White Button with Deep Green Text (High Contrast 8.4:1) */}
                 <Link
                   href="/#contact"
-                  onClick={(e) => handleAnchorClick(e, "/#contact")}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-mint/25 bg-[#1e2623] px-4 py-3 text-xs sm:text-sm font-bold text-mint transition-all duration-300 hover:bg-mint hover:text-ink"
+                  onClick={handleConsultationClick}
+                  className="w-full inline-flex items-center justify-center py-2.5 px-5 rounded-md font-bold text-xs sm:text-[13px] tracking-wide text-[#17221E] bg-white hover:bg-[#F8F9FA] hover:text-[#2B4039] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg text-center cursor-pointer"
                 >
-                  <span>
-                    {isRtl
-                      ? "درخواست مشاوره و شروع همکاری"
-                      : "Request Free Consultation"}
-                  </span>
-                  <svg
-                    className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
+                  <span>{isRtl ? "رزرو وقت مشاوره" : "Book Consultation"}</span>
                 </Link>
+
+                {/* Button 2: Outlined Ghost Button with White Border */}
+                <a
+                  href="https://maps.google.com/?q=عظیمیه+میدان+کوهنورد+گلستان+۲۱"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center py-2.5 px-5 rounded-md font-medium text-xs sm:text-[13px] tracking-wide text-white bg-white/[0.08] hover:bg-white/[0.18] border border-white/25 hover:border-white/50 active:scale-[0.98] transition-all duration-200 text-center cursor-pointer"
+                >
+                  <span>{isRtl ? "مسیریابی در گوگل مپ" : "Navigate via Google Maps"}</span>
+                </a>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Bottom Bar: Copyright & Scroll to Top ──────────────────────── */}
-        <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-foreground/45">
-          <p className="text-center sm:text-start">
-            {isRtl
-              ? `© ${String(currentYear).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)])} آژانس دیجیتال مارکتینگ آن‌ساپ (OnSupp). تمامی حقوق محفوظ است.`
-              : `© ${currentYear} OnSupp Digital Marketing Agency. All rights reserved.`}
-          </p>
-
-          <button
-            type="button"
-            onClick={scrollToTop}
-            aria-label={isRtl ? "بازگشت به بالای صفحه" : "Back to top"}
-            className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-[#171b1d] px-3.5 py-1.5 text-xs font-medium text-foreground/65 transition-all duration-300 hover:border-mint/30 hover:text-mint cursor-pointer"
-          >
-            <span>{isRtl ? "بازگشت به بالا" : "Back to top"}</span>
-            <svg
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 15l7-7 7 7"
-              />
-            </svg>
-          </button>
+          {/* ── Bottom Bar: Horizontal Line & Centered Copyright ── */}
+          <div className="pt-6 sm:pt-8 flex items-center justify-center text-center">
+            <p className="text-[11px] sm:text-xs text-white/65 tracking-wider">
+              {isRtl
+                ? `© ۲۰۲۵ تمام حقوق برای Onsupp محفوظ است | آژانس دیجیتال مارکتینگ و مهندسی نرم‌افزار آن‌ساپ`
+                : `© 2025 OnSupp. All Rights Reserved | Digital Marketing & Software Engineering Agency`}
+            </p>
+          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }

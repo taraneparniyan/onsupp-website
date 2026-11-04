@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
@@ -177,6 +178,16 @@ export default function AdminLayout({
       ) 
     },
     { 
+      name: "رضایت و نظرات مشتریان", 
+      href: "/admin/testimonials", 
+      roles: ["SUPER_ADMIN", "ADMIN", "CONTENT_SEO_MANAGER"],
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      ) 
+    },
+    { 
       name: "پیام‌ها و فرم‌های تماس", 
       href: "/admin/contact", 
       roles: ["SUPER_ADMIN", "ADMIN", "SUPPORT"],
@@ -315,8 +326,14 @@ export default function AdminLayout({
         <div className="flex-1 overflow-y-auto min-h-0 pl-1 -mr-2 pr-2">
           {/* Logo & Brand Header */}
           <div className="flex items-center gap-3 mb-6 px-3.5 py-3 bg-[#23272a] rounded-2xl border border-white/10 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-lime flex items-center justify-center shadow-md text-[#111416] font-black text-xl shrink-0">
-              O
+            <div className="w-10 h-10 rounded-xl bg-[#191c1e] p-1.5 border border-white/10 flex items-center justify-center shrink-0">
+              <Image
+                src="/images/logo/logo-light.webp"
+                alt="OnSupp"
+                width={28}
+                height={28}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-black text-white tracking-wide truncate">پنل مدیریت OnSupp</h1>

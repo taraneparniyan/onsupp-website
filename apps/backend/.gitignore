@@ -3,3 +3,7 @@ dist
 *.log
 .prisma
 uploads
+.env
+.env.*
+!.env.example
+!.env.sample

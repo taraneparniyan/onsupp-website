@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import * as fs from 'fs';
+import * as path from 'path';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
@@ -161,51 +163,38 @@ async function main() {
   if (existing === 0) {
     const defaultSlides = [
       {
-        title: 'رشد دیجیتال شما، افقی نو می‌شود',
-        titleEn: 'Your Digital Growth',
+        title: 'تولید رسانه‌ای، سینمایی و استودیو اختصاصی',
+        titleEn: 'Cinematic Production & Bespoke Studio Media',
         subtitle:
-          'ما با استراتژی‌های نوین دیجیتال مارکتینگ، کسب‌وکار شما را به مشتریان بیشتری می‌رسانیم.',
+          'روایت بصری فاخر، تصویربرداری صنعتی، پادکست و تیزرهای تبلیغاتی با پیشرفته‌ترین تجهیزات سینمایی',
         subtitleEn:
-          'We help you grow your business with modern digital marketing strategies.',
-        ctaText: 'شروع همکاری',
-        ctaTextEn: 'Get Started',
-        ctaLink: '#contact',
-        ctaText2: 'خدمات ما',
-        ctaText2En: 'Our Services',
-        ctaLink2: '/services',
-        imageUrl: null,
-        imageAlt: null,
+          'Elevating brand storytelling through cinema-grade cinematography, podcast studio recording, and high-impact commercial media.',
+        ctaText: 'مشاهده خدمات',
+        ctaTextEn: 'Explore Services',
+        ctaLink: '/services',
+        ctaText2: 'درباره ما',
+        ctaText2En: 'About Us',
+        ctaLink2: '/about',
+        imageUrl: '/images/hero/hero-media-studio.webp',
+        imageAlt: 'استودیو تخصصی تصویربرداری، تولید تیزر سینمایی و پادکست آن‌ساپ',
         position: 0,
       },
       {
-        title: 'دیجیتال مارکتینگ نوین',
-        titleEn: 'Modern Digital Marketing',
-        subtitle: 'کمپین‌های هوشمند با هدف‌گذاری دقیق، نرخ تبدیل شما را چند برابر می‌کند.',
-        subtitleEn: 'Smart campaigns with precise targeting multiply your conversion rate.',
-        ctaText: 'مشاوره رایگان',
-        ctaTextEn: 'Free Consultation',
-        ctaLink: '#contact',
+        title: 'مهندسی نرم‌افزار، پلتفرم‌های وب و اتوماسیون داده‌محور',
+        titleEn: 'Enterprise Web Engineering & Intelligent Data Systems',
+        subtitle:
+          'معماری سیستم‌های مدرن با Next.js، سئو تکنیکال، اتوماسیون CRM و سامانه‌های ابری مقیاس‌پذیر',
+        subtitleEn:
+          'Architecting high-performance Next.js platforms, technical SEO dominance, and mission-critical enterprise CRM workflows.',
+        ctaText: 'مشاهده خدمات',
+        ctaTextEn: 'Explore Services',
+        ctaLink: '/services',
         ctaText2: 'درباره ما',
         ctaText2En: 'About Us',
-        ctaLink2: '/#about',
-        imageUrl: null,
-        imageAlt: null,
+        ctaLink2: '/about',
+        imageUrl: '/images/hero/hero-tech-engineering.webp',
+        imageAlt: 'مهندسی نرم‌افزار، توسعه وب‌سایت‌های سازمانی، سئو تکنیکال و CRM آن‌ساپ',
         position: 1,
-      },
-      {
-        title: 'برندسازی و رشد پایدار',
-        titleEn: 'Branding & Sustainable Growth',
-        subtitle: 'برند شما را قدرتمند می‌کنیم تا در ذهن مشتری ماندگار بماند.',
-        subtitleEn: "We empower your brand to stay memorable in customers' minds.",
-        ctaText: 'برند خود را بسازید',
-        ctaTextEn: 'Build Your Brand',
-        ctaLink: '#contact',
-        ctaText2: 'خدمات ما',
-        ctaText2En: 'Our Services',
-        ctaLink2: '/',
-        imageUrl: null,
-        imageAlt: null,
-        position: 2,
       },
     ];
     for (const slide of defaultSlides) {
@@ -433,48 +422,229 @@ const existingStats = await prisma.stat.count();
     console.log('[seed] Default features created:', defaultFeatures.length);
   }
 
-  const existingCaseStudies = await prisma.caseStudy.count();
-  if (existingCaseStudies === 0) {
-    const defaultCaseStudies = [
-      {
-        titleFa: 'سامانه پایش سلامت MedLink',
-        titleEn: 'MedLink Vital Telemetry',
-        categoryFa: 'سلامت و پزشکی',
-        categoryEn: 'Healthcare',
-        projectType: 'app',
-        descriptionFa: 'سیستم مانیتورینگ آنلاین بیماران با پردازش زنده تلمتری و سیستم هوشمند هشدارهای پزشکی.',
-        descriptionEn: 'Real-time patient monitoring system with biometric telemetry and AI risk alert algorithms.',
-        liveUrl: 'https://medlink.example.com',
-        position: 0,
-      },
-      {
-        titleFa: 'پلتفرم تحلیل مالی Finalytix',
-        titleEn: 'Finalytix Analytics Platform',
-        categoryFa: 'فین‌تک و سازمان‌ها',
-        categoryEn: 'Fintech & Enterprise',
-        projectType: 'website',
-        descriptionFa: 'داشبورد سازمانی پیشرفته برای پیش‌بینی جریان مالی و گزارش‌گیری هوشمند تعاملی.',
-        descriptionEn: 'Advanced financial analytics platform for forecasting cash flow and enterprise reporting.',
-        liveUrl: 'https://finalytix.example.com',
-        position: 1,
-      },
-      {
-        titleFa: 'پیج اینستاگرام و استراتژی محتوای OnSupp',
-        titleEn: 'OnSupp Digital Marketing',
-        categoryFa: 'دیجیتال مارکتینگ',
-        categoryEn: 'Social Media',
-        projectType: 'instagram',
-        descriptionFa: 'طراحی هویت بصری، کمپین‌های تبلیغاتی و رشد تعامل اینستاگرام با استراتژی داده‌محور.',
-        descriptionEn: 'Visual identity design, campaign management, and Instagram engagement strategy.',
-        liveUrl: 'https://instagram.com/onsupp',
-        position: 2,
-      },
-    ];
-    for (const cs of defaultCaseStudies) {
-      await prisma.caseStudy.create({ data: cs });
+  // ─── Case Studies (Verified Canonical Projects) ──────────────────────────
+  const existingCaseStudies = await prisma.caseStudy.findMany();
+
+  // Safety Backup: export current database state before modifying
+  if (existingCaseStudies.length > 0) {
+    try {
+      const backupDir = path.resolve(process.cwd(), 'backups');
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+      const backupPath = path.join(backupDir, `case_studies_backup_${Date.now()}.json`);
+      fs.writeFileSync(backupPath, JSON.stringify(existingCaseStudies, null, 2), 'utf-8');
+      console.log(`[seed] Safety backup of ${existingCaseStudies.length} case studies saved: ${backupPath}`);
+    } catch (bErr) {
+      console.warn('[seed] Could not write safety backup file:', bErr);
     }
-    console.log('[seed] Default case studies created:', defaultCaseStudies.length);
   }
+
+  const canonicalCaseStudies = [
+    {
+      slug: 'dr-miresmaeli-clinic',
+      client: 'کلینیک تخصصی دکتر علیرضا میراسماعیلی',
+      clientEn: 'Dr. Alireza Miresmaili Clinic',
+      titleFa: 'برندینگ دیجیتال، پرتال نوبت‌دهی و هویت شبکه‌های اجتماعی',
+      titleEn: 'Digital Branding, Booking Portal & Social Identity',
+      taglineFa: 'تدوین هویت بصری منسجم، طراحی وب‌سایت پرفورمنس‌محور و سناریونویسی و تولید محتوای تخصصی اینستاگرام',
+      taglineEn: 'Comprehensive medical practice rebranding, high-performance web booking portal, and social growth strategy',
+      categoryFa: 'هویت دیجیتال و توسعه وب',
+      categoryEn: 'Digital Identity & Web',
+      projectType: 'website',
+      descriptionFa: 'طراحی پرتال مدرن با سرعت بارگذاری فوق‌العاده و اتصال مستقیم سیستم نوبت‌دهی پیامکی در کنار سناریونویسی و تصویربرداری حرفه‌ای استودیویی.',
+      descriptionEn: 'Delivered a refined clinical editorial web presence with integrated automated SMS booking and cinema-grade studio social reels.',
+      imageUrl: '/images/portfolio/dr-miresmaeli-clinic-hero.webp',
+      secondaryImage: '/images/portfolio/dr-miresmaeli-clinic-full.webp',
+      liveUrl: 'https://drmiresmaeli.com/',
+      featured: true,
+      position: 0,
+      year: '۲۰۲۴',
+    },
+    {
+      slug: 'canza-construction',
+      client: 'شرکت ساختمانی کنزا',
+      clientEn: 'Canza Construction Ltd.',
+      titleFa: 'پرتال جامع خدمات ساختمانی و بازسازی لوکس کانادا',
+      titleEn: 'High-End Architectural & Construction Portal (Canada)',
+      taglineFa: 'طراحی وب‌سایت مدرن با معماری ریسپانسیو، سیستم برآورد آنلاین بودجه و گالری تعاملی پروژه‌های لوکس ونکوور',
+      taglineEn: 'Modern architectural engineering portfolio, online budget estimator, and high-performance showcase in Canada',
+      categoryFa: 'طراحی سایت و پرتال ساختمانی',
+      categoryEn: 'Web Design & Architecture',
+      projectType: 'website',
+      descriptionFa: 'طراحی پرتال بسیار سریع بر بستر کلود با گالری عکاسی باکیفیت پروژه‌ها، فرم هوشمند مرحله‌به‌مرحله تخمین بودجه ساخت و سئوی ساختاریافته برای بازار آمریکای شمالی.',
+      descriptionEn: 'Engineered a rapid Cloudflare-backed web presence featuring an interactive cost estimation funnel and localized SEO architecture for Canadian homeowners.',
+      imageUrl: '/images/portfolio/canza-construction-hero.webp',
+      secondaryImage: '/images/portfolio/canza-construction-full.webp',
+      liveUrl: 'https://canzaconstruction.ca/',
+      featured: true,
+      position: 1,
+      year: '۲۰۲۵',
+    },
+    {
+      slug: 'dr-hatam-clinic',
+      client: 'کلینیک تخصصی دکتر سپنتا حاتم',
+      clientEn: 'Dr. Sepanta Hatam Clinic',
+      titleFa: 'پرتال جامع طب فیزیکی، توان‌بخشی و نوبت‌دهی آنلاین',
+      titleEn: 'Physical Medicine & Rehabilitation Clinical Portal',
+      taglineFa: 'طراحی وب‌سایت پزشکی و پرتال نوبت‌دهی، معرفی متدهای درمانی ستون فقرات و استراتژی رشد سئو بالینی',
+      taglineEn: 'High-performance clinical portal, automated patient booking, and physical therapy SEO architecture',
+      categoryFa: 'پرتال پزشکی و نوبت‌دهی آنلاین',
+      categoryEn: 'Medical Portal & Booking',
+      projectType: 'website',
+      descriptionFa: 'توسعه پرتال بالینی با ناوبری ساده، نوبت‌دهی مکانیزه، پایگاه دانش جامع درمان‌های توان‌بخشی و بهینه‌سازی کلمات کلیدی پزشکی در گوگل.',
+      descriptionEn: 'Delivered an accessible medical portal with automated appointment self-scheduling and an extensive rehabilitation clinical knowledge base.',
+      imageUrl: '/images/portfolio/dr-hatam-clinic-hero.webp',
+      secondaryImage: '/images/portfolio/dr-hatam-clinic-full.webp',
+      liveUrl: 'https://dr-hatam.com/',
+      featured: true,
+      position: 2,
+      year: '۲۰۲۵',
+    },
+    {
+      slug: 'shin-beauty-center',
+      client: 'مرکز زیبایی و لیزر شین',
+      clientEn: 'Shin Beauty Center',
+      titleFa: 'پلتفرم اختصاصی خدمات پوست، مو، زیبایی و رزرواسیون هوشمند',
+      titleEn: 'Luxury Aesthetic Clinic & Smart Booking Portal',
+      taglineFa: 'طراحی وب‌سایت کلینیکال با هویت بصری پریمیوم، معرفی تعرفه‌ها و سیستم رزرواسیون و مشاوره رایگان',
+      taglineEn: 'Premium aesthetic clinic platform, real-time consultation booking, and beauty service catalogue',
+      categoryFa: 'طراحی وب و هویت بصری کلینیک',
+      categoryEn: 'Aesthetic & Clinic Web',
+      projectType: 'website',
+      descriptionFa: 'طراحی پرتال مدرن با پالت رنگی گرم و طلایی، ناوبری شناور شیشه‌ای، کاتالوگ تعاملی پکیج‌های درمانی و سامانه ثبت نوبت مشاوره رایگان.',
+      descriptionEn: 'Crafted an elegant editorial web application with floating glass navigation, interactive treatment catalogs, and direct inquiry automation.',
+      imageUrl: '/images/portfolio/shin-beauty-center-hero.webp',
+      secondaryImage: '/images/portfolio/shin-beauty-center-full.webp',
+      liveUrl: 'https://shinbeautycenter.com/',
+      featured: true,
+      position: 3,
+      year: '۲۰۲۴',
+    },
+    {
+      slug: 'finalytix-wealth',
+      client: 'فاینالیتیکس اینترپرایز',
+      clientEn: 'Finalytix Enterprise',
+      titleFa: 'پلتفرم تحلیلی هوش مالی و مدیریت پورتفوی سازمانی',
+      titleEn: 'Financial Analytics & Portfolio Management Platform',
+      taglineFa: 'طراحی و پیاده‌سازی داشبورد مالی و گزارش‌گیری تحلیلی برای پایش یکپارچه دارایی‌ها با معماری Next.js',
+      taglineEn: 'Designing and engineering a multi-asset financial analytics dashboard and reporting suite with Next.js',
+      categoryFa: 'فین‌تک و داشبورد تحلیلی',
+      categoryEn: 'FinTech & Analytics',
+      projectType: 'app',
+      descriptionFa: 'طراحی کامپوننت‌های رندر بهینه‌شده سمت سرور با Next.js و نمودارهای Canvas سخت‌افزاری که زمان بارگذاری گزارش‌ها را به زیر ۰.۴ ثانیه رساند.',
+      descriptionEn: 'Developed server-driven streaming components with GPU-accelerated canvas charts achieving instant sub-second report generation.',
+      imageUrl: '/case_study_2.jpg',
+      secondaryImage: '/images/services/custom-software.webp',
+      liveUrl: '/portfolio/finalytix-wealth',
+      featured: true,
+      position: 4,
+      year: '۲۰۲۵',
+    },
+    {
+      slug: 'nova-mobility',
+      client: 'اکوسیستم نوا سرویس',
+      clientEn: 'Nova Ecosystem',
+      titleFa: 'اتوماسیون خدمات پس از فروش و مدیریت اعزام تکنسین',
+      titleEn: 'After-Sales Service Automation & Field Dispatch System',
+      taglineFa: 'یکپارچه‌سازی فرآیند ثبت درخواست مشتری، تخصیص هوشمند تکنسین و پیگیری وضعیت سفارش در لحظه',
+      taglineEn: 'Streamlining customer service requests, technician dispatch, and live order status tracking',
+      categoryFa: 'لجستیک و اتوماسیون خدمات',
+      categoryEn: 'Logistics & Field Service',
+      projectType: 'app',
+      descriptionFa: 'ایجاد سیستم اتوماسیون جامع ثبت سفارش برخط با تخصیص خودکار نزدیک‌ترین تکنسین بر اساس نقشه شهری و پیگیری آنلاین توسط مشتری.',
+      descriptionEn: 'Architected a geo-intelligent dispatcher routing tickets directly to field engineers with live SMS customer tracking.',
+      imageUrl: '/images/services/crm-automation.webp',
+      secondaryImage: '/case_study_1.jpg',
+      liveUrl: '/portfolio/nova-mobility',
+      featured: true,
+      position: 5,
+      year: '۲۰۲۴',
+    },
+    {
+      slug: 'arvand-edge-mesh',
+      client: 'زیرساخت ابری اروند',
+      clientEn: 'Arvand Cloud',
+      titleFa: 'پنل مدیریت زیرساخت ابری و مانیتورینگ سرویس‌ها',
+      titleEn: 'Cloud Infrastructure Management & Telemetry Portal',
+      taglineFa: 'طراحی کنسول مدیریت منابع ابری و پایش سلامت سرویس‌ها با معماری میکروسرویس و بهینه‌سازی مصرف منابع',
+      taglineEn: 'Engineering a cloud resource console and service health telemetry portal with microservice architecture',
+      categoryFa: 'کلود و زیرساخت نرم‌افزاری',
+      categoryEn: 'Cloud & Infrastructure',
+      projectType: 'website',
+      descriptionFa: 'طراحی داشبورد مهندسی با تایپوگرافی مونو، نمایش گرافیکی کانتینرها، نمودارهای نرخ مصرف پردازنده و لاگ‌های سرور بلادرنگ.',
+      descriptionEn: 'Built a reactive dark console featuring low-latency cluster graphs, container lifecycle controls, and live audit telemetry.',
+      imageUrl: '/images/services/custom-software.webp',
+      secondaryImage: '/case_study_2.jpg',
+      liveUrl: '/portfolio/arvand-edge-mesh',
+      featured: true,
+      position: 6,
+      year: '۲۰۲۴',
+    },
+    {
+      slug: 'karan-voice-engine',
+      client: 'هوش صوتی کاران',
+      clientEn: 'Karan Neural Voice',
+      titleFa: 'دستیار صوتی هوشمند و تبدیل گفتار به متن فارسی',
+      titleEn: 'Persian Speech-to-Text & Conversational Voice Assistant',
+      taglineFa: 'توسعه رابط کاربری و وب‌سرویس پردازش گفتار به متن برای مستندسازی تماس‌ها و دستیار مراکز ارتباطی',
+      taglineEn: 'Developing a speech-to-text web service and interface for call documentation and support centers',
+      categoryFa: 'هوش مصنوعی و پردازش زبان',
+      categoryEn: 'AI & Speech Processing',
+      projectType: 'instagram',
+      descriptionFa: 'طراحی استودیو وب تعاملی برای ویرایش، بازشنوایی و تصحیح هوشمند هم‌گام با صوت، به همراه API مقیاس‌پذیر برای استخراج کلمات کلیدی مکالمه.',
+      descriptionEn: 'Engineered an interactive audio studio interface with synchronized word timeline highlighting and automated keyword transcription.',
+      imageUrl: '/images/services/animation-motion.webp',
+      secondaryImage: '/case_study_1.jpg',
+      liveUrl: '/portfolio/karan-voice-engine',
+      featured: true,
+      position: 7,
+      year: '۲۰۲۵',
+    },
+  ];
+
+  // Idempotent upsert: match by slug or titleFa, avoiding duplicates and preserving existing IDs
+  let createdCount = 0;
+  let updatedCount = 0;
+
+  for (const cs of canonicalCaseStudies) {
+    const existing = existingCaseStudies.find(
+      (e) => (e.slug && e.slug === cs.slug) || e.titleFa === cs.titleFa || e.titleEn === cs.titleEn
+    );
+
+    if (existing) {
+      await prisma.caseStudy.update({
+        where: { id: existing.id },
+        data: cs,
+      });
+      updatedCount++;
+    } else {
+      await prisma.caseStudy.create({
+        data: cs,
+      });
+      createdCount++;
+    }
+  }
+
+  // Gracefully upgrade old mock records (MedLink, old Finalytix, OnSupp Instagram) if they still exist
+  const mockOldTitles = ['سامانه پایش سلامت MedLink', 'پلتفرم تحلیل مالی Finalytix', 'پیج اینستاگرام و استراتژی محتوای OnSupp'];
+  for (const mockTitle of mockOldTitles) {
+    const leftoverMock = await prisma.caseStudy.findFirst({
+      where: { titleFa: mockTitle },
+    });
+    if (leftoverMock) {
+      // Safely archive or flag as non-featured to prevent pollution while preserving historical ID
+      await prisma.caseStudy.update({
+        where: { id: leftoverMock.id },
+        data: {
+          featured: false,
+          position: 999,
+        },
+      });
+    }
+  }
+
+  console.log(`[seed] Canonical case studies synced (created: ${createdCount}, updated: ${updatedCount})`);
 
   const existingCategories = await prisma.pricingCategory.count();
   if (existingCategories === 0) {
@@ -674,61 +844,239 @@ const existingStats = await prisma.stat.count();
   const existingArticles = await prisma.article.count();
   if (existingArticles === 0) {
     console.log('[seed] Seeding initial articles...');
-    await prisma.article.createMany({
-      data: [
-        {
-          titleFa: '۱۰ استراتژی برتر سئو در سال ۲۰۲۶ برای رشد انفجاری کسب‌وکارها',
-          titleEn: 'Top 10 SEO Strategies in 2026 for Exponential Business Growth',
-          slug: 'top-seo-strategies-2026',
-          categoryFa: 'آموزش سئو',
-          categoryEn: 'SEO Tutorial',
-          excerptFa: 'با الگوریتم‌های جدید گوگل و هوش مصنوعی، چگونه رتبه اول گوگل را در کمتر از ۳ ماه تسخیر کنیم؟',
-          excerptEn: 'With new Google AI algorithms, how to reach position #1 in under 3 months?',
-          contentFa: 'لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است، و برای شرایط فعلی تکنولوژی مورد نیاز، و کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می باشد.',
-          contentEn: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-          readTimeFa: '۵ دقیقه مطالعه',
-          readTimeEn: '5 min read',
-          imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
-          author: 'آن‌ساپ',
-          published: true,
+
+    await prisma.article.create({
+      data: {
+        titleFa: 'راهنمای جامع سئو تکنیکال (Technical SEO) در سال ۲۰۲۶؛ چک‌لیست معماری وب و فاکتورهای حیاتی گوگل',
+        titleEn: 'The Ultimate Guide to Technical SEO in 2026: Modern Web Architecture & Google Vitals',
+        slug: 'technical-seo-modern-web-architecture',
+        categoryFa: 'سئو و رشد ارگانیک',
+        categoryEn: 'Technical SEO & Growth',
+        excerptFa: 'راهنمای گام‌به‌گام و تخصصی بهینه‌سازی فنی وب‌سایت‌ها برای خزنده‌های نوین گوگل در سال ۲۰۲۶؛ بررسی عمیق معماری Next.js، شاخص‌های Core Web Vitals (INP, LCP, CLS)، بهینه‌سازی بودجه خزش و اسکیماهای معنایی ساختاریافته.',
+        excerptEn: 'A comprehensive technical blueprint for optimizing modern web platforms for Google crawlers: SSR/SSG rendering, Core Web Vitals (INP, LCP, CLS), crawl budget, and semantic schema architecture.',
+        contentFa: `<section id="intro">
+  <h2>۱. سئو تکنیکال در عصر هوش مصنوعی؛ چرا زیرساخت فنی پادشاه جدید است؟</h2>
+  <p>در سال ۲۰۲۶ با گسترش موتورهای جستجوی مبتنی بر هوش مصنوعی (Google SGE و پردازش چندوجهی Gemini)، نحوه بررسی و ارزیابی صفحات وب توسط ربات‌های خزنده‌گر متحول شده است. امروزه دیگر تولید محتوای متنی صرف بدون داشتن یک <strong>زیرساخت فنی بی‌نقص و پرسرعت</strong>، هیچ شانسی برای تثبیت رتبه در صفحه اول نتایج جستجو ندارد.</p>
+  <blockquote>سئو تکنیکال (Technical SEO) هنر و مهندسی آماده‌سازی پلتفرم وب شماست به گونه‌ای که خزنده‌های گوگل بتوانند در کمترین زمان ممکن، بدون خطاهای رندرینگ و با کمترین مصرف منابع پردازشی، محتوای صفحات را درک و ایندکس کنند.</blockquote>
+</section>
+<section id="section-1">
+  <h2 id="section-1">۲. شاخص‌های حیاتی وب (Core Web Vitals ۲۰۲۶) و ارتقای پرفورمنس</h2>
+  <p>شاخص INP باید زیر ۲۰۰ میلی‌ثانیه و LCP زیر ۱.۵ ثانیه نگه داشته شود تا نرخ پرش کاربران به حداقل برسد.</p>
+</section>
+<section id="section-2">
+  <h2 id="section-2">۳. معماری رندرینگ Next.js، بودجه خزش و داده‌های ساختاریافته (Schema Markup)</h2>
+  <p>ترکیب SSR و SSG در Next.js تضمین می‌کند که خزنده‌ها بدون تاخیر کلاینت به HTML کامل دسترسی داشته باشند.</p>
+</section>
+<section id="conclusion">
+  <h2 id="conclusion">۴. چک‌لیست نهایی ممیزی سئو تکنیکال و جمع‌بندی</h2>
+  <p>تیم مهندسی و متخصصان سئوی تکنیکال آن‌ساپ با آنالیز اختصاصی کدها و سرورها، مسیر رسیدن به لینک یک گوگل را هموار می‌کنند.</p>
+</section>`,
+        contentEn: `<section id="intro"><h2>1. Technical SEO in the AI Era</h2><p>Foundational engineering ensures search engines crawl and index with zero friction.</p></section>`,
+        readTimeFa: '۷ دقیقه مطالعه',
+        readTimeEn: '7 min read',
+        imageUrl: '/images/services/technical-seo.webp',
+        author: 'دپارتمان سئو و معماری نرم‌افزار آن‌ساپ',
+        metaTitleFa: 'راهنمای جامع سئو تکنیکال ۲۰۲۶ | چک‌لیست معماری وب و افزایش رتبه گوگل | آن‌ساپ',
+        metaTitleEn: 'Complete Technical SEO Guide 2026: Core Web Vitals & Web Architecture | OnSupp',
+        metaDescFa: 'راهنمای عملی سئو تکنیکال (Technical SEO) برای وب‌اپلیکیشن‌های مدرن. بهینه‌سازی سرعت LCP و INP، معماری Next.js، بودجه خزش و استانداردهای گوگل ۲۰۲۶ با متخصصان آن‌ساپ.',
+        metaDescEn: 'Master Technical SEO in 2026: Next.js rendering, Core Web Vitals benchmarks, crawl budget management, and schema architecture for enterprise growth.',
+        keywordsFa: 'سئو تکنیکال, Technical SEO, چک لیست سئو تکنیکال, Core Web Vitals, سئو Next.js',
+        canonicalUrl: 'https://onsupp.ir/blog/technical-seo-modern-web-architecture',
+        published: true,
+        faqs: {
+          create: [
+            {
+              question: 'سئو تکنیکال (Technical SEO) دقیقاً چیست و چه فرقی با سئوی محتوایی دارد؟',
+              answer: 'سئو تکنیکال بر زیرساخت‌های مهندسی وب‌سایت مانند سرعت، ساختار کدها، Core Web Vitals و دیتای اسکیما تمرکز دارد.',
+              order: 1,
+            },
+            {
+              question: 'شاخص INP در Core Web Vitals چیست و چرا جایگزین FID شد؟',
+              answer: 'شاخص Interaction to Next Paint سرعت پاسخگویی و لگ بصری تمام تعاملات کاربر در طول صفحه را اندازه می‌گیرد و باید زیر ۲۰۰ میلی‌ثانیه باشد.',
+              order: 2,
+            },
+          ],
         },
-        {
-          titleFa: 'نقش طراحی سایت اختصاصی در افزایش ۳ برابری نرخ تبدیل مشتری',
-          titleEn: 'The Role of Custom Web Design in Tripling Conversion Rates',
-          slug: 'custom-web-design-conversion-rate',
-          categoryFa: 'طراحی وب',
-          categoryEn: 'Web Design',
-          excerptFa: 'بررسی اهمیت تجربه کاربری (UX)، سرعت لود زیر ۱ ثانیه و دیزاین مدرن در اعتماد مشتریان دیجیتال.',
-          excerptEn: 'Exploring UX impact, sub-second load times, and modern aesthetics on customer trust.',
-          contentFa: 'طراحی وب‌سایت اختصاصی نه تنها به برند شما هویت می‌بخشد، بلکه با بهینه‌سازی مسیر خرید کاربر، نرخ تبدیل خریداران را تا ۳ برابر افزایش می‌دهد.',
-          contentEn: 'Custom website design gives your brand identity and optimizes conversion path by 3x.',
-          readTimeFa: '۷ دقیقه مطالعه',
-          readTimeEn: '7 min read',
-          imageUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
-          author: 'تیم دیزاین آن‌ساپ',
-          published: true,
-        },
-        {
-          titleFa: 'گزارش رشد سالانه آن‌ساپ: کسب رتبه اول سئو برای بیش از ۵۰ برند پیشرو',
-          titleEn: 'OnSupp Annual Growth Report: Over 50 Leader Brands Ranked #1',
-          slug: 'onsupp-annual-growth-report',
-          categoryFa: 'اخبار سازمان',
-          categoryEn: 'Company News',
-          excerptFa: 'دستاوردهای آژانس دیجیتال مارکتینگ آن‌ساپ و برنامه‌های توسعه همکاری با برندهای بین‌المللی.',
-          excerptEn: 'OnSupp Agency milestones and international brand partnership expansion plans.',
-          contentFa: 'آژانس آن‌ساپ با افتتاح دفاتر جدید بین‌المللی و همکاری با بیش از ۵۰ برند مطرح، سال مالی جدید را با موفقیت بی‌نظیری به پایان رساند.',
-          contentEn: 'OnSupp agency expands international operations with over 50 leading enterprise brands.',
-          readTimeFa: '۴ دقیقه مطالعه',
-          readTimeEn: '4 min read',
-          imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80',
-          author: 'روابط عمومی آن‌ساپ',
-          published: true,
-        },
-      ],
+      },
     });
+
+    await prisma.article.create({
+      data: {
+        titleFa: 'طراحی سایت اختصاصی یا وردپرس؟ تحلیل فنی، امنیت، سرعت و نرخ بازگشت سرمایه (ROI)',
+        titleEn: 'Custom Web Engineering vs WordPress CMS: Performance, Security & Conversion Rates',
+        slug: 'editorial-ui-design-conversion-rate',
+        categoryFa: 'طراحی وب و تکنولوژی',
+        categoryEn: 'Web Engineering & Design',
+        excerptFa: 'بررسی بی‌طرفانه و موشکافانه تفاوت‌های معماری وب‌سایت‌های اختصاصی (کدنویسی شده با Next.js و TypeScript) در برابر قالب‌های آماده وردپرس؛ کدام پلتفرم بهترین سرعت لود، امنیت پایدار و نرخ تبدیل تجاری را ارائه می‌دهد؟',
+        excerptEn: 'An in-depth architectural breakdown comparing custom bespoke platforms (Next.js & TypeScript) with off-the-shelf WordPress themes: speed, security audits, and enterprise ROI.',
+        contentFa: `<section id="intro">
+  <h2>۱. چالش بزرگ کسب‌وکارهای در حال رشد؛ توسعه اختصاصی یا سیستم‌های مدیریت محتوای آماده؟</h2>
+  <p>برای سازمان‌هایی که سرعت لود زیر ۱ ثانیه، هویت برند سفارشی، نرخ تبدیل بالا و امنیت غیرقابل نفوذ می‌خواهند، توسعه اختصاصی یک سرمایه‌گذاری ضروری و راهبردی است.</p>
+</section>
+<section id="section-1">
+  <h2 id="section-1">۲. کالبدشکافی عملکرد و سرعت؛ تاثیر زمان بارگذاری زیر ۱ ثانیه بر نرخ تبدیل (CRO)</h2>
+  <p>به ازای هر ۱ ثانیه تاخیر در لود صفحه موبایل، نرخ تبدیل تا ۷ درصد افت می‌کند.</p>
+</section>
+<section id="section-2">
+  <h2 id="section-2">۳. ارزیابی امنیت داده‌ها، آسیب‌پذیری افزونه‌ها و هزینه‌های پنهان نگهداری</h2>
+  <p>معماری هدلس و تفکیک فرانت‌اند از دیتابیس خطر حملات متداول را به صفر نزدیک می‌کند.</p>
+</section>
+<section id="conclusion">
+  <h2 id="conclusion">۴. ماتریس تصمیم‌گیری هوشمند و استراتژی رشد دیجیتال با آن‌ساپ</h2>
+  <p>دپارتمان مهندسی نرم‌افزار آن‌ساپ وب‌سایت‌های اختصاصی را با Next.js و TypeScript خلق می‌کند.</p>
+</section>`,
+        contentEn: `<section id="intro"><h2>1. Bespoke Architecture vs CMS Templates</h2><p>Enterprise platforms require scalable performance and hardened security.</p></section>`,
+        readTimeFa: '۶ دقیقه مطالعه',
+        readTimeEn: '6 min read',
+        imageUrl: '/images/services/web-development.webp',
+        author: 'دپارتمان مهندسی نرم‌افزار آن‌ساپ',
+        metaTitleFa: 'طراحی سایت اختصاصی یا وردپرس؟ مقایسه فنی، امنیت و سرعت | آن‌ساپ',
+        metaTitleEn: 'Custom Web Development vs WordPress Templates: Complete Guide | OnSupp',
+        metaDescFa: 'مقایسه تخصصی طراحی وب‌سایت اختصاصی با قالب‌های آماده CMS از نظر سرعت لود، امنیت نفوذناپذیر، سئو تکنیکال و تجربه کاربری.',
+        metaDescEn: 'Compare custom web engineering versus WordPress CMS: speed, security, and conversion rates.',
+        keywordsFa: 'طراحی سایت اختصاصی, مقایسه وردپرس و سایت اختصاصی, طراحی وب Next.js',
+        canonicalUrl: 'https://onsupp.ir/blog/editorial-ui-design-conversion-rate',
+        published: true,
+        faqs: {
+          create: [
+            {
+              question: 'چه زمانی یک کسب‌وکار باید حتماً به سراغ طراحی وب‌سایت اختصاصی برود؟',
+              answer: 'هنگامی که نیاز به سرعت لود زیر ۱ ثانیه، امنیت داده‌های حساس، قابلیت اتصال به نرم‌افزارهای داخلی سازمانی و ترافیک بالای روزانه دارید.',
+              order: 1,
+            },
+            {
+              question: 'آیا سئوی وب‌سایت‌های اختصاصی واقعاً بهتر از سایت‌های وردپرسی است؟',
+              answer: 'بله، به دلیل کدهای سبک‌تر و بهینه‌سازی دقیق Core Web Vitals، امتیاز عملکردی سایت اختصاصی در تست‌های گوگل بالاتر است.',
+              order: 2,
+            },
+          ],
+        },
+      },
+    });
+
+    await prisma.article.create({
+      data: {
+        titleFa: 'ویدیو مارکتینگ و تولید محتوای استودیویی؛ راز ماندگاری برند و انفجار نرخ تبدیل در سال ۲۰۲۶',
+        titleEn: 'Video Marketing & Cinematic Studio Media: The Engine of Retention and Conversions',
+        slug: 'data-driven-growth-marketing-funnel',
+        categoryFa: 'استودیو و تولید رسانه',
+        categoryEn: 'Studio & Media Production',
+        excerptFa: 'چرا بیش از ۸۲٪ ترافیک وب به محتوای ویدیویی تعلق دارد؟ راهنمای کاربردی تولید تیزرهای تبلیغاتی، پادکست‌های صنعتی و ویدیوهای سینمایی در استودیو تخصصی آن‌ساپ، همراه با تکنیک‌های افزایش زمان ماندگاری کاربر (Dwell Time) و اعتمادسازی عمیق برند.',
+        excerptEn: 'How cinematic corporate video production, bespoke podcast recording, and visual storytelling elevate brand authority, boost dwell time, and maximize marketing conversions.',
+        contentFa: `<section id="intro">
+  <h2>۱. انقلاب محتوای چندرسانه‌ای؛ چرا بدون ویدیو در بازار مدرن نادیده گرفته می‌شوید؟</h2>
+  <p>بیش از ۸۲ درصد از کل ترافیک اینترنت به ویدیو اختصاص دارد. کاربران انتظار دارند در کمتر از ۶۰ ثانیه کیفیت و هویت برند را لمس کنند.</p>
+</section>
+<section id="section-1">
+  <h2 id="section-1">۲. تاثیر استراتژیک ویدیو و پادکست بر فاکتورهای سئو و زمان ماندگاری کاربر (Dwell Time)</h2>
+  <p>صفحات دارای ویدیو زمان حضور کاربر را تا ۲.۶ برابر افزایش داده و سیگنال قوی به الگوریتم‌های گوگل ارسال می‌کنند.</p>
+</section>
+<section id="section-2">
+  <h2 id="section-2">۳. استانداردها و امکانات فنی استودیو مدرن آن‌ساپ؛ از تصویربرداری ۴K تا صدابرداری تخصصی</h2>
+  <p>استودیو مجهز آن‌ساپ با دوربین‌های سینمایی، اتاق آکوستیک و نورپردازی حرفه‌ای پرستیژ برند شما را متحول می‌کند.</p>
+</section>
+<section id="conclusion">
+  <h2 id="conclusion">۴. فرمول ۴ مرحله‌ای راه‌اندازی کمپین ویدیویی با بالاترین نرخ بازگشت سرمایه</h2>
+  <p>ایده‌پردازی، تولید حرفه‌ای، تدوین ریتمیک و توزیع هدفمند ارکان یک کمپین ویدیویی پربازده هستند.</p>
+</section>`,
+        contentEn: `<section id="intro"><h2>1. The Multimedia Revolution</h2><p>Over 82% of internet traffic is video. Cinematic storytelling accelerates brand conversion.</p></section>`,
+        readTimeFa: '۸ دقیقه مطالعه',
+        readTimeEn: '8 min read',
+        imageUrl: '/images/services/studio-production.webp',
+        author: 'استودیو فیلم‌سازی و رسانه آن‌ساپ',
+        metaTitleFa: 'راهنمای ویدیو مارکتینگ و تولید محتوای استودیویی ۲۰۲۶ | آن‌ساپ',
+        metaTitleEn: 'Corporate Video Marketing & Studio Production Strategy Guide | OnSupp',
+        metaDescFa: 'استراتژی‌های مدرن ویدیو مارکتینگ، تولید تیزرهای سینمایی و پادکست حرفه‌ای سازمانی. یاد بگیرید چگونه با تولید محتوای استودیویی نرخ تعامل و فروش برند خود را چندین برابر کنید.',
+        metaDescEn: 'Comprehensive video marketing and studio media guide: cinematic videography, corporate podcasting, and video SEO.',
+        keywordsFa: 'ویدیو مارکتینگ, استودیو تولید محتوا, تیزر تبلیغاتی صنعتی, پادکست سازمانی',
+        canonicalUrl: 'https://onsupp.ir/blog/data-driven-growth-marketing-funnel',
+        published: true,
+        faqs: {
+          create: [
+            {
+              question: 'ویدیو مارکتینگ چگونه باعث بهبود رتبه سئو سایت در گوگل می‌شود؟',
+              answer: 'با افزایش زمان حضور کاربر (Dwell Time) و کاهش نرخ پرش، همراه با استفاده از اسکیماهای ویدیویی در نتایج جستجو.',
+              order: 1,
+            },
+            {
+              question: 'یک استودیوی استاندارد تولید محتوای رسانه‌ای چه ویژگی‌هایی دارد؟',
+              answer: 'اتاق آکوستیک بدون انعکاس، نورپردازی استاندارد، دوربین‌های سینمایی و میکروفون‌های استودیویی کاندنسر.',
+              order: 2,
+            },
+          ],
+        },
+      },
+    });
+
     console.log('[seed] Default articles created: 3');
   } else {
     console.log('[seed] Articles already exist. Skipping creation.');
+  }
+
+  // 10. Seed default Testimonials
+  const testimonialsCount = await prisma.testimonial.count();
+  if (testimonialsCount === 0) {
+    await prisma.testimonial.createMany({
+      data: [
+        {
+          quoteFa:
+            'بازطراحی معماری فنی و استراتژی سئوی سایت ما با همراهی تیم آن‌ساپ باعث شد سرعت بارگذاری صفحات به شکل محسوسی بهبود پیدا کند و ورودی ارگانیک هدفمند در کمتر از چهار ماه رشد پایداری را تجربه کند.',
+          quoteEn:
+            'Redesigning our technical architecture and SEO strategy with the OnSupp team significantly improved page speed and delivered sustainable organic traffic growth within four months.',
+          authorFa: 'مهندس علیرضا رضایی',
+          authorEn: 'Alireza Rezaei',
+          roleFa: 'مدیر ارشد محصول',
+          roleEn: 'VP of Product',
+          companyFa: 'پلتفرم خدمات مالی',
+          companyEn: 'Fintech Platform',
+          serviceTagFa: 'سئو و مهندسی وب',
+          serviceTagEn: 'SEO & Web Engineering',
+          highlightFa: 'رشد مستمر ترافیک ارگانیک',
+          highlightEn: 'Consistent Organic Growth',
+          isActive: true,
+          position: 0,
+        },
+        {
+          quoteFa:
+            'آنچه همکاری با آن‌ساپ را متمایز می‌کند، نگاه داده‌محور در کنار درک عمیق از هویت بصری برند است. خروجی نهایی رابط کاربری دقیقاً هم‌راستا با استانداردهای سازمانی ما و نیاز واقعی کاربران شکل گرفت.',
+          quoteEn:
+            'What sets OnSupp apart is their data-driven mindset paired with a deep understanding of brand identity. The final UI aligned seamlessly with our enterprise standards and user needs.',
+          authorFa: 'دکتر سارا احمدی',
+          authorEn: 'Dr. Sara Ahmadi',
+          roleFa: 'مدیر بازاریابی و برند',
+          roleEn: 'Brand & Marketing Director',
+          companyFa: 'مجموعه تجارت الکترونیک',
+          companyEn: 'E-Commerce Group',
+          serviceTagFa: 'طراحی محصول و برندینگ',
+          serviceTagEn: 'Product Design & Branding',
+          highlightFa: 'ارتقای نرخ تعامل کاربران',
+          highlightEn: 'Higher User Engagement',
+          isActive: true,
+          position: 1,
+        },
+        {
+          quoteFa:
+            'گزارش‌دهی شفاف، زمان‌بندی دقیق در تحویل اسپرینت‌ها و پشتیبانی فنی مستمر باعث شد فرآیند توسعه سامانه اختصاصی ما بدون چالش پیش برود و تیم داخلی ما با اطمینان کامل محصول را مقیاس دهد.',
+          quoteEn:
+            'Transparent reporting, punctual sprint deliveries, and continuous technical support allowed our custom platform development to proceed smoothly and scale with confidence.',
+          authorFa: 'مهندس پویا شمس',
+          authorEn: 'Pouya Shams',
+          roleFa: 'هم‌بنیان‌گذار و مدیر فنی',
+          roleEn: 'Co-Founder & CTO',
+          companyFa: 'استارتاپ فناوری سلامت',
+          companyEn: 'HealthTech Startup',
+          serviceTagFa: 'توسعه نرم‌افزار اختصاصی',
+          serviceTagEn: 'Custom Software Dev',
+          highlightFa: 'پایداری و مقیاس‌پذیری بالا',
+          highlightEn: 'High System Scalability',
+          isActive: true,
+          position: 2,
+        },
+      ],
+    });
+    console.log('[seed] Default testimonials created: 3');
+  } else {
+    console.log('[seed] Testimonials already exist. Skipping creation.');
   }
 
   console.log('Seeding completed successfully!');

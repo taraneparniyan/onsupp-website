@@ -134,7 +134,15 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
 
-      // 6. Content sections (hero, services, stats, about, casestudies, pricing): ADMIN only
+      // 6. Testimonials (/admin/testimonials): SUPER_ADMIN, ADMIN, CONTENT_SEO_MANAGER
+      if (
+        pathname.startsWith("/admin/testimonials") &&
+        !["ADMIN", "CONTENT_SEO_MANAGER"].includes(role)
+      ) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+
+      // 7. Content sections (hero, services, stats, about, casestudies, pricing): ADMIN only
       const contentPaths = [
         "/admin/hero",
         "/admin/services",

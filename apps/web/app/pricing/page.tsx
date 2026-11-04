@@ -101,19 +101,19 @@ function PricingContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* ── 1. Page Header: Title & Short Introduction ─────────────── */}
           <section className="text-center mb-10 sm:mb-12">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-panel border border-white/10 text-xs font-bold tracking-widest text-mint uppercase mb-4 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-lime animate-pulse" />
-              <span>{isRtl ? "اسکلت اولیه پلن‌ها و تعرفه‌ها" : "Pricing Skeleton"}</span>
+            <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-4">
+              <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+              <span>{isRtl ? "پلن‌ها و سطوح خدمات" : "Service Packages"}</span>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
-              {isRtl ? "پلن‌ها و تعرفه‌های خدمات آن‌ساپ" : "OnSupp Pricing & Packages"}
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
+              {isRtl ? "پلن‌ها و بسته‌های تخصصی خدمات آن‌ساپ" : "OnSupp Service Packages & Tiers"}
             </h1>
 
             <p className="text-sm sm:text-base text-foreground/70 max-w-2xl mx-auto leading-relaxed">
               {isRtl
-                ? "تعرفه‌های شفاف، مدون و منعطف برای خدمات تخصصی سئو، طراحی وب‌سایت و راهکارهای جامع دیجیتال. در این مرحله اسکلت اولیه صفحه تعرفه‌ها، تب‌های انتخاب دسته‌بندی و اطلاعات دقیق پلن‌ها پیاده‌سازی شده است."
-                : "Transparent, scalable investment tiers engineered for startups, growth-stage brands, and enterprise digital operations."}
+                ? "بسته‌های ساختاریافته، منعطف و متناسب با اهداف رشد برند شما در حوزه سئو، توسعه نرم‌افزار، تولید محتوا و هویت دیجیتال."
+                : "Structured, flexible service tiers engineered to scale with your digital objectives."}
             </p>
           </section>
 
@@ -121,18 +121,18 @@ function PricingContent() {
           {apiError && (
             <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </span>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-amber-300 mb-1">
+                  <h4 className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
                     {isRtl
                       ? "اطلاعیه اتصال وب‌سرویس تعرفه‌ها (API)"
                       : "Pricing API Connection Notice"}
                   </h4>
-                  <p className="text-xs text-amber-200/80 leading-relaxed">
+                  <p className="text-xs text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                     {isRtl
                       ? `ارتباط زنده با بک‌اند (${BACKEND_URL}/api/v1/pricing/categories) برقرار نشد (${apiError}). در حال حاضر داده‌های پایه و مستندشده اولیه نمایش داده می‌شوند و با فعال‌سازی وب‌سرویس، پلن‌ها به‌صورت خودکار با پایگاه داده همگام خواهند شد.`
                       : `Backend service at ${BACKEND_URL} is currently offline (${apiError}). Displaying verified canonical pricing packages.`}
@@ -159,7 +159,7 @@ function PricingContent() {
               <div
                 role="tablist"
                 aria-label={isRtl ? "دسته‌بندی تعرفه‌ها" : "Pricing Categories"}
-                className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 p-3 rounded-2xl bg-panel/70 border border-white/10 backdrop-blur-md"
+                className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 p-3 rounded-2xl bg-panel/70 border border-foreground/10 backdrop-blur-md"
               >
                 {categories.map((cat) => {
                   const isActive = cat.id === selectedCategoryId;
@@ -173,7 +173,7 @@ function PricingContent() {
                       className={`min-h-[42px] px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer select-none inline-flex items-center gap-2 ${
                         isActive
                           ? "bg-lime text-ink shadow-[0_0_18px_rgba(178,248,0,0.3)] font-bold scale-[1.02]"
-                          : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/5"
+                          : "bg-raised text-foreground/70 hover:text-foreground hover:bg-panel border border-foreground/10"
                       }`}
                     >
                       {isActive && (
@@ -185,7 +185,7 @@ function PricingContent() {
                           className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
                             isActive
                               ? "bg-black/20 text-black font-bold"
-                              : "bg-white/10 text-white/50"
+                              : "bg-foreground/10 text-foreground/60"
                           }`}
                         >
                           {cat.plans.length}
@@ -213,8 +213,8 @@ function PricingContent() {
                       key={plan.id}
                       className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 border flex flex-col justify-between transition-all duration-300 ${
                         plan.popular
-                          ? "border-mint/60 bg-gradient-to-b from-panel via-raised to-panel shadow-[0_16px_36px_rgba(0,0,0,0.4)] lg:scale-[1.02] z-10"
-                          : "border-white/10 bg-panel hover:border-mint/30"
+                          ? "border-mint/60 bg-gradient-to-b from-panel via-raised to-panel shadow-[0_16px_36px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.4)] lg:scale-[1.02] z-10"
+                          : "border-foreground/10 bg-panel hover:border-mint/30"
                       }`}
                     >
                       {/* Popular / Special Badge */}
@@ -240,7 +240,7 @@ function PricingContent() {
                         {/* Title & Description */}
                         <div>
                           <h3
-                            className={`text-xl sm:text-2xl font-bold tracking-tight text-white ${
+                            className={`text-xl sm:text-2xl font-bold tracking-tight text-foreground ${
                               plan.badgeFa
                                 ? isRtl
                                   ? "pl-24"
@@ -255,46 +255,8 @@ function PricingContent() {
                           </p>
                         </div>
 
-                        {/* Price Box */}
-                        <div className="py-4 border-y border-white/10 space-y-1">
-                          {isContact ? (
-                            <div className="py-1">
-                              <span className="text-2xl sm:text-3xl font-black text-mint block">
-                                {isRtl ? "تماس بگیرید" : "Contact Us"}
-                              </span>
-                              <span className="text-xs font-semibold text-foreground/50 mt-1 block">
-                                {isRtl
-                                  ? plan.periodFa || "مشاوره و قیمت سفارشی"
-                                  : plan.periodEn || "Custom Quote"}
-                              </span>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex items-baseline gap-2 flex-wrap">
-                                {hasDiscount && (
-                                  <span className="text-base sm:text-lg line-through text-foreground/40 font-semibold font-mono">
-                                    {isRtl ? plan.priceFa : plan.priceEn}
-                                  </span>
-                                )}
-                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white font-mono">
-                                  {hasDiscount
-                                    ? isRtl
-                                      ? plan.discountPriceFa
-                                      : plan.discountPriceEn
-                                    : isRtl
-                                    ? plan.priceFa
-                                    : plan.priceEn}
-                                </span>
-                              </div>
-                              <span className="text-xs font-semibold text-foreground/50 block">
-                                {isRtl ? plan.periodFa : plan.periodEn}
-                              </span>
-                            </>
-                          )}
-                        </div>
-
                         {/* Features Checklist */}
-                        <div className="space-y-3 pt-1">
+                        <div className="space-y-3 pt-3 border-t border-foreground/10">
                           <span className="text-[11px] font-bold tracking-wider text-mint uppercase block">
                             {isRtl ? "امکانات و خدمات شامل:" : "WHAT'S INCLUDED:"}
                           </span>
@@ -329,23 +291,17 @@ function PricingContent() {
                       </div>
 
                       {/* Action Button */}
-                      <div className="pt-6 sm:pt-8 mt-6 border-t border-white/5">
+                      <div className="pt-6 sm:pt-8 mt-6 border-t border-foreground/10">
                         <Link
                           href={plan.ctaLink || "/#contact"}
                           className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 px-5 text-xs sm:text-sm font-bold transition-all min-h-[44px] ${
                             plan.popular
                               ? "bg-lime text-ink shadow-[0_0_20px_rgba(178,248,0,0.25)] hover:scale-[1.02] active:scale-95"
-                              : "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-mint/30"
+                              : "bg-raised border border-foreground/10 text-foreground hover:bg-panel hover:border-mint/30"
                           }`}
                         >
                           <span>
-                            {isContact
-                              ? isRtl
-                                ? "تماس و مشاوره رایگان"
-                                : "Contact Sales"
-                              : isRtl
-                              ? plan.ctaFa || "سفارش پلن"
-                              : plan.ctaEn || "Select Plan"}
+                            {isRtl ? "درخواست مشاوره و استعلام" : "Request Consultation"}
                           </span>
                           <svg
                             className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`}
@@ -368,7 +324,7 @@ function PricingContent() {
               </div>
             </section>
           ) : (
-            <div className="py-16 text-center rounded-2xl bg-panel border border-white/10">
+            <div className="py-16 text-center rounded-2xl bg-panel border border-foreground/10">
               <p className="text-sm text-foreground/50">
                 {isRtl
                   ? "پلنی برای نمایش وجود ندارد."
@@ -378,9 +334,9 @@ function PricingContent() {
           )}
 
           {/* ── 4. Bottom Custom Consultation Callout ──────────────────── */}
-          <section className="mt-16 sm:mt-20 p-8 sm:p-10 rounded-3xl bg-panel border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
+          <section className="mt-16 sm:mt-20 p-8 sm:p-10 rounded-3xl bg-panel border border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
                 {isRtl
                   ? "نیاز به پلن سفارشی یا مشاوره تلفنی دارید؟"
                   : "Need a Custom Strategy or Enterprise Quote?"}
@@ -395,7 +351,7 @@ function PricingContent() {
             <div className="flex items-center gap-3 shrink-0">
               <Link
                 href="/services"
-                className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm font-semibold text-white hover:text-mint transition-all"
+                className="px-5 py-3 rounded-xl bg-raised hover:bg-panel border border-foreground/10 text-xs sm:text-sm font-semibold text-foreground hover:text-mint transition-all"
               >
                 {isRtl ? "بررسی همه خدمات" : "All Services"}
               </Link>

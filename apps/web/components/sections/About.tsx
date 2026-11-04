@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { buttonHover, tapFeedback } from "@/lib/motion";
 import { scrollToSection } from "@/lib/scroll";
+import { BACKEND_URL } from "@/config/api";
 
 const ICONS: Record<string, React.ReactNode> = {
   team: (
@@ -65,7 +66,7 @@ const MOBILE_FEATURES = [
     titleFa: "تیم متخصص",
     titleEn: "Expert Team",
     icon: (
-      <svg className="w-5 h-5 text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -80,7 +81,7 @@ const MOBILE_FEATURES = [
     titleFa: "استراتژی داده",
     titleEn: "Data Strategy",
     icon: (
-      <svg className="w-5 h-5 text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -95,7 +96,7 @@ const MOBILE_FEATURES = [
     titleFa: "پشتیبانی مستمر",
     titleEn: "Continuous Support",
     icon: (
-      <svg className="w-5 h-5 text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -110,7 +111,7 @@ const MOBILE_FEATURES = [
     titleFa: "نتایج ملموس",
     titleEn: "Tangible Results",
     icon: (
-      <svg className="w-5 h-5 text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="8.5" strokeWidth={1.8} />
         <circle cx="12" cy="12" r="4.5" strokeWidth={1.8} />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M18 6l-3.5 3.5" />
@@ -144,8 +145,7 @@ const DEFAULT_CONTENT = {
     "A team of digital marketing specialists who combine strategy, technology, and creativity to make your brand shine online.",
 };
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 
 export default function About() {
   const { lang } = useLanguage();
@@ -187,101 +187,116 @@ export default function About() {
     : DEFAULT_CONTENT.imageUrl;
 
   return (
-    <section id="about" className="w-full relative overflow-hidden pb-12 sm:pb-20 lg:pb-32">
+    <section id="about" className="w-full relative overflow-hidden pb-12 sm:pb-20 lg:pb-32 bg-background">
       {/* ─── Mobile Version (Reference Design - lg:hidden) ─── */}
       <div className="lg:hidden w-full px-4 sm:px-6 pt-4 pb-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : "ltr"}>
-        {/* Top Eyebrow: Dash and Label */}
-        <div className="flex items-center justify-start gap-2.5 mb-2.5">
-          <span className="h-[1.5px] w-7 bg-white/40 rounded-full shrink-0" />
-          <span className="text-xs sm:text-sm font-medium text-white/75">
-            {isRtl ? content.eyebrowFa || "درباره ما" : content.eyebrowEn || "About Us"}
-          </span>
-        </div>
+        {/* Top Eyebrow & Main Headline */}
+        <ScrollReveal animation="slideUp" duration={0.5}>
+          <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-2.5">
+            <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+            <span>
+              {isRtl ? content.eyebrowFa || "درباره ما" : content.eyebrowEn || "About Us"}
+            </span>
+          </div>
 
-        {/* Main Headline */}
-        <h2 className="font-display font-extrabold text-[26px] xs:text-[28px] sm:text-3xl leading-[1.3] text-white tracking-tight text-start mb-5">
-          {isRtl ? (
-            <>
-              <span className="block">آنساپ؛ فراتر از یک تیم</span>
-              <span className="block mt-0.5">دیجیتال</span>
-            </>
-          ) : (
-            content.titleEn
-          )}
-        </h2>
+          <h2 className="font-display font-extrabold text-[26px] xs:text-[28px] sm:text-3xl leading-[1.3] text-foreground tracking-tight text-start mb-5">
+            {isRtl ? (
+              <>
+                <span className="block">آنساپ؛ فراتر از یک تیم</span>
+                <span className="block mt-0.5">دیجیتال</span>
+              </>
+            ) : (
+              content.titleEn
+            )}
+          </h2>
+        </ScrollReveal>
 
-        {/* Team Photo with rounded corners and full container width */}
-        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0d1012] shadow-xl mb-4 xs:mb-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc}
-            alt={content.imageAlt || (isRtl ? "تیم ما" : "Our Team")}
-            className="h-full w-full object-cover"
-            loading="eager"
-          />
-        </div>
+        {/* Team Photo with rounded corners and scale reveal */}
+        <ScrollReveal animation="scaleUp" delay={0.1} duration={0.6}>
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-foreground/10 bg-raised shadow-xl mb-4 xs:mb-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc}
+              alt={content.imageAlt || (isRtl ? "تیم ما" : "Our Team")}
+              className="h-full w-full object-cover"
+              loading="eager"
+            />
+          </div>
+        </ScrollReveal>
 
         {/* Four Feature Cards in 2-Column Grid */}
-        <div className="grid grid-cols-2 gap-2.5 xs:gap-3 mb-6 xs:mb-7">
-          {MOBILE_FEATURES.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-start gap-2 xs:gap-2.5 rounded-2xl border border-white/10 bg-[#121619] px-3 py-3.5 xs:px-3.5 xs:py-4 transition-all duration-200 active:scale-[0.98]"
+        <ScrollReveal animation="slideUp" delay={0.15} duration={0.55}>
+          <div className="grid grid-cols-2 gap-2.5 xs:gap-3 mb-6 xs:mb-7">
+            {MOBILE_FEATURES.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-start gap-2 xs:gap-2.5 rounded-2xl border border-foreground/10 bg-raised px-3 py-3.5 xs:px-3.5 xs:py-4 transition-all duration-200 active:scale-[0.98]"
+              >
+                <span className="text-mint shrink-0">
+                  {item.icon}
+                </span>
+                <span className="text-[12px] xs:text-[13px] font-bold text-foreground tracking-tight select-none truncate">
+                  {isRtl ? item.titleFa : item.titleEn}
+                </span>
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* Subtitle & Introduction Text & Full-Width Action CTA Button */}
+        <ScrollReveal animation="slideUp" delay={0.2} duration={0.55}>
+          <div className="text-start mb-6 xs:mb-7">
+            <h3 className="font-display font-bold text-xl xs:text-[22px] text-foreground tracking-tight mb-2.5">
+              {isRtl ? content.subTitleFa || "شریک راهبردی شما" : content.subTitleEn || "Your Strategic Partner"}
+            </h3>
+            <p className="text-xs xs:text-sm text-foreground/75 leading-[1.8]">
+              {isRtl ? content.paragraphFa : content.paragraphEn}
+            </p>
+          </div>
+
+          <motion.div
+            whileHover={prefersReducedMotion ? undefined : buttonHover}
+            whileTap={prefersReducedMotion ? undefined : tapFeedback}
+          >
+            <Link
+              href={content.ctaLink || "#contact"}
+              onClick={(e) => {
+                const target = content.ctaLink || "#contact";
+                if (target.includes("#") && scrollToSection(target)) {
+                  e.preventDefault();
+                }
+              }}
+              className={`group flex w-full h-12 xs:h-13 items-center justify-center gap-2.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-6 text-sm xs:text-base font-semibold shadow-[0_4px_16px_rgba(56,83,74,0.25)] active:scale-[0.98] transition-all duration-200 ${
+                isRtl
+                  ? "font-[family-name:var(--font-vazirmatn)]"
+                  : "font-[family-name:var(--font-gendy)]"
+              }`}
             >
-              <span className="text-lime shrink-0">
-                {item.icon}
-              </span>
-              <span className="text-[12px] xs:text-[13px] font-bold text-white tracking-tight select-none truncate">
-                {isRtl ? item.titleFa : item.titleEn}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Subtitle & Introduction Text */}
-        <div className="text-start mb-6 xs:mb-7">
-          <h3 className="font-display font-bold text-xl xs:text-[22px] text-white tracking-tight mb-2.5">
-            {isRtl ? content.subTitleFa || "شریک راهبردی شما" : content.subTitleEn || "Your Strategic Partner"}
-          </h3>
-          <p className="text-xs xs:text-sm text-foreground/75 leading-[1.8]">
-            {isRtl ? content.paragraphFa : content.paragraphEn}
-          </p>
-        </div>
-
-        {/* Full-Width Sage Green CTA Button */}
-        <Link
-          href={content.ctaLink || "#contact"}
-          onClick={(e) => {
-            const target = content.ctaLink || "#contact";
-            if (target.includes("#") && scrollToSection(target)) {
-              e.preventDefault();
-            }
-          }}
-          className="flex w-full h-12 xs:h-13 items-center justify-center gap-2.5 rounded-full bg-[#c4d5b6] hover:bg-[#b8cbaa] px-6 text-sm xs:text-base font-bold text-[#14181a] shadow-md active:scale-[0.99] transition-all duration-200"
-        >
-          <svg className={`w-5 h-5 shrink-0 text-[#14181a] ${isRtl ? "rotate-0" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M19 12H5m0 0l6-6m-6 6l6 6" />
-          </svg>
-          <span>{isRtl ? content.ctaFa || "شروع همکاری" : content.ctaEn || "Get Started"}</span>
-        </Link>
+              <svg className={`w-4 h-4 shrink-0 transition-transform duration-300 ${isRtl ? "rotate-0 group-hover:-translate-x-1" : "rotate-180 group-hover:translate-x-1"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m0 0l6-6m-6 6l6 6" />
+              </svg>
+              <span>{isRtl ? content.ctaFa || "شروع همکاری" : content.ctaEn || "Get Started"}</span>
+            </Link>
+          </motion.div>
+        </ScrollReveal>
       </div>
 
       {/* ─── Desktop Version (Strictly Preserved - hidden lg:block) ─── */}
       <div className="hidden lg:block w-full">
         <div dir={isRtl ? "rtl" : "ltr"} className="w-full">
-          <div className="w-full border-y border-white/5 bg-panel px-6 sm:px-12 lg:px-24 py-10 sm:py-14 lg:py-20 relative overflow-hidden shadow-2xl">
+          <div className="w-full border-y border-foreground/10 bg-panel px-6 sm:px-12 lg:px-24 py-10 sm:py-14 lg:py-20 relative overflow-hidden shadow-2xl">
             {/* Subtle background glow */}
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-mint/5 rounded-full blur-[120px] pointer-events-none" />
 
             {/* Inner content constrained to max-w for readability */}
             <div className="relative z-10 mx-auto max-w-[1600px]">
-              <ScrollReveal>
-                {/* Top Bar: Eyebrow, Title, CTA */}
+              {/* Top Bar: Eyebrow, Title, CTA */}
+              <ScrollReveal animation="slideUp" duration={0.65}>
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
                   <div className="max-w-3xl">
-                    <div className="inline-flex items-center gap-3 text-sm font-bold tracking-widest text-mint uppercase">
-                      <span className="h-px w-10 bg-mint/50" />
+                    <div className="inline-flex items-center gap-3 text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase">
+                      <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50" />
                       {isRtl ? content.eyebrowFa || "درباره ما" : content.eyebrowEn || "About Us"}
                     </div>
                     <h2 className="mt-4 sm:mt-6 font-display text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.15] tracking-tight text-foreground drop-shadow-md">
@@ -301,29 +316,35 @@ export default function About() {
                           e.preventDefault();
                         }
                       }}
-                      className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl bg-mint px-8 py-4 text-sm sm:text-base font-bold text-ink shadow-[0_0_16px_rgba(194,202,173,0.2)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                      className={`group inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-7 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold shadow-[0_8px_20px_-4px_rgba(56,83,74,0.3)] transition-all duration-300 cursor-pointer ${
+                        isRtl
+                          ? "font-[family-name:var(--font-vazirmatn)]"
+                          : "font-[family-name:var(--font-gendy)]"
+                      }`}
                     >
                       <span>{isRtl ? content.ctaFa : content.ctaEn}</span>
-                      <svg className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      <svg className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform duration-300 ${isRtl ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
                     </Link>
                   </motion.div>
                 </div>
+              </ScrollReveal>
 
-                {/* Middle Row: Image and Text Content */}
-                <div className="relative z-10 mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-                  {/* Text & Features (Placed first in DOM so it appears on the Right in RTL) */}
-                  <div className="col-span-1 lg:col-span-5 flex flex-col justify-center order-2 lg:order-1">
+              {/* Middle Row: Image and Text Content (Balanced vertical alignment and natural fill) */}
+              <div className="relative z-10 mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-center">
+                {/* Text & Features (Placed first in DOM so it appears on the Right in RTL) */}
+                <div className="col-span-1 lg:col-span-6 order-2 lg:order-1 flex flex-col justify-center">
+                  <ScrollReveal animation="slideUp" delay={0.15} duration={0.7}>
                     {/* Features Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4.5">
                       {features.map((f, i) => (
                         <motion.div
                           key={i}
                           whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.02 }}
-                          className="flex items-center gap-4 rounded-2xl border border-white/5 bg-raised/40 px-4 py-3.5 sm:px-5 sm:py-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-white/15 hover:bg-raised/80"
+                          className="flex items-center gap-3.5 sm:gap-4 rounded-2xl border border-foreground/10 bg-raised/60 px-5 py-4 sm:py-4.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-[#38534A]/30 dark:hover:border-[#8AB3A0]/30 hover:bg-raised"
                         >
-                          <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-panel text-lime shadow-inner border border-white/5">
+                          <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-panel text-[#38534A] dark:text-[#8AB3A0] shadow-inner border border-foreground/10">
                             {ICONS[f.icon] || ICONS.team}
                           </span>
                           <span className="text-sm sm:text-base font-bold text-foreground">
@@ -334,31 +355,33 @@ export default function About() {
                     </div>
 
                     {/* Subtitle & Paragraph */}
-                    <div className="mt-8 sm:mt-10">
-                      <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                    <div className="mt-8 sm:mt-9 lg:mt-10">
+                      <h3 className="font-display text-2xl sm:text-[26px] lg:text-[28px] font-bold tracking-tight text-foreground">
                         {isRtl ? content.subTitleFa : content.subTitleEn}
                       </h3>
-                      <p className="mt-4 sm:mt-5 text-base sm:text-lg leading-relaxed sm:leading-[1.8] text-foreground/70">
+                      <p className="mt-4 text-base sm:text-[17px] lg:text-[18px] leading-relaxed sm:leading-[1.9] text-foreground/75">
                         {isRtl ? content.paragraphFa : content.paragraphEn}
                       </p>
                     </div>
-                  </div>
+                  </ScrollReveal>
+                </div>
 
-                  {/* Image Presentation (Placed second in DOM so it appears on the Left in RTL) */}
-                  <div className="col-span-1 lg:col-span-7 order-1 lg:order-2">
-                    <div className="group relative aspect-[4/3] md:aspect-[16/10] w-full overflow-hidden rounded-2xl sm:rounded-[32px] border border-white/10 bg-[#0d1012] shadow-2xl">
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d1012]/80 via-transparent to-transparent z-10 pointer-events-none" />
+                {/* Image Presentation (Placed second in DOM so it appears on the Left in RTL) */}
+                <div className="col-span-1 lg:col-span-6 order-1 lg:order-2 flex items-center">
+                  <ScrollReveal animation="scaleUp" delay={0.25} duration={0.8} className="w-full">
+                    <div className="group relative w-full aspect-[16/10.2] overflow-hidden rounded-2xl sm:rounded-[32px] border border-foreground/10 bg-raised shadow-2xl">
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent z-10 pointer-events-none" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
                         alt={content.imageAlt || (isRtl ? "درباره ما" : "About us")}
                         className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 opacity-90 group-hover:opacity-100"
                       />
-                      <div className="absolute inset-0 border border-white/5 rounded-2xl sm:rounded-[32px] z-20 pointer-events-none" />
+                      <div className="absolute inset-0 border border-foreground/10 rounded-2xl sm:rounded-[32px] z-20 pointer-events-none" />
                     </div>
-                  </div>
+                  </ScrollReveal>
                 </div>
-              </ScrollReveal>
+              </div>
             </div>{/* end inner max-w wrapper */}
           </div>{/* end panel */}
         </div>

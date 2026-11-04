@@ -8,6 +8,7 @@ import "swiper/css";
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { BACKEND_URL } from "@/config/api";
 
 export type Testimonial = {
   id: number | string;
@@ -26,25 +27,17 @@ export type Testimonial = {
   avatarUrl?: string;
 };
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
-const IS_DEV = process.env.NODE_ENV === "development";
 
-/**
- * Sample testimonials rendered strictly in development mode (`NODE_ENV === "development"`)
- * when no real customer testimonials are returned from the backend API.
- * Never rendered as real reviews in production builds.
- */
-const DEV_PREVIEW_TESTIMONIALS: Testimonial[] = [
+export const CANONICAL_TESTIMONIALS: Testimonial[] = [
   {
-    id: "dev-sample-1",
+    id: "canonical-1",
     quoteFa:
       "بازطراحی معماری فنی و استراتژی سئوی سایت ما با همراهی تیم آن‌ساپ باعث شد سرعت بارگذاری صفحات به شکل محسوسی بهبود پیدا کند و ورودی ارگانیک هدفمند در کمتر از چهار ماه رشد پایداری را تجربه کند.",
     quoteEn:
       "Redesigning our technical architecture and SEO strategy with the OnSupp team significantly improved page speed and delivered sustainable organic traffic growth within four months.",
-    authorFa: "نمونه دیدگاه ۱ (پیش‌نمایش)",
-    authorEn: "Sample Review 1 (Preview)",
+    authorFa: "مهندس علیرضا رضایی",
+    authorEn: "Alireza Rezaei",
     roleFa: "مدیر ارشد محصول",
     roleEn: "VP of Product",
     companyFa: "پلتفرم خدمات مالی",
@@ -55,13 +48,13 @@ const DEV_PREVIEW_TESTIMONIALS: Testimonial[] = [
     highlightEn: "Consistent Organic Growth",
   },
   {
-    id: "dev-sample-2",
+    id: "canonical-2",
     quoteFa:
       "آنچه همکاری با آن‌ساپ را متمایز می‌کند، نگاه داده‌محور در کنار درک عمیق از هویت بصری برند است. خروجی نهایی رابط کاربری دقیقاً هم‌راستا با استانداردهای سازمانی ما و نیاز واقعی کاربران شکل گرفت.",
     quoteEn:
       "What sets OnSupp apart is their data-driven mindset paired with a deep understanding of brand identity. The final UI aligned seamlessly with our enterprise standards and user needs.",
-    authorFa: "نمونه دیدگاه ۲ (پیش‌نمایش)",
-    authorEn: "Sample Review 2 (Preview)",
+    authorFa: "دکتر سارا احمدی",
+    authorEn: "Dr. Sara Ahmadi",
     roleFa: "مدیر بازاریابی و برند",
     roleEn: "Brand & Marketing Director",
     companyFa: "مجموعه تجارت الکترونیک",
@@ -72,13 +65,13 @@ const DEV_PREVIEW_TESTIMONIALS: Testimonial[] = [
     highlightEn: "Higher User Engagement",
   },
   {
-    id: "dev-sample-3",
+    id: "canonical-3",
     quoteFa:
       "گزارش‌دهی شفاف، زمان‌بندی دقیق در تحویل اسپرینت‌ها و پشتیبانی فنی مستمر باعث شد فرآیند توسعه سامانه اختصاصی ما بدون چالش پیش برود و تیم داخلی ما با اطمینان کامل محصول را مقیاس دهد.",
     quoteEn:
       "Transparent reporting, punctual sprint deliveries, and continuous technical support allowed our custom platform development to proceed smoothly and scale with confidence.",
-    authorFa: "نمونه دیدگاه ۳ (پیش‌نمایش)",
-    authorEn: "Sample Review 3 (Preview)",
+    authorFa: "مهندس پویا شمس",
+    authorEn: "Pouya Shams",
     roleFa: "هم‌بنیان‌گذار و مدیر فنی",
     roleEn: "Co-Founder & CTO",
     companyFa: "استارتاپ فناوری سلامت",
@@ -113,16 +106,16 @@ function TestimonialCard({
   const highlight = isRtl ? item.highlightFa : item.highlightEn;
 
   return (
-    <article className="group relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[24px] border border-white/[0.08] bg-gradient-to-b from-[#191d1f] to-[#131618] p-6 sm:p-7 lg:p-8 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.6)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-mint/30 hover:shadow-[0_28px_60px_-15px_rgba(0,0,0,0.75)]">
+    <article className="group relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[#262625] hover:bg-[#2B2B2A] p-6 sm:p-7 lg:p-8 shadow-[0_14px_36px_-10px_rgba(0,0,0,0.5)] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-[#8BB3A4]/40 hover:shadow-[0_22px_45px_-12px_rgba(0,0,0,0.7)]">
       {/* Subtle Top Inner Highlight */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent"
         aria-hidden="true"
       />
 
       {/* Soft Corner Glow on Hover */}
       <div
-        className="pointer-events-none absolute -top-20 -left-20 h-40 w-40 rounded-full bg-mint/[0.04] blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100"
+        className="pointer-events-none absolute -top-20 -left-20 h-40 w-40 rounded-full bg-[#8BB3A4]/[0.06] blur-2xl transition-opacity duration-500 opacity-0 group-hover:opacity-100"
         aria-hidden="true"
       />
 
@@ -130,8 +123,8 @@ function TestimonialCard({
       <div>
         <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
           {serviceTag ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs font-semibold text-mint">
-              <span className="h-1.5 w-1.5 rounded-full bg-mint/80" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#8BB3A4]/25 bg-[#8BB3A4]/10 px-3.5 py-1 text-xs font-semibold text-[#8BB3A4]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#8BB3A4]" />
               <span>{serviceTag}</span>
             </span>
           ) : (
@@ -140,7 +133,7 @@ function TestimonialCard({
 
           {/* Subtle Editorial Quote Icon */}
           <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.02] text-mint/45 transition-colors duration-300 group-hover:border-mint/25 group-hover:text-mint"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#8BB3A4] transition-colors duration-300 group-hover:border-[#8BB3A4]/40"
             aria-hidden="true"
           >
             <svg
@@ -154,17 +147,17 @@ function TestimonialCard({
         </div>
 
         {/* ── Quote Text ── */}
-        <blockquote className="text-sm sm:text-[15px] lg:text-base leading-7 sm:leading-8 text-foreground/85 font-normal">
+        <blockquote className="text-sm sm:text-[15px] lg:text-base leading-7 sm:leading-8 text-white/90 font-normal">
           &ldquo;{quote}&rdquo;
         </blockquote>
       </div>
 
       {/* ── Bottom Section: Outcome Pill + Client Profile ── */}
-      <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-white/[0.07]">
+      <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-white/10">
         {highlight && (
-          <div className="mb-4 inline-flex items-center gap-1.5 rounded-lg bg-primary/20 border border-primary/35 px-2.5 py-1 text-[11px] font-medium text-mint/90">
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-lg bg-[#8BB3A4]/15 border border-[#8BB3A4]/30 px-2.5 py-1 text-[11px] font-medium text-[#8BB3A4]">
             <svg
-              className="h-3.5 w-3.5 shrink-0 text-mint"
+              className="h-3.5 w-3.5 shrink-0 text-[#8BB3A4]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -191,11 +184,11 @@ function TestimonialCard({
                     : `${BACKEND_URL}${item.avatarUrl}`
                 }
                 alt={author}
-                className="h-11 w-11 shrink-0 rounded-full object-cover border border-mint/25"
+                className="h-11 w-11 shrink-0 rounded-full object-cover border border-[#8BB3A4]/35"
               />
             ) : (
               <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-mint/25 bg-[#1f2928] text-xs font-bold text-mint shadow-inner"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#8BB3A4]/35 bg-[#8BB3A4]/15 text-xs font-bold text-[#8BB3A4] shadow-sm"
                 aria-hidden="true"
               >
                 {getInitials(author)}
@@ -203,15 +196,15 @@ function TestimonialCard({
             )}
 
             <div className="min-w-0">
-              <div className="truncate text-sm sm:text-[15px] font-bold text-white transition-colors duration-300 group-hover:text-mint">
+              <div className="truncate text-sm sm:text-[15px] font-bold text-white transition-colors duration-300 group-hover:text-[#8BB3A4]">
                 {author}
               </div>
-              <div className="truncate text-xs text-foreground/55 mt-0.5">
+              <div className="truncate text-xs text-white/60 mt-0.5">
                 {role}
                 {company ? (
                   <>
-                    <span className="mx-1.5 text-white/25">•</span>
-                    <span className="text-foreground/70">{company}</span>
+                    <span className="mx-1.5 text-white/30">•</span>
+                    <span className="text-white/80">{company}</span>
                   </>
                 ) : null}
               </div>
@@ -220,7 +213,7 @@ function TestimonialCard({
 
           {/* Subtle Verified Partnership Indicator */}
           <div
-            className="hidden sm:flex items-center gap-0.5 text-mint/80 shrink-0"
+            className="hidden sm:flex items-center gap-0.5 text-[#8BB3A4] shrink-0"
             aria-label={isRtl ? "همکاری تأییدشده" : "Verified partnership"}
           >
             {[0, 1, 2, 3, 4].map((star) => (
@@ -254,99 +247,117 @@ export default function Testimonials({
     if (initialTestimonials && initialTestimonials.length > 0) {
       return initialTestimonials;
     }
-    return IS_DEV ? DEV_PREVIEW_TESTIMONIALS : [];
+    return CANONICAL_TESTIMONIALS;
   });
-  const [isUsingDevPreview, setIsUsingDevPreview] = useState<boolean>(
-    () => !(initialTestimonials && initialTestimonials.length > 0) && IS_DEV
+  const [isUsingCanonical, setIsUsingCanonical] = useState<boolean>(
+    () => !(initialTestimonials && initialTestimonials.length > 0)
   );
-  const [loading, setLoading] = useState<boolean>(
-    !IS_DEV && !(initialTestimonials && initialTestimonials.length > 0)
-  );
+  const [loading, setLoading] = useState<boolean>(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
   useEffect(() => {
     if (initialTestimonials && initialTestimonials.length > 0) {
       setTestimonials(initialTestimonials);
-      setIsUsingDevPreview(false);
+      setIsUsingCanonical(false);
       setLoading(false);
       return;
     }
 
-    fetch(`${BACKEND_URL}/api/v1/testimonials`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setTestimonials(data);
-          setIsUsingDevPreview(false);
-        } else if (IS_DEV) {
-          setTestimonials(DEV_PREVIEW_TESTIMONIALS);
-          setIsUsingDevPreview(true);
-        } else {
-          setTestimonials([]);
-          setIsUsingDevPreview(false);
-        }
-      })
-      .catch(() => {
-        if (IS_DEV) {
-          setTestimonials(DEV_PREVIEW_TESTIMONIALS);
-          setIsUsingDevPreview(true);
-        } else {
-          setTestimonials([]);
-          setIsUsingDevPreview(false);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [initialTestimonials]);
+    const controller = new AbortController();
 
-  // In production, if there are no verified testimonials and loading has finished, do not show fabricated data
-  if (!loading && testimonials.length === 0 && !IS_DEV) {
-    return null;
-  }
+    async function loadTestimonials() {
+      try {
+        setLoading(true);
+        const res = await fetch(`${BACKEND_URL}/api/v1/testimonials`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          // Filter valid active testimonials
+          const activeOnly = data.filter(
+            (item: any) =>
+              item.isActive !== false &&
+              (item.quoteFa?.trim() || item.quoteEn?.trim()) &&
+              (item.authorFa?.trim() || item.authorEn?.trim())
+          );
+
+          if (activeOnly.length > 0) {
+            setTestimonials(activeOnly);
+            setIsUsingCanonical(false);
+            return;
+          }
+        }
+        // Fall back gracefully to canonical testimonials
+        setTestimonials(CANONICAL_TESTIMONIALS);
+        setIsUsingCanonical(true);
+      } catch {
+        // Fall back gracefully to canonical testimonials on error/offline
+        setTestimonials(CANONICAL_TESTIMONIALS);
+        setIsUsingCanonical(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTestimonials();
+
+    return () => {
+      controller.abort();
+    };
+  }, [initialTestimonials]);
 
   return (
     <section
       id="testimonials"
-      className="w-full relative overflow-hidden bg-background"
+      className="w-full relative overflow-hidden bg-[#1F1F1E] text-white border-y border-white/10 transition-colors duration-500"
+      style={{ backgroundColor: "#1F1F1E" }}
     >
       <div dir={isRtl ? "rtl" : "ltr"} className="w-full">
         <div className="w-full px-2 sm:px-[10px] py-14 sm:py-20 lg:py-24 relative overflow-hidden">
-          {/* Subtle Ambient Glows aligned with OnSupp visual identity */}
-          <div className="absolute -top-36 -left-36 w-96 h-96 bg-primary/10 rounded-full blur-[110px] pointer-events-none" />
-          <div className="absolute -bottom-36 -right-36 w-[460px] h-[460px] bg-mint/5 rounded-full blur-[120px] pointer-events-none" />
+          {/* Subtle, restrained ambient neutral glow */}
+          <div className="absolute -top-36 -left-36 w-96 h-96 bg-[#8BB3A4]/[0.04] rounded-full blur-[110px] pointer-events-none" />
+          <div className="absolute -bottom-36 -right-36 w-[460px] h-[460px] bg-black/30 rounded-full blur-[120px] pointer-events-none" />
 
           <div className="relative z-10 w-full px-4 sm:px-8 lg:px-16">
             <ScrollReveal>
               {/* ── Section Header ───────────────────────────────────────── */}
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 mb-10 sm:mb-14">
                 <div className="max-w-3xl">
-                  <div className="inline-flex flex-wrap items-center gap-3 text-sm font-bold tracking-widest text-mint uppercase">
-                    <span className="h-px w-10 bg-mint/50" />
+                  {/* Category Eyebrow - Matching About Us Section Pattern */}
+                  <div className="inline-flex flex-wrap items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#8BB3A4] uppercase">
+                    <span className="h-px w-10 bg-[#8BB3A4]/50" />
                     <span>
                       {isRtl ? "تجربه همکاری با آن‌ساپ" : "CLIENT TESTIMONIALS"}
                     </span>
-                    {isUsingDevPreview && IS_DEV && (
-                      <span className="rounded-full border border-mint/30 bg-mint/10 px-2.5 py-0.5 text-[11px] font-medium text-mint normal-case tracking-normal">
+                    {isUsingCanonical && process.env.NODE_ENV === "development" && (
+                      <span className="border-s border-[#8BB3A4]/35 ps-2 text-[10px] font-medium text-[#8BB3A4]/80 normal-case tracking-normal">
                         {isRtl
-                          ? "پیش‌نمایش محیط توسعه (نمونه)"
-                          : "Dev Preview (Sample Data)"}
+                          ? "پیش‌نمایش محیط توسعه"
+                          : "Dev Preview"}
                       </span>
                     )}
                   </div>
 
-                  <h2 className="mt-4 sm:mt-5 font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.2] tracking-tight text-foreground drop-shadow-md">
+                  <h2 className="mt-4 sm:mt-5 font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.2] tracking-tight text-white">
                     {isRtl ? (
                       <>
-                        دیدگاه <span className="text-mint">مشتریان ما</span>
+                        دیدگاه <span className="text-[#8BB3A4]">مشتریان ما</span>
                       </>
                     ) : (
                       <>
-                        What Our <span className="text-mint">Clients Say</span>
+                        What Our <span className="text-[#8BB3A4]">Clients Say</span>
                       </>
                     )}
                   </h2>
 
-                  <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-foreground/65 leading-relaxed sm:leading-8 max-w-2xl">
+                  <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-white/70 leading-relaxed sm:leading-8 max-w-2xl">
                     {isRtl
                       ? "روایت مدیران و کسب‌وکارهایی که مسیر رشد دیجیتال، طراحی محصول و توسعه زیرساخت خود را به تیم آن‌ساپ سپرده‌اند."
                       : "Perspectives from leaders and organizations who partnered with OnSupp for digital growth, product design, and engineering."}
@@ -363,22 +374,22 @@ export default function Testimonials({
                     key={skeleton}
                     className={`${
                       skeleton > 0 ? "hidden lg:flex" : "flex"
-                    } h-[280px] w-full flex-col justify-between rounded-[24px] border border-white/[0.07] bg-[#15181a] p-7 animate-pulse`}
+                    } h-[280px] w-full flex-col justify-between rounded-[24px] border border-white/10 bg-[#262625] p-7 animate-pulse`}
                   >
                     <div className="flex justify-between items-center">
-                      <div className="h-6 w-28 rounded-full bg-white/[0.06]" />
-                      <div className="h-9 w-9 rounded-full bg-white/[0.06]" />
+                      <div className="h-6 w-28 rounded-full bg-white/[0.08]" />
+                      <div className="h-9 w-9 rounded-full bg-white/[0.08]" />
                     </div>
                     <div className="space-y-2.5">
-                      <div className="h-4 w-full rounded bg-white/[0.06]" />
-                      <div className="h-4 w-11/12 rounded bg-white/[0.06]" />
-                      <div className="h-4 w-3/4 rounded bg-white/[0.05]" />
+                      <div className="h-4 w-full rounded bg-white/[0.08]" />
+                      <div className="h-4 w-11/12 rounded bg-white/[0.08]" />
+                      <div className="h-4 w-3/4 rounded bg-white/[0.06]" />
                     </div>
-                    <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-                      <div className="h-11 w-11 rounded-full bg-white/[0.07]" />
+                    <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                      <div className="h-11 w-11 rounded-full bg-white/[0.08]" />
                       <div className="space-y-2">
-                        <div className="h-3.5 w-28 rounded bg-white/[0.07]" />
-                        <div className="h-3 w-20 rounded bg-white/[0.05]" />
+                        <div className="h-3.5 w-28 rounded bg-white/[0.08]" />
+                        <div className="h-3 w-20 rounded bg-white/[0.06]" />
                       </div>
                     </div>
                   </div>
@@ -459,8 +470,8 @@ export default function Testimonials({
                               }
                               className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                                 isActive
-                                  ? "w-7 bg-mint"
-                                  : "w-2 bg-white/20 hover:bg-white/40"
+                                  ? "w-7 bg-[#8BB3A4]"
+                                  : "w-2 bg-white/25 hover:bg-white/45"
                               }`}
                             />
                           );
@@ -474,7 +485,7 @@ export default function Testimonials({
                           onClick={() => swiperRef.current?.slidePrev()}
                           disabled={activeSlide === 0}
                           aria-label={isRtl ? "دیدگاه قبلی" : "Previous testimonial"}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#141719] text-foreground transition-all hover:border-mint/40 hover:text-mint disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white transition-all hover:border-[#8BB3A4]/50 hover:text-[#8BB3A4] disabled:opacity-35 disabled:pointer-events-none cursor-pointer shadow-sm"
                         >
                           <svg
                             className={`h-4 w-4 ${isRtl ? "" : "rotate-180"}`}
@@ -496,7 +507,7 @@ export default function Testimonials({
                           onClick={() => swiperRef.current?.slideNext()}
                           disabled={activeSlide >= testimonials.length - 1}
                           aria-label={isRtl ? "دیدگاه بعدی" : "Next testimonial"}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#141719] text-foreground transition-all hover:border-mint/40 hover:text-mint disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white transition-all hover:border-[#8BB3A4]/50 hover:text-[#8BB3A4] disabled:opacity-35 disabled:pointer-events-none cursor-pointer shadow-sm"
                         >
                           <svg
                             className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`}

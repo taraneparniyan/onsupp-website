@@ -1,8 +1,9 @@
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
-import StatsBanner from "@/components/sections/StatsBanner";
+import ClientsPartners from "@/components/sections/ClientsPartners";
+import ClientLogoMarquee from "@/components/sections/ClientLogoMarquee";
+import StatsSatisfaction from "@/components/sections/StatsSatisfaction";
 import Services from "@/components/sections/Services";
-import BrandLogos from "@/components/sections/BrandLogos";
 import About from "@/components/sections/About";
 import CaseStudies from "@/components/sections/CaseStudies";
 import ContactCTA from "@/components/sections/ContactCTA";
@@ -19,23 +20,22 @@ export default function HomePage() {
         {/* 1. Hero: full viewport width */}
         <Hero />
 
-        {/* 2. Statistics / Trust strip: immediately below Hero */}
-        <div className="w-full bg-[#131618] border-b border-white/5">
-          <div className="mx-auto w-full max-w-[1600px] px-6 sm:px-12 lg:px-24 py-6 sm:py-8">
-            <StatsBanner />
-          </div>
-        </div>
+        {/* 2. Clients & Partners: immediately following Hero (Mandatory Section Order) */}
+        <ClientsPartners />
 
-        {/* 3. Services: immediately after Statistics */}
+        {/* 3. Statistics & Client Satisfaction: full-bleed unified glassmorphism section */}
+        <StatsSatisfaction />
+
+        {/* 4. Services: immediately after Statistics */}
         <Services />
-
-        {/* 4. Brand Partners / Trust Logos: between Services and About */}
-        <BrandLogos />
 
         {/* 5. About OnSupp */}
         <About />
 
-        {/* 5. Our Work / Portfolio */}
+        {/* 6. Client Logo Marquee: برندهایی که به ما اعتماد کرده‌اند */}
+        <ClientLogoMarquee />
+
+        {/* 7. Our Work / Portfolio */}
         <CaseStudies />
 
         {/* 6. CTA / Contact */}

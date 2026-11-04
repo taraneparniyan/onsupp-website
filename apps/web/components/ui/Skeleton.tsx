@@ -12,7 +12,7 @@ export function Skeleton({
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse motion-reduce:animate-none bg-white/[0.07] rounded-lg ${className}`}
+      className={`animate-pulse motion-reduce:animate-none bg-foreground/[0.08] rounded-lg ${className}`}
       {...props}
     />
   );
@@ -23,16 +23,16 @@ export function Skeleton({
  */
 export function StatsCardSkeleton() {
   return (
-    <div className="bg-panel p-5 sm:p-6 rounded-2xl border border-white/10 space-y-4">
+    <div className="bg-panel p-5 sm:p-6 rounded-2xl border border-foreground/10 space-y-4">
       <div className="flex justify-between items-center">
-        <Skeleton className="w-11 h-11 rounded-xl bg-white/10" />
+        <Skeleton className="w-11 h-11 rounded-xl bg-foreground/10" />
         <Skeleton className="w-20 h-6 rounded-full" />
       </div>
       <div className="space-y-2 pt-1">
         <Skeleton className="w-24 h-3.5" />
         <Skeleton className="w-16 h-8 rounded-md" />
       </div>
-      <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+      <div className="pt-2 border-t border-foreground/10 flex items-center justify-between">
         <Skeleton className="w-28 h-3" />
         <Skeleton className="w-12 h-3" />
       </div>

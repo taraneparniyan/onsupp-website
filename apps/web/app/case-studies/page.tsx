@@ -11,10 +11,10 @@ import {
   type CaseStudyItem,
 } from "@/lib/case-studies";
 import { scrollToSection } from "@/lib/scroll";
+import { BACKEND_URL } from "@/config/api";
 
 const ITEMS_PER_PAGE = 12;
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 
 // Helper icon for project preview type
 function TypeBadgeIcon({ type }: { type: "mobile" | "web" | "platform" }) {
@@ -56,44 +56,65 @@ export default function CaseStudiesArchivePage() {
       .then((res) => (res.ok ? res.json() : null))
       .then((dbItems) => {
         if (Array.isArray(dbItems) && dbItems.length > 0) {
-          // Merge database items while preserving rich showcase visuals for matching IDs/slugs
-          const merged: CaseStudyItem[] = [...SHOWCASE_PROJECTS];
-          for (const item of dbItems) {
-            const exists = merged.some(
-              (p) => p.id === String(item.id) || p.slug === item.titleEn?.toLowerCase().replace(/\s+/g, "-")
+          const merged: CaseStudyItem[] = dbItems.map((item: any, idx: number) => {
+            const match = SHOWCASE_PROJECTS.find(
+              (p) => p.slug === item.slug || p.titleFa === item.titleFa || p.id === item.slug
             );
-            if (!exists) {
-              const previewType: "mobile" | "web" | "platform" =
-                item.projectType === "app"
-                  ? "mobile"
-                  : item.projectType === "instagram"
-                  ? "platform"
-                  : "web";
-              merged.push({
-                id: String(item.id),
-                slug: `project-${item.id}`,
-                client: item.titleFa || "مشتری سازمانی",
-                clientEn: item.titleEn || "Enterprise Client",
-                titleFa: item.titleFa || "",
-                titleEn: item.titleEn || "",
-                taglineFa: item.descriptionFa || "",
-                taglineEn: item.descriptionEn || "",
-                categoryFa: item.categoryFa || "دیجیتال",
-                categoryEn: item.categoryEn || "Digital",
-                servicesFa: [item.categoryFa || "توسعه محصول"],
-                servicesEn: [item.categoryEn || "Product Development"],
-                metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
-                metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
-                colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
-                accentColor: "#38bdf8",
-                glowColor: "rgba(56, 189, 248, 0.15)",
-                previewType,
-                liveUrl: item.liveUrl || "#",
-                featured: false,
-                position: item.position ?? 999,
-              });
+            if (match) {
+              return {
+                ...match,
+                titleFa: item.titleFa || match.titleFa,
+                titleEn: item.titleEn || match.titleEn,
+                client: item.client || match.client,
+                clientEn: item.clientEn || match.clientEn,
+                taglineFa: item.taglineFa || match.taglineFa,
+                taglineEn: item.taglineEn || match.taglineEn,
+                categoryFa: item.categoryFa || match.categoryFa,
+                categoryEn: item.categoryEn || match.categoryEn,
+                image: item.imageUrl || match.image,
+                secondaryImage: item.secondaryImage || match.secondaryImage,
+                liveUrl: item.liveUrl || match.liveUrl,
+                position: item.position ?? match.position ?? idx,
+                featured: item.featured ?? match.featured,
+                year: item.year || match.year,
+              };
             }
-          }
+
+            const previewType: "mobile" | "web" | "platform" =
+              item.projectType === "app"
+                ? "mobile"
+                : item.projectType === "instagram"
+                ? "platform"
+                : "web";
+
+            return {
+              id: item.slug || `project-${item.id}`,
+              slug: item.slug || `project-${item.id}`,
+              client: item.client || item.titleFa || "مشتری سازمانی",
+              clientEn: item.clientEn || item.titleEn || "Enterprise Client",
+              titleFa: item.titleFa || "",
+              titleEn: item.titleEn || "",
+              taglineFa: item.taglineFa || item.descriptionFa || "",
+              taglineEn: item.taglineEn || item.descriptionEn || "",
+              categoryFa: item.categoryFa || "دیجیتال",
+              categoryEn: item.categoryEn || "Digital",
+              servicesFa: [item.categoryFa || "توسعه محصول"],
+              servicesEn: [item.categoryEn || "Product Development"],
+              metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
+              metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
+              colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
+              accentColor: "#38bdf8",
+              glowColor: "rgba(56, 189, 248, 0.15)",
+              previewType,
+              image: item.imageUrl || "/case_study_1.jpg",
+              secondaryImage: item.secondaryImage || undefined,
+              liveUrl: item.liveUrl || "#",
+              featured: item.featured !== false,
+              position: item.position ?? idx,
+              year: item.year || "۲۰۲۵",
+            };
+          });
+
           setProjects(getAllCaseStudies(merged));
         }
       })
@@ -147,32 +168,10 @@ export default function CaseStudiesArchivePage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans" dir={isRtl ? "rtl" : "ltr"}>
       <Header />
 
-      <main className="flex-1 pt-28 sm:pt-36 pb-20 sm:pb-24">
-        {/* ── Hero / Archive Header ────────────────────────────────────── */}
-        <section className="relative overflow-hidden mb-12 sm:mb-16">
-          <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/10 rounded-full blur-[160px] pointer-events-none" />
-
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-panel border border-white/10 text-xs font-bold tracking-widest text-mint uppercase mb-4 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-lime animate-pulse" />
-              <span>{isRtl ? "آرشیو کامل پروژه‌ها" : "Portfolio Archive"}</span>
-            </div>
-
-            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
-              {isRtl ? "همه نمونه‌کارهای آن‌ساپ" : "All Case Studies & Works"}
-            </h1>
-
-            <p className="text-sm sm:text-base text-foreground/60 max-w-2xl mx-auto leading-relaxed">
-              {isRtl
-                ? "مجموعه‌ای جامع از پروژه‌های تحول دیجیتال، سامانه‌های مقیاس‌پذیر و محصولات نرم‌افزاری برتر که توسط تیم آن‌ساپ معماری و توسعه داده شده‌اند."
-                : "A comprehensive archive of scalable web architectures, mission-critical mobile platforms, and high-conversion enterprise systems."}
-            </p>
-          </div>
-        </section>
-
+      <main className="flex-1 pt-24 sm:pt-32 pb-20 sm:pb-24">
         {/* ── Filters & Search Bar ────────────────────────────────────── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-panel/70 border border-white/10 backdrop-blur-md">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-panel/70 border border-foreground/10 backdrop-blur-md">
             {/* Category Filter Pills */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
               <button
@@ -181,7 +180,7 @@ export default function CaseStudiesArchivePage() {
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
                   selectedCategory === "all"
                     ? "bg-lime text-ink shadow-[0_0_16px_rgba(178,248,0,0.3)] font-bold"
-                    : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/5"
+                    : "bg-raised text-foreground/70 hover:text-foreground hover:bg-panel border border-foreground/10"
                 }`}
               >
                 {isRtl ? "همه پروژه‌ها" : "All Projects"}
@@ -195,7 +194,7 @@ export default function CaseStudiesArchivePage() {
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
                     selectedCategory === category
                       ? "bg-lime text-ink shadow-[0_0_16px_rgba(178,248,0,0.3)] font-bold"
-                      : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/5"
+                      : "bg-raised text-foreground/70 hover:text-foreground hover:bg-panel border border-foreground/10"
                   }`}
                 >
                   {category}
@@ -210,10 +209,10 @@ export default function CaseStudiesArchivePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={isRtl ? "جستجوی پروژه یا برند..." : "Search case studies..."}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 ps-9 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-mint/50 focus:ring-1 focus:ring-mint/50 transition-all"
+                className="w-full bg-raised border border-foreground/10 rounded-xl px-4 py-2.5 ps-9 text-xs sm:text-sm text-foreground placeholder-foreground/40 focus:outline-none focus:border-mint focus:ring-1 focus:ring-mint transition-all"
               />
               <svg
-                className={`w-4 h-4 text-white/40 absolute top-1/2 -translate-y-1/2 ${
+                className={`w-4 h-4 text-foreground/40 absolute top-1/2 -translate-y-1/2 ${
                   isRtl ? "right-3" : "left-3"
                 }`}
                 fill="none"
@@ -230,9 +229,9 @@ export default function CaseStudiesArchivePage() {
         {/* ── Case Studies Grid (12 items per page) ────────────────────── */}
         <section id="archive-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {paginatedProjects.length === 0 ? (
-            <div className="py-20 text-center rounded-2xl bg-panel/30 border border-white/5">
+            <div className="py-20 text-center rounded-2xl bg-panel/50 border border-foreground/10">
               <span className="text-4xl block mb-3">🔍</span>
-              <h3 className="font-display text-lg font-bold text-white mb-1">
+              <h3 className="font-display text-lg font-bold text-foreground mb-1">
                 {isRtl ? "پروژه‌ای با این مشخصات یافت نشد" : "No case studies match your query"}
               </h3>
               <p className="text-xs sm:text-sm text-foreground/50 mb-4">
@@ -244,7 +243,7 @@ export default function CaseStudiesArchivePage() {
                   setSelectedCategory("all");
                   setSearchQuery("");
                 }}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white font-semibold transition-all"
+                className="px-4 py-2 rounded-xl bg-raised hover:bg-panel border border-foreground/10 text-xs text-foreground font-semibold transition-all"
               >
                 {isRtl ? "پاکسازی فیلترها" : "Clear Filters"}
               </button>
@@ -254,11 +253,11 @@ export default function CaseStudiesArchivePage() {
               {paginatedProjects.map((project) => (
                 <article
                   key={project.id}
-                  className="group relative rounded-2xl bg-panel border border-white/10 hover:border-mint/30 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.4)]"
+                  className="group relative rounded-2xl bg-panel border border-foreground/10 hover:border-mint/30 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_16px_36px_rgba(0,0,0,0.4)]"
                 >
                   {/* Top Visual Card Preview */}
                   <div
-                    className={`relative h-48 sm:h-52 w-full bg-gradient-to-br ${project.colorGradient} p-5 flex flex-col justify-between overflow-hidden border-b border-white/5`}
+                    className={`relative h-48 sm:h-52 w-full bg-gradient-to-br ${project.colorGradient} p-5 flex flex-col justify-between overflow-hidden border-b border-foreground/10`}
                   >
                     {/* Ambient Glow */}
                     <div
@@ -274,7 +273,7 @@ export default function CaseStudiesArchivePage() {
                       </span>
 
                       {project.featured && (
-                        <span className="px-2 py-0.5 rounded-full bg-lime/20 border border-lime/40 text-lime text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded-full bg-lime text-ink text-[10px] font-bold">
                           {isRtl ? "شاخص" : "Featured"}
                         </span>
                       )}
@@ -291,7 +290,7 @@ export default function CaseStudiesArchivePage() {
                             <span className="font-display font-bold text-sm text-white" dir="ltr">
                               {isRtl ? m.value.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]) : m.value}
                             </span>
-                            <span className="text-[10px] text-white/50">{m.label}</span>
+                            <span className="text-[10px] text-white/70">{m.label}</span>
                           </div>
                         ))}
                       </div>
@@ -301,7 +300,7 @@ export default function CaseStudiesArchivePage() {
                   {/* Bottom Content Body */}
                   <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
                     <div>
-                      <h2 className="font-display text-lg sm:text-xl font-bold text-white mb-2 leading-tight group-hover:text-mint transition-colors">
+                      <h2 className="font-display text-lg sm:text-xl font-bold text-foreground mb-2 leading-tight group-hover:text-mint transition-colors">
                         {isRtl ? project.titleFa : project.titleEn}
                       </h2>
 
@@ -314,7 +313,7 @@ export default function CaseStudiesArchivePage() {
                         {(isRtl ? project.servicesFa : project.servicesEn).map((service, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[10px] text-white/60 font-mono"
+                            className="px-2 py-0.5 rounded-md bg-raised border border-foreground/10 text-[10px] text-foreground/70 font-mono"
                           >
                             {service}
                           </span>
@@ -323,12 +322,12 @@ export default function CaseStudiesArchivePage() {
                     </div>
 
                     {/* Action Button */}
-                    <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                    <div className="pt-3 border-t border-foreground/10 flex items-center justify-between">
                       <a
                         href={project.liveUrl || "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-lime hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-mint hover:text-foreground transition-colors"
                       >
                         <span>{isRtl ? "مشاهده جزئیات پروژه" : "View Case Study"}</span>
                         <svg
@@ -342,7 +341,7 @@ export default function CaseStudiesArchivePage() {
                         </svg>
                       </a>
 
-                      <span className="text-[10px] text-white/40 font-mono uppercase">
+                      <span className="text-[10px] text-foreground/40 font-mono uppercase">
                         {project.previewType}
                       </span>
                     </div>
@@ -362,7 +361,7 @@ export default function CaseStudiesArchivePage() {
                   setCurrentPage((p) => Math.max(1, p - 1));
                   scrollToSection("archive-grid", { updateHash: false });
                 }}
-                className="px-3.5 py-2 rounded-xl bg-panel border border-white/10 text-xs font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-all cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-panel border border-foreground/10 text-xs font-semibold text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-raised transition-all cursor-pointer"
               >
                 {isRtl ? "صفحه قبل" : "Previous"}
               </button>
@@ -379,7 +378,7 @@ export default function CaseStudiesArchivePage() {
                     className={`w-9 h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       currentPage === pageNumber
                         ? "bg-lime text-ink shadow-[0_0_12px_rgba(178,248,0,0.3)]"
-                        : "bg-panel border border-white/10 text-white/70 hover:text-white hover:bg-white/10"
+                        : "bg-panel border border-foreground/10 text-foreground/70 hover:text-foreground hover:bg-raised"
                     }`}
                   >
                     {isRtl ? String(pageNumber).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]) : pageNumber}
@@ -394,7 +393,7 @@ export default function CaseStudiesArchivePage() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1));
                   scrollToSection("archive-grid", { updateHash: false });
                 }}
-                className="px-3.5 py-2 rounded-xl bg-panel border border-white/10 text-xs font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-all cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-panel border border-foreground/10 text-xs font-semibold text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-raised transition-all cursor-pointer"
               >
                 {isRtl ? "صفحه بعد" : "Next"}
               </button>
@@ -404,9 +403,9 @@ export default function CaseStudiesArchivePage() {
 
         {/* ── Back to Homepage Banner ─────────────────────────────────── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
-          <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-panel via-raised to-panel border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
+          <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-panel via-raised to-panel border border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
                 {isRtl ? "پروژه اختصاصی خود را با ما آغاز کنید" : "Ready to Engineer Your Next Milestone?"}
               </h3>
               <p className="text-xs sm:text-sm text-foreground/60 max-w-xl">
@@ -419,7 +418,7 @@ export default function CaseStudiesArchivePage() {
             <div className="flex items-center gap-3 shrink-0">
               <Link
                 href="/#case-studies"
-                className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm font-semibold text-white hover:text-mint transition-all"
+                className="px-5 py-3 rounded-xl bg-raised hover:bg-panel border border-foreground/10 text-xs sm:text-sm font-semibold text-foreground hover:text-mint transition-all"
               >
                 {isRtl ? "بازگشت به صفحه اصلی" : "Back to Home"}
               </Link>

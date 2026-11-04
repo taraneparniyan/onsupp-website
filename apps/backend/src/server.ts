@@ -25,9 +25,10 @@ import articlesRoutes from './routes/articles.js';
 import usersRoutes from './routes/users.js';
 import commentsRoutes from './routes/comments.js';
 import dashboardRoutes from './routes/dashboard.js';
+import testimonialsRoutes from './routes/testimonials.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const uploadDir = path.resolve(process.cwd(), 'uploads');
 
 if (!fs.existsSync(uploadDir)) {
@@ -40,6 +41,8 @@ export const devOrigins = [
   'http://127.0.0.1:3000',
   'http://localhost:3003',
   'http://127.0.0.1:3003',
+  'http://localhost:3004',
+  'http://127.0.0.1:3004',
 ];
 
 // Dynamically determine allowed origins based on environment
@@ -113,6 +116,7 @@ app.use('/api/v1/pricing', pricingRoutes);
 app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/articles', articlesRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/testimonials', testimonialsRoutes);
 export { app };
 export default app;
 

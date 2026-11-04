@@ -137,19 +137,30 @@ model Feature {
 }
 
 model CaseStudy {
-  id            Int      @id @default(autoincrement())
-  titleFa       String   @default("")
-  titleEn       String   @default("")
-  categoryFa    String   @default("")
-  categoryEn    String   @default("")
-  projectType   String   @default("website")
-  descriptionFa String   @default("")
-  descriptionEn String   @default("")
-  liveUrl       String   @default("#")
-  position      Int      @default(0)
-  updatedAt     DateTime @updatedAt
-  createdAt     DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  slug           String   @default("")
+  client         String   @default("")
+  clientEn       String   @default("")
+  titleFa        String   @default("")
+  titleEn        String   @default("")
+  taglineFa      String   @default("")
+  taglineEn      String   @default("")
+  categoryFa     String   @default("")
+  categoryEn     String   @default("")
+  projectType    String   @default("website")
+  descriptionFa  String   @default("")
+  descriptionEn  String   @default("")
+  imageUrl       String?
+  secondaryImage String?
+  liveUrl        String   @default("#")
+  featured       Boolean  @default(true)
+  position       Int      @default(0)
+  year           String   @default("۲۰۲۵")
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
 
+  @@index([position])
+  @@index([slug])
   @@map("case_studies")
 }
 
@@ -205,7 +216,7 @@ model ContactContent {
   titleEn        String   @default("Ready to transform your brand's digital reach?")
   descriptionFa  String   @default("فرم زیر را پر کنید تا متخصصان ارشد آن‌ساپ آنالیز رایگان، نمونه‌کارها و برنامه رشد اختصاصی شما را ارسال کنند.")
   descriptionEn  String   @default("Fill out the form to receive a complimentary audit and personalized digital strategy from our senior growth team.")
-  phone          String   @default("۰۲۱ - ۹۱۰۰ ۰۰۰۰")
+  phone          String   @default("")
   phoneLabelFa   String   @default("تماس مستقیم فوری")
   phoneLabelEn   String   @default("Direct Call")
   email          String   @default("info@onsupp.ir")
@@ -309,6 +320,31 @@ model Comment {
   @@index([articleId])
   @@index([approved])
   @@map("comments")
+}
+
+model Testimonial {
+  id           Int      @id @default(autoincrement())
+  quoteFa      String
+  quoteEn      String   @default("")
+  authorFa     String
+  authorEn     String   @default("")
+  roleFa       String   @default("")
+  roleEn       String   @default("")
+  companyFa    String?
+  companyEn    String?
+  serviceTagFa String?
+  serviceTagEn String?
+  highlightFa  String?
+  highlightEn  String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([position])
+  @@map("testimonials")
 }
 
 enum Role {

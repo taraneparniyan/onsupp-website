@@ -13,7 +13,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "رمز عبور الزامی است"),
 });
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
+import { BACKEND_URL } from "@/config/api";
 
 export async function login(state: State, formData: FormData): Promise<State> {
   const validated = loginSchema.safeParse({

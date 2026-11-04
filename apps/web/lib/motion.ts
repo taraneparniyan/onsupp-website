@@ -48,6 +48,89 @@ export const fadeIn: Variants = {
   }),
 };
 
+/**
+ * Elegant Scale Reveal: transitions from slightly smaller (0.95) to natural scale
+ * Ideal for luxury photography, cards, and hero elements.
+ */
+export const scaleReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+  },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.65,
+      delay,
+      ease: EASE_PREMIUM,
+    },
+  }),
+};
+
+/**
+ * Editorial Blur to Focus: transitions from subtle blur (8px) to sharp clarity
+ * Creates a high-end magazine / film aesthetic.
+ */
+export const blurReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    filter: "blur(8px)",
+    y: 14,
+  },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    filter: "blur(0px)",
+    y: 0,
+    transition: {
+      duration: 0.7,
+      delay,
+      ease: EASE_PREMIUM,
+    },
+  }),
+};
+
+/**
+ * Mask Reveal: progressive reveal using smooth clipping mask
+ * Perfect for client portraits, case study imagery, and editorial features.
+ */
+export const maskReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    clipPath: "inset(0% 0% 18% 0%)",
+    y: 12,
+  },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    clipPath: "inset(0% 0% 0% 0%)",
+    y: 0,
+    transition: {
+      duration: 0.75,
+      delay,
+      ease: EASE_PREMIUM,
+    },
+  }),
+};
+
+/**
+ * Directional Horizontal Reveal respecting text orientation (RTL vs LTR)
+ */
+export const horizontalReveal = (isRtl = false, distance = 28): Variants => ({
+  hidden: {
+    opacity: 0,
+    x: isRtl ? distance : -distance,
+  },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.6,
+      delay,
+      ease: EASE_PREMIUM,
+    },
+  }),
+});
+
 // ─── Staggered Group Variants ────────────────────────────────────────────────
 
 /**
@@ -81,6 +164,68 @@ export const staggerItem: Variants = {
     scale: 1,
     transition: {
       duration: 0.45,
+      ease: EASE_PREMIUM,
+    },
+  },
+};
+
+/**
+ * Luxury Card Grid Stagger: perfect for Services glass cards and Portfolio previews
+ */
+export const cardStaggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.06,
+    },
+  },
+};
+
+export const cardStaggerItem: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 26,
+    scale: 0.97,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.55,
+      ease: EASE_PREMIUM,
+    },
+  },
+};
+
+/**
+ * Statistics Grid Stagger & Stat Item Reveal
+ */
+export const statStaggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+export const statItemReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 22,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.55,
       ease: EASE_PREMIUM,
     },
   },

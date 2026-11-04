@@ -34,8 +34,8 @@ export type PricingCategory = {
   plans: PricingPlan[];
 };
 
-export const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+import { BACKEND_URL } from "@/config/api";
+export { BACKEND_URL };
 
 /**
  * Verified canonical pricing categories & plans created in project seed.

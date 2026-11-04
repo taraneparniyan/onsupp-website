@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { login, State } from "@/lib/actions/auth";
 
@@ -30,28 +31,16 @@ export default function AdminLoginPage() {
         
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center">
-          {/* Neumorphic Leaf Icon Container */}
-          <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#212629] to-[#15181a] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.6),inset_0_1px_1.5px_0_rgba(255,255,255,0.15)]">
-            <svg
-              className="h-8 w-8 text-mint drop-shadow-[0_2px_8px_rgba(194,202,173,0.3)]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-                d="M5 21C5 12.163 12.163 5 21 5c0 8.837-7.163 16-16 16z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-                d="M5 21l9-9"
-              />
-            </svg>
+          {/* Official OnSupp Brand Icon Container */}
+          <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#212629] to-[#15181a] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.6),inset_0_1px_1.5px_0_rgba(255,255,255,0.15)] p-3">
+            <Image
+              src="/images/logo/logo-light.webp"
+              alt="OnSupp"
+              width={40}
+              height={40}
+              priority
+              className="w-full h-full object-contain"
+            />
           </div>
 
           {/* Typography Hierarchy */}

@@ -15,7 +15,7 @@ const translations = {
     { name: "نمونه‌کارها", href: "/portfolio" },
     { name: "پلن‌ها و تعرفه‌ها", href: "/pricing" },
     { name: "مقالات", href: "/blog" },
-    { name: "درباره ما", href: "/#about" },
+    { name: "درباره ما", href: "/about" },
   ],
   en: [
     { name: "Home", href: "/" },
@@ -23,7 +23,7 @@ const translations = {
     { name: "Portfolio", href: "/portfolio" },
     { name: "Pricing", href: "/pricing" },
     { name: "Articles", href: "/blog" },
-    { name: "About Us", href: "/#about" },
+    { name: "About Us", href: "/about" },
   ],
 };
 
@@ -31,6 +31,7 @@ type NavLinksProps = {
   className?: string;
   linkClassName?: (isActive: boolean, isHome: boolean) => string;
   onLinkClick?: () => void;
+  isOverHero?: boolean;
 };
 
 // ─── Service Category Icon ───────────────────────────────────────────────────
@@ -96,7 +97,7 @@ function ServiceCategoryIcon({ type }: { type: ServiceCategory["iconType"] }) {
   }
 }
 
-export default function NavLinks({ className, linkClassName, onLinkClick }: NavLinksProps) {
+export default function NavLinks({ className, linkClassName, onLinkClick, isOverHero }: NavLinksProps) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const links = translations[lang];
@@ -189,8 +190,12 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
     }
   };
 
+  // Desktop Navigation Menu Container: Clean, zero-container, zero-capsule, pure layout
+  const desktopNavClass = "relative flex items-center gap-1.5 sm:gap-2 xl:gap-3";
+  const navContainerClass = className || desktopNavClass;
+
   return (
-    <nav className={className || "flex items-center gap-6 xl:gap-8 relative"}>
+    <nav className={navContainerClass}>
       {links.map((link) => {
         const isHome = link.href === "/";
         const isHash = link.href.includes("#");
@@ -203,14 +208,19 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
           isActive = isHome ? pathname === "/" && !activeHash : pathname.startsWith(link.href);
         }
 
-        const defaultClass = "text-sm font-medium transition-all hover:text-foreground no-underline";
-        const desktopActiveStyle = isActive
-          ? "text-mint font-semibold"
-          : "text-foreground/70";
+        const desktopLinkBase =
+          "relative px-2.5 sm:px-3 py-1.5 text-xs xl:text-sm font-medium transition-colors duration-200 no-underline inline-flex items-center gap-1 select-none";
+        const desktopActiveStyle = isOverHero
+          ? isActive
+            ? "text-white font-bold"
+            : "text-white/80 hover:text-white"
+          : isActive
+          ? "text-mint font-bold"
+          : "text-foreground/80 hover:text-foreground hover:text-mint";
 
         const resolvedClass = linkClassName
           ? linkClassName(isActive, isHome)
-          : `${defaultClass} ${desktopActiveStyle}`;
+          : `${desktopLinkBase} ${desktopActiveStyle}`;
 
         // ─── Services Menu Item ──────────────────────────────────────────────
         if (link.isServices) {
@@ -224,7 +234,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                 >
                   <span className="flex items-center gap-2">
                     <span>{link.name}</span>
-                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-md bg-lime/10 text-lime border border-lime/20">
+                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-md bg-raised text-foreground/70 border border-foreground/10">
                       {isRtl ? "۷ دسته تخصصی" : "7 Categories"}
                     </span>
                   </span>
@@ -257,8 +267,8 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                             key={service.id}
                             className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                               isCategoryOpen
-                                ? "bg-[#161a1d] border-lime/30 shadow-md"
-                                : "bg-[#131719]/90 border-white/5 hover:border-white/10"
+                                ? "bg-raised border-mint/40 shadow-sm"
+                                : "bg-panel border-foreground/10 hover:border-foreground/20"
                             }`}
                           >
                             {/* Category Accordion Header */}
@@ -272,15 +282,15 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                                 <span
                                   className={`flex h-7 w-7 items-center justify-center rounded-lg border shrink-0 transition-colors ${
                                     isCategoryOpen
-                                      ? "bg-lime text-ink border-lime shadow-[0_0_8px_rgba(178,248,0,0.3)]"
-                                      : "bg-lime/10 text-lime border-lime/20"
+                                      ? "bg-mint text-white border-mint shadow-sm"
+                                      : "bg-mint/10 text-mint border-mint/20"
                                   }`}
                                 >
                                   <ServiceCategoryIcon type={service.iconType} />
                                 </span>
                                 <span
                                   className={`text-xs font-bold transition-colors truncate ${
-                                    isCategoryOpen ? "text-lime" : "text-white"
+                                    isCategoryOpen ? "text-mint" : "text-foreground"
                                   }`}
                                 >
                                   {isRtl ? service.titleFa : service.titleEn}
@@ -291,7 +301,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                               <span
                                 className={`flex h-6 w-6 items-center justify-center rounded-md transition-transform duration-200 shrink-0 ${
                                   isCategoryOpen
-                                    ? "rotate-180 text-lime bg-lime/10"
+                                    ? "rotate-180 text-mint bg-mint/10"
                                     : "text-foreground/50"
                                 }`}
                               >
@@ -322,12 +332,12 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="px-3 pb-3 pt-1 border-t border-white/[0.06]">
+                                  <div className="px-3 pb-3 pt-1 border-t border-foreground/[0.08]">
                                     <ul
                                       className={`space-y-1 ${
                                         isRtl
-                                          ? "border-r-2 border-lime/30 pr-3 mr-3"
-                                          : "border-l-2 border-lime/30 pl-3 ml-3"
+                                          ? "border-r-2 border-mint/30 pr-3 mr-3"
+                                          : "border-l-2 border-mint/30 pl-3 ml-3"
                                       } mt-1.5`}
                                     >
                                       {(isRtl
@@ -345,9 +355,9 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                                                 e
                                               )
                                             }
-                                            className="flex items-center gap-2 text-[11.5px] font-medium text-foreground/75 hover:text-white active:text-lime transition-colors py-1.5"
+                                            className="flex items-center gap-2 text-[11.5px] font-medium text-foreground/75 hover:text-foreground active:text-mint transition-colors py-1.5"
                                           >
-                                            <span className="w-1.5 h-1.5 rounded-full bg-lime/60 shrink-0" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-mint/60 shrink-0" />
                                             <span>{sub}</span>
                                           </Link>
                                         </li>
@@ -364,7 +374,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                       <Link
                         href="/services"
                         onClick={(e) => handleLinkClick("/services", false, false, e)}
-                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-mint hover:bg-white/[0.08] transition-all text-center mt-2"
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-raised border border-foreground/10 text-xs font-bold text-mint hover:bg-panel transition-all text-center mt-2"
                       >
                         <span>{isRtl ? "مشاهده ساختار کامل در صفحه خدمات" : "View Full Services Page"}</span>
                         <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,7 +400,11 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                 href={link.href}
                 onClick={(e) => handleLinkClick(link.href, isHash, isHome, e)}
                 className={`inline-flex items-center gap-1.5 ${resolvedClass} ${
-                  isDesktopDropdownOpen ? "text-mint font-semibold" : ""
+                  isDesktopDropdownOpen
+                    ? isOverHero
+                      ? "text-white font-bold"
+                      : "text-mint font-bold"
+                    : ""
                 }`}
                 aria-expanded={isDesktopDropdownOpen}
                 aria-haspopup="true"
@@ -398,7 +412,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                 <span>{link.name}</span>
                 <svg
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    isDesktopDropdownOpen ? "rotate-180 text-mint" : "opacity-60"
+                    isDesktopDropdownOpen ? "rotate-180" : "opacity-60"
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -408,7 +422,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                 </svg>
               </Link>
 
-              {/* Desktop Mega-Menu Dropdown Panel */}
+              {/* Desktop Mega-Menu Dropdown Panel (Glass Concept matching sample/menu) */}
               <AnimatePresence>
                 {isDesktopDropdownOpen && (
                   <motion.div
@@ -419,80 +433,67 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                     className="absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50 w-[780px] xl:w-[840px] pointer-events-auto"
                     dir={isRtl ? "rtl" : "ltr"}
                   >
-                    <div className="relative rounded-2xl bg-[#0e1113]/98 backdrop-blur-2xl border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-5 overflow-hidden">
-                      {/* Top Accent Beam Line */}
-                      <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-lime/50 to-transparent" />
+                    <div className="relative rounded-3xl bg-panel/95 dark:bg-[#151d18]/95 backdrop-blur-2xl border border-white/25 dark:border-white/15 shadow-[0_24px_64px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] p-5 overflow-hidden">
+                      {/* Top Accent Line */}
+                      <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-mint/60 to-transparent" />
 
                       {/* Header Title Bar */}
-                      <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/[0.08]">
+                      <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-foreground/[0.08]">
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-lime animate-pulse shadow-[0_0_8px_#b2f800]" />
-                          <span className="text-xs font-bold text-white tracking-wide">
+                          <span className="w-2 h-2 rounded-full bg-mint" />
+                          <span className="text-xs font-bold text-foreground tracking-wide">
                             {isRtl ? "ساختار خدمات تخصصی OnSupp" : "OnSupp Core Services & Solutions"}
                           </span>
                         </div>
-                        <span className="text-[11px] text-white/40 font-mono">
+                        <span className="text-[11px] text-foreground/50 font-mono">
                           {isRtl ? "۷ دپارتمان تخصصی" : "7 Specialized Departments"}
                         </span>
                       </div>
 
                       {/* ─── Categories & Sub-Services Grid ─── */}
-                      <div className="grid grid-cols-3 gap-3.5">
-                        {SERVICES_MENU_ITEMS.map((service, index) => {
-                          const isFeatured = index < 3; // First 3 are the newly structured creative & media services
-                          return (
-                            <div
-                              key={service.id}
-                              className={`rounded-xl p-3 transition-all duration-200 group border ${
-                                isFeatured
-                                  ? "bg-white/[0.03] border-white/10 hover:border-lime/40 hover:bg-white/[0.05]"
-                                  : "bg-white/[0.015] border-white/5 hover:border-mint/30 hover:bg-white/[0.04]"
-                              }`}
+                      <div className="grid grid-cols-3 gap-3">
+                        {SERVICES_MENU_ITEMS.map((service) => (
+                          <div
+                            key={service.id}
+                            className="rounded-xl p-3 transition-colors duration-200 group border bg-raised/40 border-foreground/[0.06] hover:border-mint/30 hover:bg-raised/80"
+                          >
+                            {/* Category Header Link */}
+                            <Link
+                              href={service.href}
+                              onClick={(e) => handleLinkClick(service.href, service.href.includes("#"), false, e)}
+                              className="flex items-center gap-2 text-xs font-bold text-foreground group-hover:text-mint transition-colors mb-2"
                             >
-                              {/* Category Header Link */}
-                              <Link
-                                href={service.href}
-                                onClick={(e) => handleLinkClick(service.href, service.href.includes("#"), false, e)}
-                                className="flex items-center gap-2 text-xs font-bold text-white group-hover:text-lime transition-colors mb-2"
-                              >
-                                <span
-                                  className={`flex h-6 w-6 items-center justify-center rounded-lg border shrink-0 transition-colors ${
-                                    isFeatured
-                                      ? "bg-lime/10 border-lime/30 text-lime group-hover:bg-lime group-hover:text-ink shadow-[0_0_8px_rgba(178,248,0,0.15)]"
-                                      : "bg-white/[0.04] border-white/10 text-white/80 group-hover:border-mint/40 group-hover:text-mint"
-                                  }`}
-                                >
-                                  <ServiceCategoryIcon type={service.iconType} />
-                                </span>
-                                <span className="truncate">{isRtl ? service.titleFa : service.titleEn}</span>
-                              </Link>
+                              <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-foreground/10 bg-raised text-foreground/80 group-hover:border-mint/40 group-hover:text-mint shrink-0 transition-colors">
+                                <ServiceCategoryIcon type={service.iconType} />
+                              </span>
+                              <span className="truncate">{isRtl ? service.titleFa : service.titleEn}</span>
+                            </Link>
 
-                              {/* Subservices List */}
-                              <ul className="space-y-1 pr-1.5 pl-1.5 text-[11px] leading-[18px]">
-                                {(isRtl ? service.subservicesFa : service.subservicesEn).map((sub, i) => (
-                                  <li key={i}>
-                                    <Link
-                                      href={service.href}
-                                      onClick={(e) => handleLinkClick(service.href, service.href.includes("#"), false, e)}
-                                      className="text-white/60 hover:text-white transition-colors flex items-center gap-1.5 group/item"
-                                    >
-                                      <span className="w-1 h-1 rounded-full bg-white/30 group-hover/item:bg-lime shrink-0 transition-colors" />
-                                      <span className="truncate">{sub}</span>
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          );
-                        })}
+                            {/* Subservices List */}
+                            <ul className="space-y-1 pr-1.5 pl-1.5 text-[11px] leading-[18px]">
+                              {(isRtl ? service.subservicesFa : service.subservicesEn).map((sub, i) => (
+                                <li key={i}>
+                                  <Link
+                                    href={service.href}
+                                    onClick={(e) => handleLinkClick(service.href, service.href.includes("#"), false, e)}
+                                    className="text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1.5 group/item"
+                                  >
+                                    <span className="w-1 h-1 rounded-full bg-foreground/30 group-hover/item:bg-mint shrink-0 transition-colors" />
+                                    <span className="truncate">{sub}</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
                       </div>
 
                       {/* Bottom Quick Action Bar */}
-                      <div className="mt-4 pt-3.5 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                      <div className="mt-4 pt-3.5 border-t border-foreground/[0.08] flex items-center justify-between text-xs">
                         <Link
                           href="/services"
                           onClick={(e) => handleLinkClick("/services", false, false, e)}
-                          className="inline-flex items-center gap-1.5 text-mint hover:text-white font-semibold transition-colors"
+                          className="inline-flex items-center gap-1.5 text-mint hover:text-foreground font-semibold transition-colors"
                         >
                           <span>{isRtl ? "مشاهده صفحه جامع ساختار خدمات" : "Explore full services page"}</span>
                           <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,7 +504,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick }: NavL
                         <Link
                           href="/#contact"
                           onClick={(e) => handleLinkClick("/#contact", true, false, e)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lime text-ink font-bold hover:shadow-[0_0_12px_rgba(178,248,0,0.3)] transition-all"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background font-semibold hover:opacity-90 transition-all text-xs shadow-sm"
                         >
                           <span>{isRtl ? "درخواست مشاوره اختصاصی" : "Request Consultation"}</span>
                         </Link>

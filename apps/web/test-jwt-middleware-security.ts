@@ -4,7 +4,7 @@
 import { SignJWT } from "jose";
 import { verifyAdminToken } from "./middleware";
 
-const VALID_SECRET = "onsupp-test-only-jwt-secret-not-for-production-2026";
+const VALID_SECRET = "onsupp_dev_7e8b4f1c9d2a5e3b8a1f4c7d0e2b5a8c1d4e7f0a3b6c9d2e5";
 const ATTACKER_SECRET = "evil_attacker_crafted_secret_key_with_at_least_32_characters_12345";
 
 process.env.JWT_SECRET = VALID_SECRET;

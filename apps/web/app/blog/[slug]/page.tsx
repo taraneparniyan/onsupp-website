@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { scrollToSection } from "@/lib/scroll";
 import { CANONICAL_PREVIEW_ARTICLES } from "@/lib/articles";
 import { sanitizeArticleHtml, safeJsonLdStringify } from "@/lib/sanitize";
+import { BACKEND_URL } from "@/config/api";
 
 type FaqItem = {
   id: number;
@@ -50,8 +51,7 @@ type Article = {
   createdAt: string;
 };
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
@@ -656,8 +656,8 @@ export default function ArticleDetailPage() {
 
       {/* Custom Awwwards-Style OnSupp Toast Notification Modal */}
       {toastMsg && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/70  animate-fadeIn" dir={isRtl ? "rtl" : "ltr"}>
-          <div className="w-full max-w-md rounded-xl bg-[#0f221c] border border-mint/30 p-6 sm:p-8 space-y-6 shadow-md text-center relative overflow-hidden">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/70 animate-fadeIn" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="w-full max-w-md rounded-xl bg-panel border border-foreground/10 p-6 sm:p-8 space-y-6 shadow-2xl text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-mint via-leaf to-emerald-400" />
             
             <div className="w-16 h-16 rounded-full bg-mint/15 border border-mint/30 text-mint mx-auto flex items-center justify-center shadow-lg">
@@ -673,7 +673,7 @@ export default function ArticleDetailPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">{toastMsg.title}</h3>
+              <h3 className="text-xl font-black text-foreground">{toastMsg.title}</h3>
               <p className="text-xs text-foreground/75 leading-6">{toastMsg.desc}</p>
             </div>
 

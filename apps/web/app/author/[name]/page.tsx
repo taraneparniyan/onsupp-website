@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
+import { BACKEND_URL } from "@/config/api";
 
 type Article = {
   id: number;
@@ -22,8 +23,7 @@ type Article = {
   createdAt: string;
 };
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 
 export default function AuthorArticlesPage() {
   const params = useParams();
@@ -63,10 +63,10 @@ export default function AuthorArticlesPage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-mint/10 border border-mint/20 text-mint text-xs font-bold">
                   {isRtl ? "پروفایل و مقالات نویسنده" : "Author Profile & Articles"}
                 </div>
-                <h1 className="text-2xl sm:text-4xl font-black text-white">
+                <h1 className="text-2xl sm:text-4xl font-black text-foreground">
                   {rawAuthor || (isRtl ? "نویسنده آن‌ساپ" : "OnSupp Author")}
                 </h1>
-                <p className="text-xs sm:text-sm text-white/70 max-w-2xl leading-6">
+                <p className="text-xs sm:text-sm text-foreground/70 max-w-2xl leading-6">
                   {isRtl
                     ? `مشاهده تمامی مقالات، تحلیل‌ها و گزارش‌های منتشرشده توسط ${rawAuthor} در وبلاگ رسمی آن‌ساپ.`
                     : `View all articles and insights published by ${rawAuthor} on OnSupp Official Blog.`}
