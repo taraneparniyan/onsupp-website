@@ -32,6 +32,10 @@ export type CaseStudyItem = {
   solutionEn?: string;
   deliverablesFa?: string[];
   deliverablesEn?: string[];
+  gallery?: string[];
+  published?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export const SHOWCASE_PROJECTS: CaseStudyItem[] = [
@@ -381,4 +385,89 @@ export function getAllCaseStudies(projects: CaseStudyItem[] = SHOWCASE_PROJECTS)
  */
 export function getCaseStudyBySlug(slug: string, projects: CaseStudyItem[] = SHOWCASE_PROJECTS): CaseStudyItem | undefined {
   return projects.find((p) => p.slug === slug || p.id === slug);
+}
+
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:3002";
+
+export function normalizeCaseStudy(item: any, idx = 0): CaseStudyItem {
+  const previewType: "mobile" | "web" | "platform" =
+    item.previewType === "mobile" || item.previewType === "platform" || item.previewType === "web"
+      ? item.previewType
+      : item.projectType === "mobile" || item.projectType === "app"
+      ? "mobile"
+      : item.projectType === "instagram"
+      ? "platform"
+      : "web";
+
+  return {
+    id: String(item.id || item.slug || `project-${idx}`),
+    slug: item.slug || `project-${item.id || idx}`,
+    client: item.client || item.titleFa || "مشتری سازمانی",
+    clientEn: item.clientEn || item.titleEn || "Enterprise Client",
+    titleFa: item.titleFa || "",
+    titleEn: item.titleEn || "",
+    taglineFa: item.taglineFa || item.descriptionFa || "",
+    taglineEn: item.taglineEn || item.descriptionEn || "",
+    categoryFa: item.categoryFa || "دیجیتال",
+    categoryEn: item.categoryEn || "Digital",
+    servicesFa: Array.isArray(item.servicesFa) && item.servicesFa.length > 0 ? item.servicesFa : [item.categoryFa || "توسعه محصول"],
+    servicesEn: Array.isArray(item.servicesEn) && item.servicesEn.length > 0 ? item.servicesEn : [item.categoryEn || "Product Development"],
+    metricsFa: Array.isArray(item.metricsFa) && item.metricsFa.length > 0 ? item.metricsFa : [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
+    metricsEn: Array.isArray(item.metricsEn) && item.metricsEn.length > 0 ? item.metricsEn : [{ value: "100%", label: "Client Satisfaction" }],
+    colorGradient: item.colorGradient || "from-[#0d1620] via-[#112338] to-[#081018]",
+    accentColor: item.accentColor || "#38bdf8",
+    glowColor: item.glowColor || "rgba(56, 189, 248, 0.15)",
+    previewType,
+    image: item.image || item.imageUrl || "/case_study_1.jpg",
+    secondaryImage: item.secondaryImage || undefined,
+    liveUrl: item.liveUrl || "#",
+    featured: item.featured !== false,
+    position: item.position ?? idx,
+    year: item.year || "۲۰۲۵",
+    challengeFa: item.challengeFa,
+    challengeEn: item.challengeEn,
+    solutionFa: item.solutionFa,
+    solutionEn: item.solutionEn,
+    deliverablesFa: item.deliverablesFa,
+    deliverablesEn: item.deliverablesEn,
+    gallery: Array.isArray(item.gallery) ? item.gallery : [],
+    published: item.published !== false,
+    seoTitle: item.seoTitle,
+    seoDescription: item.seoDescription,
+  };
+}
+
+export async function fetchCaseStudies(): Promise<CaseStudyItem[]> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/casestudies`, {
+      next: { tags: ["casestudies"], revalidate: 3600 },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((item, idx) => normalizeCaseStudy(item, idx)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+      }
+    }
+  } catch (err) {
+    // Fallback to static SHOWCASE_PROJECTS
+  }
+  return getAllCaseStudies();
+}
+
+export async function fetchCaseStudyBySlug(slug: string): Promise<CaseStudyItem | undefined> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/casestudies/by-slug/${encodeURIComponent(slug)}`, {
+      next: { tags: ["casestudies", `casestudy-${slug}`], revalidate: 3600 },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.slug) {
+        return normalizeCaseStudy(data);
+      }
+    }
+  } catch (err) {
+    // Fallback to static lookup
+  }
+  return getCaseStudyBySlug(slug);
 }

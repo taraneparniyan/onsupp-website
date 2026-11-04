@@ -1,16 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { BACKEND_URL } from "@/config/api";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export interface ClientLogo {
-  id: string;
-  filename: string;
+  id: string | number;
+  filename?: string;
+  imageUrl?: string;
   nameFa: string;
-  nameEn: string;
-  width: number;
-  height: number;
+  nameEn?: string;
+  websiteUrl?: string | null;
+  width?: number;
+  height?: number;
 }
 
 export const CLIENT_LOGOS: ClientLogo[] = [
@@ -91,22 +94,73 @@ export const CLIENT_LOGOS: ClientLogo[] = [
 export default function ClientLogoMarquee() {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
+  const [logos, setLogos] = useState<ClientLogo[]>(CLIENT_LOGOS);
 
-  const renderLogoItem = (logo: ClientLogo, key: string) => (
-    <div
-      key={key}
-      className="shrink-0 flex items-center justify-center h-14 sm:h-16 md:h-18 px-2 sm:px-3 select-none transition-transform duration-300 hover:scale-105"
-      title={isRtl ? logo.nameFa : logo.nameEn}
-    >
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/client-logos`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: ClientLogo[] = data.map((item: any) => {
+            let img = item.imageUrl || "";
+            if (img.startsWith("/images/clients/")) {
+              img = img.replace("/images/clients/", "/images/client-logos/");
+            }
+            return {
+              id: item.id,
+              imageUrl: img,
+              nameFa: item.nameFa || item.altFa || "",
+              nameEn: item.nameEn || item.altEn || item.nameFa || "",
+              websiteUrl: item.websiteUrl || null,
+              width: item.width || 180,
+              height: item.height || 60,
+            };
+          });
+          setLogos(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const renderLogoItem = (logo: ClientLogo, key: string) => {
+    const rawSrc = logo.imageUrl
+      ? logo.imageUrl
+      : `/images/client-logos/${encodeURIComponent(logo.filename || "")}`;
+    const altText = (isRtl ? logo.nameFa : logo.nameEn) || logo.nameFa;
+
+    const imgElement = (
       <img
-        src={`/images/client-logos/${encodeURIComponent(logo.filename)}`}
-        alt={isRtl ? logo.nameFa : logo.nameEn}
+        src={rawSrc}
+        alt={altText}
         loading="eager"
         decoding="async"
         className="h-9 sm:h-11 md:h-12 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[180px] object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_1px_8px_rgba(255,255,255,0.22)]"
       />
-    </div>
-  );
+    );
+
+    return (
+      <div
+        key={key}
+        className="shrink-0 flex items-center justify-center h-14 sm:h-16 md:h-18 px-2 sm:px-3 select-none transition-transform duration-300 hover:scale-105"
+        title={altText}
+      >
+        {logo.websiteUrl ? (
+          <a
+            href={logo.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center"
+          >
+            {imgElement}
+          </a>
+        ) : (
+          imgElement
+        )}
+      </div>
+    );
+  };
+
+  
 
   return (
     <section
@@ -166,7 +220,7 @@ export default function ClientLogoMarquee() {
               aria-hidden={trackIndex > 0}
               className="animate-marquee-glide flex shrink-0 items-center gap-10 sm:gap-14 lg:gap-18 pe-10 sm:pe-14 lg:pe-18"
             >
-              {CLIENT_LOGOS.map((logo, logoIndex) =>
+              {logos.map((logo, logoIndex) =>
                 renderLogoItem(logo, `track-${trackIndex}-${logo.id}-${logoIndex}`)
               )}
             </div>

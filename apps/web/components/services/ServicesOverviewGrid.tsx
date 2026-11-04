@@ -10,11 +10,13 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function ServicesOverviewGrid({
   isRtl,
+  services = DETAILED_SERVICES_DATA,
 }: {
   isRtl: boolean;
+  services?: ServiceDetailItem[];
 }) {
   const prefersReducedMotion = useReducedMotion();
-  const displayedServices = DETAILED_SERVICES_DATA;
+  const displayedServices = services;
 
   const handleCardClick = (serviceId: string) => {
     scrollToSection(serviceId);

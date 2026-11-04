@@ -9,15 +9,20 @@ import ServicesHero from "./ServicesHero";
 import ServicesOverviewGrid from "./ServicesOverviewGrid";
 import ServicesDeepDive from "./ServicesDeepDive";
 import ServicesCTASection from "./ServicesCTASection";
-import { DETAILED_SERVICES_DATA } from "./services-data";
+import { DETAILED_SERVICES_DATA, type ServiceDetailItem } from "./services-data";
 import { scrollToSection } from "@/lib/scroll";
 
-export default function ServicesPageView() {
+export default function ServicesPageView({
+  initialServices = DETAILED_SERVICES_DATA,
+}: {
+  initialServices?: ServiceDetailItem[];
+}) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
 
+  const [servicesList] = useState<ServiceDetailItem[]>(initialServices);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [consultationServiceId, setConsultationServiceId] = useState<string>("seo");
 
@@ -68,7 +73,7 @@ export default function ServicesPageView() {
 
       <main className="flex-1 w-full pt-20 sm:pt-28">
         {/* Section 01: Services Overview (Glassmorphism Cards Grid) */}
-        <ServicesOverviewGrid isRtl={isRtl} />
+        <ServicesOverviewGrid isRtl={isRtl} services={servicesList} />
 
         {/* Section 02: Individual Service Details (Varied Editorial Compositions) */}
         <ServicesDeepDive

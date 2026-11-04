@@ -1,4 +1,5 @@
 // ─── About Page Content Model ───────────────────────────────────────────────
+import { BACKEND_URL } from "@/config/api";
 // Data layer for the /about page. Presentation components only consume the
 // types below, so the static placeholder content can later be swapped for a
 // CMS / backend response (`/api/v1/about-page`) without touching any UI code.
@@ -147,8 +148,8 @@ export const ABOUT_PAGE_PLACEHOLDER: AboutPageContent = {
     eyebrowEn: "About OnSupp",
     titleFa: "آدم‌هایی که پشت هر پروژه ایستاده‌اند",
     titleEn: "The people behind every project",
-    captionFa: "تیم آن‌ساپ — تهران",
-    captionEn: "The OnSupp team — Tehran",
+    captionFa: "",
+    captionEn: "",
     photo: placeholderPhoto("عکس گروهی تیم آن‌ساپ", "OnSupp team group photograph"),
   },
   intro: {
@@ -249,5 +250,123 @@ export function getVisibleMembers(members: TeamMember[]): TeamMember[] {
  * and fall back to `ABOUT_PAGE_PLACEHOLDER` on failure. UI stays unchanged.
  */
 export async function getAboutPageContent(): Promise<AboutPageContent> {
-  return ABOUT_PAGE_PLACEHOLDER;
+  let content = { ...ABOUT_PAGE_PLACEHOLDER };
+
+  try {
+    const [aboutRes, membersRes] = await Promise.all([
+      fetch(`${BACKEND_URL}/api/v1/about-page`, {
+        next: { tags: ["about-page"] },
+      }).catch(() => null),
+      fetch(`${BACKEND_URL}/api/v1/team-members`, {
+        next: { tags: ["team-members"] },
+      }).catch(() => null),
+    ]);
+
+    if (aboutRes && aboutRes.ok) {
+      const data = await aboutRes.json();
+      if (data && typeof data === "object") {
+        content = {
+          ...content,
+          hero: {
+            ...content.hero,
+            eyebrowFa: data.heroEyebrowFa || content.hero.eyebrowFa,
+            eyebrowEn: data.heroEyebrowEn || content.hero.eyebrowEn,
+            titleFa: data.heroTitleFa || content.hero.titleFa,
+            titleEn: data.heroTitleEn || content.hero.titleEn,
+            captionFa: data.heroCaptionFa ?? content.hero.captionFa,
+            captionEn: data.heroCaptionEn ?? content.hero.captionEn,
+            photo: data.heroImageUrl
+              ? {
+                  src: data.heroImageUrl,
+                  altFa: data.heroImageAltFa || content.hero.photo.altFa,
+                  altEn: data.heroImageAltEn || content.hero.photo.altEn,
+                  focalPoint: "50% 50%",
+                }
+              : content.hero.photo,
+          },
+          intro: {
+            ...content.intro,
+            eyebrowFa: data.introEyebrowFa || content.intro.eyebrowFa,
+            eyebrowEn: data.introEyebrowEn || content.intro.eyebrowEn,
+            titleFa: data.introTitleFa || content.intro.titleFa,
+            titleEn: data.introTitleEn || content.intro.titleEn,
+            leadFa: data.introLeadFa || content.intro.leadFa,
+            leadEn: data.introLeadEn || content.intro.leadEn,
+            approachFa: data.introApproachFa || content.intro.approachFa,
+            approachEn: data.introApproachEn || content.intro.approachEn,
+            values:
+              Array.isArray(data.coreValues) && data.coreValues.length > 0
+                ? data.coreValues
+                : content.intro.values,
+          },
+          ceo: {
+            ...content.ceo,
+            nameFa: data.ceoNameFa || content.ceo.nameFa,
+            nameEn: data.ceoNameEn || content.ceo.nameEn,
+            roleFa: data.ceoRoleFa || content.ceo.roleFa,
+            roleEn: data.ceoRoleEn || content.ceo.roleEn,
+            quoteFa: data.ceoQuoteFa || content.ceo.quoteFa,
+            quoteEn: data.ceoQuoteEn || content.ceo.quoteEn,
+            bioFa:
+              Array.isArray(data.ceoBioFa) && data.ceoBioFa.length > 0
+                ? data.ceoBioFa
+                : content.ceo.bioFa,
+            bioEn:
+              Array.isArray(data.ceoBioEn) && data.ceoBioEn.length > 0
+                ? data.ceoBioEn
+                : content.ceo.bioEn,
+            photo: data.ceoPhotoUrl
+              ? {
+                  src: data.ceoPhotoUrl,
+                  altFa: data.ceoNameFa || content.ceo.photo.altFa,
+                  altEn: data.ceoNameEn || content.ceo.photo.altEn,
+                  focalPoint: "50% 50%",
+                }
+              : content.ceo.photo,
+            links:
+              Array.isArray(data.ceoSocialLinks) && data.ceoSocialLinks.length > 0
+                ? data.ceoSocialLinks
+                : content.ceo.links,
+          },
+        };
+      }
+    }
+
+    if (membersRes && membersRes.ok) {
+      const membersData = await membersRes.json();
+      if (Array.isArray(membersData) && membersData.length > 0) {
+        const mappedMembers: TeamMember[] = membersData.map(
+          (m: any, idx: number) => ({
+            id: String(m.id || idx),
+            position: typeof m.position === "number" ? m.position : idx,
+            isPublished: m.isPublished !== false && m.status !== "DRAFT",
+            nameFa: m.nameFa || "",
+            nameEn: m.nameEn || "",
+            roleFa: m.roleFa || "",
+            roleEn: m.roleEn || "",
+            departmentFa: m.departmentFa || "",
+            departmentEn: m.departmentEn || "",
+            bioFa: m.bioFa || "",
+            bioEn: m.bioEn || "",
+            photo: {
+              src: m.photoUrl || null,
+              altFa: m.photoAltFa || m.nameFa || "",
+              altEn: m.photoAltEn || m.nameEn || "",
+              focalPoint: m.focalPoint || "50% 50%",
+            },
+            links: Array.isArray(m.socialLinks) ? m.socialLinks : [],
+          })
+        );
+
+        content.team = {
+          ...content.team,
+          members: mappedMembers,
+        };
+      }
+    }
+  } catch (error) {
+    // Non-blocking fallback to placeholder content
+  }
+
+  return content;
 }

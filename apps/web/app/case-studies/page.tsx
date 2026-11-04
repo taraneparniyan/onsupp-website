@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   SHOWCASE_PROJECTS,
   getAllCaseStudies,
+  normalizeCaseStudy,
   type CaseStudyItem,
 } from "@/lib/case-studies";
 import { scrollToSection } from "@/lib/scroll";
@@ -60,59 +61,22 @@ export default function CaseStudiesArchivePage() {
             const match = SHOWCASE_PROJECTS.find(
               (p) => p.slug === item.slug || p.titleFa === item.titleFa || p.id === item.slug
             );
+            const normalized = normalizeCaseStudy(item, idx);
             if (match) {
               return {
                 ...match,
-                titleFa: item.titleFa || match.titleFa,
-                titleEn: item.titleEn || match.titleEn,
-                client: item.client || match.client,
-                clientEn: item.clientEn || match.clientEn,
-                taglineFa: item.taglineFa || match.taglineFa,
-                taglineEn: item.taglineEn || match.taglineEn,
-                categoryFa: item.categoryFa || match.categoryFa,
-                categoryEn: item.categoryEn || match.categoryEn,
-                image: item.imageUrl || match.image,
-                secondaryImage: item.secondaryImage || match.secondaryImage,
-                liveUrl: item.liveUrl || match.liveUrl,
-                position: item.position ?? match.position ?? idx,
-                featured: item.featured ?? match.featured,
-                year: item.year || match.year,
+                ...normalized,
+                servicesFa: (Array.isArray(item.servicesFa) && item.servicesFa.length > 0) ? item.servicesFa : match.servicesFa,
+                servicesEn: (Array.isArray(item.servicesEn) && item.servicesEn.length > 0) ? item.servicesEn : match.servicesEn,
+                metricsFa: (Array.isArray(item.metricsFa) && item.metricsFa.length > 0) ? item.metricsFa : match.metricsFa,
+                metricsEn: (Array.isArray(item.metricsEn) && item.metricsEn.length > 0) ? item.metricsEn : match.metricsEn,
+                colorGradient: item.colorGradient || match.colorGradient,
+                accentColor: item.accentColor || match.accentColor,
+                glowColor: item.glowColor || match.glowColor,
+                previewType: item.previewType || match.previewType,
               };
             }
-
-            const previewType: "mobile" | "web" | "platform" =
-              item.projectType === "app"
-                ? "mobile"
-                : item.projectType === "instagram"
-                ? "platform"
-                : "web";
-
-            return {
-              id: item.slug || `project-${item.id}`,
-              slug: item.slug || `project-${item.id}`,
-              client: item.client || item.titleFa || "مشتری سازمانی",
-              clientEn: item.clientEn || item.titleEn || "Enterprise Client",
-              titleFa: item.titleFa || "",
-              titleEn: item.titleEn || "",
-              taglineFa: item.taglineFa || item.descriptionFa || "",
-              taglineEn: item.taglineEn || item.descriptionEn || "",
-              categoryFa: item.categoryFa || "دیجیتال",
-              categoryEn: item.categoryEn || "Digital",
-              servicesFa: [item.categoryFa || "توسعه محصول"],
-              servicesEn: [item.categoryEn || "Product Development"],
-              metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
-              metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
-              colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
-              accentColor: "#38bdf8",
-              glowColor: "rgba(56, 189, 248, 0.15)",
-              previewType,
-              image: item.imageUrl || "/case_study_1.jpg",
-              secondaryImage: item.secondaryImage || undefined,
-              liveUrl: item.liveUrl || "#",
-              featured: item.featured !== false,
-              position: item.position ?? idx,
-              year: item.year || "۲۰۲۵",
-            };
+            return normalized;
           });
 
           setProjects(getAllCaseStudies(merged));

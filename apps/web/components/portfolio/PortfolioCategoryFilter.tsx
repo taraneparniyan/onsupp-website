@@ -143,8 +143,8 @@ export default function PortfolioCategoryFilter({
     String(num).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]);
 
   return (
-    <div className="w-full overflow-x-auto no-scrollbar py-2 select-none">
-      <div className="flex items-center gap-2 sm:gap-2.5 min-w-max">
+    <div className="w-full select-none border-b border-[#1F1F1E]/12 dark:border-white/10 pb-1">
+      <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-2">
         {PORTFOLIO_CATEGORY_TABS.map((cat) => {
           const isSelected = currentCategory === cat.id;
           const count = getCount(cat.id);
@@ -154,18 +154,18 @@ export default function PortfolioCategoryFilter({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory(cat.id)}
-              className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 border cursor-pointer ${
+              className={`group/tab relative inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-none transition-all duration-200 border cursor-pointer shrink-0 ${
                 isSelected
-                  ? "bg-[#38534A] dark:bg-[#8AB3A0] text-white dark:text-[#17221E] border-[#38534A] dark:border-[#8AB3A0] shadow-md shadow-[#38534A]/20"
-                  : "bg-white/70 dark:bg-white/[0.05] border-black/[0.08] dark:border-white/10 text-foreground/75 hover:border-[#38534A]/40 dark:hover:border-[#8AB3A0]/40 hover:text-foreground hover:bg-white dark:hover:bg-white/[0.08]"
+                  ? "bg-[#38534A] text-white dark:bg-[#8AB3A0] dark:text-[#121413] border-[#38534A] dark:border-[#8AB3A0] shadow-sm font-bold"
+                  : "bg-[#EAEBE7]/80 dark:bg-[#1A1D1C]/80 border-[#1F1F1E]/10 dark:border-white/10 text-foreground/75 hover:bg-[#E2E5E1] dark:hover:bg-[#222624] hover:text-foreground hover:border-[#1F1F1E]/25 dark:hover:border-white/20"
               }`}
             >
               <span>{isRtl ? cat.labelFa : cat.labelEn}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none ${
                   isSelected
-                    ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#17221E]"
-                    : "bg-black/[0.05] dark:bg-white/[0.08] text-foreground/60"
+                    ? "bg-white/20 dark:bg-black/20 text-white dark:text-[#121413]"
+                    : "bg-black/[0.06] dark:bg-white/[0.08] text-foreground/60"
                 }`}
               >
                 {isRtl ? toFaDigits(count) : count}

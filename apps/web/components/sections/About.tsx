@@ -187,7 +187,7 @@ export default function About() {
     : DEFAULT_CONTENT.imageUrl;
 
   return (
-    <section id="about" className="w-full relative overflow-hidden pb-12 sm:pb-20 lg:pb-32 bg-background">
+    <section id="about" className="w-full relative overflow-hidden bg-background">
       {/* ─── Mobile Version (Reference Design - lg:hidden) ─── */}
       <div className="lg:hidden w-full px-4 sm:px-6 pt-4 pb-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : "ltr"}>
         {/* Top Eyebrow & Main Headline */}
@@ -213,7 +213,7 @@ export default function About() {
 
         {/* Team Photo with rounded corners and scale reveal */}
         <ScrollReveal animation="scaleUp" delay={0.1} duration={0.6}>
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-foreground/10 bg-raised shadow-xl mb-4 xs:mb-5">
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-foreground/10 bg-raised shadow-xl mb-4 xs:mb-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageSrc}
@@ -230,7 +230,7 @@ export default function About() {
             {MOBILE_FEATURES.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-start gap-2 xs:gap-2.5 rounded-2xl border border-foreground/10 bg-raised px-3 py-3.5 xs:px-3.5 xs:py-4 transition-all duration-200 active:scale-[0.98]"
+                className="flex items-center justify-start gap-2 xs:gap-2.5 rounded-none border border-foreground/10 bg-raised px-3 py-3.5 xs:px-3.5 xs:py-4 transition-all duration-200 active:scale-[0.98]"
               >
                 <span className="text-mint shrink-0">
                   {item.icon}
@@ -266,7 +266,7 @@ export default function About() {
                   e.preventDefault();
                 }
               }}
-              className={`group flex w-full h-12 xs:h-13 items-center justify-center gap-2.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-6 text-sm xs:text-base font-semibold shadow-[0_4px_16px_rgba(56,83,74,0.25)] active:scale-[0.98] transition-all duration-200 ${
+              className={`group flex w-full h-12 xs:h-13 items-center justify-center gap-2.5 rounded-none bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-6 text-sm xs:text-base font-semibold shadow-[0_4px_16px_rgba(56,83,74,0.25)] active:scale-[0.98] transition-all duration-200 ${
                 isRtl
                   ? "font-[family-name:var(--font-vazirmatn)]"
                   : "font-[family-name:var(--font-gendy)]"
@@ -316,7 +316,7 @@ export default function About() {
                           e.preventDefault();
                         }
                       }}
-                      className={`group inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-7 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold shadow-[0_8px_20px_-4px_rgba(56,83,74,0.3)] transition-all duration-300 cursor-pointer ${
+                      className={`group inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 rounded-none bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/30 px-7 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold shadow-[0_8px_20px_-4px_rgba(56,83,74,0.3)] transition-all duration-300 cursor-pointer ${
                         isRtl
                           ? "font-[family-name:var(--font-vazirmatn)]"
                           : "font-[family-name:var(--font-gendy)]"
@@ -342,9 +342,9 @@ export default function About() {
                         <motion.div
                           key={i}
                           whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.02 }}
-                          className="flex items-center gap-3.5 sm:gap-4 rounded-2xl border border-foreground/10 bg-raised/60 px-5 py-4 sm:py-4.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-[#38534A]/30 dark:hover:border-[#8AB3A0]/30 hover:bg-raised"
+                          className="flex items-center gap-3.5 sm:gap-4 rounded-none border border-foreground/10 bg-raised/60 px-5 py-4 sm:py-4.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-[#38534A]/30 dark:hover:border-[#8AB3A0]/30 hover:bg-raised"
                         >
-                          <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-panel text-[#38534A] dark:text-[#8AB3A0] shadow-inner border border-foreground/10">
+                          <span className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-none bg-panel text-[#38534A] dark:text-[#8AB3A0] shadow-inner border border-foreground/10">
                             {ICONS[f.icon] || ICONS.team}
                           </span>
                           <span className="text-sm sm:text-base font-bold text-foreground">
@@ -369,7 +369,7 @@ export default function About() {
                 {/* Image Presentation (Placed second in DOM so it appears on the Left in RTL) */}
                 <div className="col-span-1 lg:col-span-6 order-1 lg:order-2 flex items-center">
                   <ScrollReveal animation="scaleUp" delay={0.25} duration={0.8} className="w-full">
-                    <div className="group relative w-full aspect-[16/10.2] overflow-hidden rounded-2xl sm:rounded-[32px] border border-foreground/10 bg-raised shadow-2xl">
+                    <div className="group relative w-full aspect-[16/10.2] overflow-hidden rounded-none border border-foreground/10 bg-raised shadow-2xl">
                       <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent z-10 pointer-events-none" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -377,7 +377,7 @@ export default function About() {
                         alt={content.imageAlt || (isRtl ? "درباره ما" : "About us")}
                         className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 opacity-90 group-hover:opacity-100"
                       />
-                      <div className="absolute inset-0 border border-foreground/10 rounded-2xl sm:rounded-[32px] z-20 pointer-events-none" />
+                      <div className="absolute inset-0 border border-foreground/10 rounded-none z-20 pointer-events-none" />
                     </div>
                   </ScrollReveal>
                 </div>

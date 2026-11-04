@@ -73,33 +73,78 @@ model HeroSlide {
 }
 
 model Service {
-  id         Int      @id @default(autoincrement())
-  title      String   @default("")
-  titleEn    String   @default("")
-  subtitle   String   @default("")
-  subtitleEn String   @default("")
-  imageUrl   String?
-  imageAlt   String?
-  position   Int      @default(0)
-  updatedAt  DateTime @updatedAt
-  createdAt  DateTime @default(now())
+  id                   Int           @id @default(autoincrement())
+  slug                 String        @default("")
+  title                String        @default("")
+  titleEn              String        @default("")
+  subtitle             String        @default("")
+  subtitleEn           String        @default("")
+  tagFa                String        @default("")
+  tagEn                String        @default("")
+  iconType             String        @default("web")
+  headlineFa           String        @default("")
+  headlineEn           String        @default("")
+  descriptionFa        String        @default("")
+  descriptionEn        String        @default("")
+  detailedNarrativeFa  String        @default("")
+  detailedNarrativeEn  String        @default("")
+  businessValueTitleFa String        @default("")
+  businessValueTitleEn String        @default("")
+  businessValueFa      String        @default("")
+  businessValueEn      String        @default("")
+  imageUrl             String?
+  imageAlt             String?
+  coverImageUrl        String?
+  coverImageAlt        String?
+  gallery              String[]      @default([])
+  subservices          Json          @default("[]")
+  deliverablesFa       String[]      @default([])
+  deliverablesEn       String[]      @default([])
+  metrics              Json          @default("[]")
+  relatedLinks         Json          @default("[]")
+  metaTitleFa          String        @default("")
+  metaTitleEn          String        @default("")
+  metaDescFa           String        @default("")
+  metaDescEn           String        @default("")
+  keywordsFa           String        @default("")
+  keywordsEn           String        @default("")
+  canonicalUrl         String        @default("")
+  ogImage              String        @default("")
+  position             Int           @default(0)
+  published            Boolean       @default(true)
+  status               ContentStatus @default(PUBLISHED)
+  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime      @default(now())
 
+  @@index([slug])
+  @@index([published])
+  @@index([status])
+  @@index([position])
   @@map("services")
 }
 
 model Stat {
-  id        Int      @id @default(autoincrement())
-  kind      String   @default("number")
-  valueFa   String   @default("")
-  valueEn   String   @default("")
-  labelFa   String   @default("")
-  labelEn   String   @default("")
-  descFa    String   @default("")
-  descEn    String   @default("")
-  position  Int      @default(0)
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
+  id        Int           @id @default(autoincrement())
+  kind      String        @default("number")
+  valueFa   String        @default("")
+  valueEn   String        @default("")
+  labelFa   String        @default("")
+  labelEn   String        @default("")
+  descFa    String        @default("")
+  descEn    String        @default("")
+  iconType  String        @default("star")
+  suffixFa  String        @default("")
+  suffixEn  String        @default("")
+  isRating  Boolean       @default(false)
+  position  Int           @default(0)
+  published Boolean       @default(true)
+  status    ContentStatus @default(PUBLISHED)
+  updatedAt DateTime      @updatedAt
+  createdAt DateTime      @default(now())
 
+  @@index([published])
+  @@index([status])
+  @@index([position])
   @@map("stats")
 }
 
@@ -137,30 +182,57 @@ model Feature {
 }
 
 model CaseStudy {
-  id             Int      @id @default(autoincrement())
-  slug           String   @default("")
-  client         String   @default("")
-  clientEn       String   @default("")
-  titleFa        String   @default("")
-  titleEn        String   @default("")
-  taglineFa      String   @default("")
-  taglineEn      String   @default("")
-  categoryFa     String   @default("")
-  categoryEn     String   @default("")
-  projectType    String   @default("website")
-  descriptionFa  String   @default("")
-  descriptionEn  String   @default("")
+  id             Int           @id @default(autoincrement())
+  slug           String        @default("")
+  client         String        @default("")
+  clientEn       String        @default("")
+  titleFa        String        @default("")
+  titleEn        String        @default("")
+  taglineFa      String        @default("")
+  taglineEn      String        @default("")
+  categoryFa     String        @default("")
+  categoryEn     String        @default("")
+  projectType    String        @default("website")
+  descriptionFa  String        @default("")
+  descriptionEn  String        @default("")
   imageUrl       String?
   secondaryImage String?
-  liveUrl        String   @default("#")
-  featured       Boolean  @default(true)
-  position       Int      @default(0)
-  year           String   @default("۲۰۲۵")
-  updatedAt      DateTime @updatedAt
-  createdAt      DateTime @default(now())
+  gallery        String[]      @default([])
+  servicesFa     String[]      @default([])
+  servicesEn     String[]      @default([])
+  challengeFa    String        @default("")
+  challengeEn    String        @default("")
+  solutionFa     String        @default("")
+  solutionEn     String        @default("")
+  deliverablesFa String[]      @default([])
+  deliverablesEn String[]      @default([])
+  metricsFa      Json          @default("[]")
+  metricsEn      Json          @default("[]")
+  colorGradient  String        @default("from-[#1a1315] via-[#241a1e] to-[#100b0d]")
+  accentColor    String        @default("#8BB3A4")
+  glowColor      String        @default("rgba(139, 179, 164, 0.2)")
+  previewType    String        @default("web")
+  liveUrl        String        @default("#")
+  metaTitleFa    String        @default("")
+  metaTitleEn    String        @default("")
+  metaDescFa     String        @default("")
+  metaDescEn     String        @default("")
+  keywordsFa     String        @default("")
+  keywordsEn     String        @default("")
+  canonicalUrl   String        @default("")
+  ogImage        String        @default("")
+  featured       Boolean       @default(true)
+  published      Boolean       @default(true)
+  status         ContentStatus @default(PUBLISHED)
+  position       Int           @default(0)
+  year           String        @default("۱۴۰۳")
+  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime      @default(now())
 
   @@index([position])
   @@index([slug])
+  @@index([published])
+  @@index([status])
   @@map("case_studies")
 }
 
@@ -356,4 +428,212 @@ enum Role {
   SUPPORT
   PROJECT_MANAGER
   USER
+}
+
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model SiteSetting {
+  id                 Int           @id @default(1)
+  siteNameFa         String        @default("آن‌ساپ")
+  siteNameEn         String        @default("OnSupp")
+  siteDescriptionFa  String        @default("آژانس خلاق دیجیتال مارکتینگ و توسعه نرم‌افزار")
+  siteDescriptionEn  String        @default("Creative Digital Marketing & Software Development Agency")
+  headerCtaTextFa    String        @default("شروع همکاری")
+  headerCtaTextEn    String        @default("Get Started")
+  headerCtaLink      String        @default("/#contact")
+  addressTitleFa     String        @default("آدرس و نشانی")
+  addressTitleEn     String        @default("Office Address")
+  streetFa           String        @default("عظیمیه، میدان کوهنورد، گلستان ۲۱")
+  streetEn           String        @default("Golestan 21, Kouhnavard Sq, Azimiyeh")
+  cityFa             String        @default("البرز، کرج، منطقه عظیمیه")
+  cityEn             String        @default("Alborz, Karaj, Azimiyeh District")
+  workingHoursFa     String        @default("شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰")
+  workingHoursEn     String        @default("Sat - Wed: 09:00 - 18:00")
+  channels           Json          @default("[]")
+  telegramUrl        String        @default("https://t.me/onsupp_web")
+  telegramHandle     String        @default("onsupp_web")
+  instagramUrl       String        @default("https://instagram.com/onsupp_web")
+  linkedinUrl        String?
+  consultEmail       String        @default("info@onsupp.ir")
+  footerTextFa       String        @default("کلیه حقوق مادی و معنوی متعلق به آژانس دیجیتال مارکتینگ آن‌ساپ می‌باشد.")
+  footerTextEn       String        @default("All rights reserved by OnSupp Digital Marketing Agency.")
+  copyrightTextFa    String        @default("تمامی حقوق برای آن‌ساپ محفوظ است.")
+  copyrightTextEn    String        @default("All rights reserved.")
+  defaultMetaTitleFa String        @default("آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار")
+  defaultMetaTitleEn String        @default("OnSupp | Digital Agency & Software Engineering")
+  defaultMetaDescFa  String        @default("")
+  defaultMetaDescEn  String        @default("")
+  defaultKeywordsFa  String        @default("")
+  defaultKeywordsEn  String        @default("")
+  headerLogoUrl      String?
+  footerLogoUrl      String?
+  faviconUrl         String?
+  ogImageUrl         String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@map("site_settings")
+}
+
+model ClientPartner {
+  id              Int           @id @default(autoincrement())
+  orderNumber     String        @default("01")
+  nameFa          String
+  nameEn          String        @default("")
+  titleFa         String
+  titleEn         String        @default("")
+  industryFa      String        @default("")
+  industryEn      String        @default("")
+  introFa         String        @default("")
+  introEn         String        @default("")
+  quoteFa         String?
+  quoteEn         String?
+  servicesFa      String[]      @default([])
+  servicesEn      String[]      @default([])
+  yearFa          String        @default("۱۴۰۳")
+  yearEn          String        @default("2024")
+  portraitImage   String?
+  portraitBadgeFa String?
+  portraitBadgeEn String?
+  monogram        String        @default("OP")
+  websites        Json          @default("[]")
+  instagrams      Json          @default("[]")
+  isActive        Boolean       @default(true)
+  status          ContentStatus @default(PUBLISHED)
+  position        Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([status])
+  @@index([position])
+  @@map("client_partners")
+}
+
+model ClientLogo {
+  id         Int           @id @default(autoincrement())
+  nameFa     String
+  nameEn     String        @default("")
+  imageUrl   String
+  altFa      String        @default("")
+  altEn      String        @default("")
+  websiteUrl String?
+  width      Int           @default(200)
+  height     Int           @default(100)
+  isActive   Boolean       @default(true)
+  status     ContentStatus @default(PUBLISHED)
+  position   Int           @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([status])
+  @@index([position])
+  @@map("client_logos")
+}
+
+model TeamMember {
+  id           Int           @id @default(autoincrement())
+  nameFa       String
+  nameEn       String        @default("")
+  roleFa       String
+  roleEn       String        @default("")
+  departmentFa String        @default("عمومی")
+  departmentEn String        @default("General")
+  bioFa        String        @default("")
+  bioEn        String        @default("")
+  photoUrl     String?
+  photoAltFa   String?
+  photoAltEn   String?
+  focalPoint   String        @default("50% 50%")
+  gallery      String[]      @default([])
+  socialLinks  Json          @default("[]")
+  isPublished  Boolean       @default(true)
+  isLeadership Boolean       @default(false)
+  status       ContentStatus @default(PUBLISHED)
+  position     Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([isPublished])
+  @@index([status])
+  @@index([position])
+  @@map("team_members")
+}
+
+model AboutPageSetting {
+  id              Int      @id @default(1)
+  heroEyebrowFa   String   @default("درباره آن‌ساپ")
+  heroEyebrowEn   String   @default("About OnSupp")
+  heroTitleFa     String   @default("تیمی فراتر از مرزهای سنتی دیجیتال مارکتینگ")
+  heroTitleEn     String   @default("Beyond the Boundaries of Traditional Agency")
+  heroCaptionFa   String   @default("")
+  heroCaptionEn   String   @default("")
+  heroImageUrl    String?
+  heroImageAltFa  String?
+  heroImageAltEn  String?
+  introEyebrowFa  String   @default("دیدگاه استراتژیک")
+  introEyebrowEn  String   @default("Strategic Vision")
+  introTitleFa    String   @default("تمرکز بر ساختن ارزش‌های ماندگار")
+  introTitleEn    String   @default("Focused on Enduring Value Creation")
+  introLeadFa     String   @default("")
+  introLeadEn     String   @default("")
+  introApproachFa String   @default("")
+  introApproachEn String   @default("")
+  coreValues      Json     @default("[]")
+  ceoNameFa       String   @default("علی شمس")
+  ceoNameEn       String   @default("Ali Shams")
+  ceoRoleFa       String   @default("مدیرعامل و هم‌بنیان‌گذار")
+  ceoRoleEn       String   @default("Chief Executive Officer & Co-Founder")
+  ceoQuoteFa      String   @default("")
+  ceoQuoteEn      String   @default("")
+  ceoBioFa        String[] @default([])
+  ceoBioEn        String[] @default([])
+  ceoPhotoUrl     String?
+  ceoSocialLinks  Json     @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("about_page_settings")
+}
+
+model HomeSection {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  titleFa   String
+  titleEn   String   @default("")
+  type      String   @default("section")
+  isEnabled Boolean  @default(true)
+  position  Int      @default(0)
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+  @@index([isEnabled])
+  @@map("home_sections")
+}
+
+model PageSeo {
+  id            Int      @id @default(autoincrement())
+  routePath     String   @unique
+  titleFa       String
+  titleEn       String   @default("")
+  descriptionFa String   @default("")
+  descriptionEn String   @default("")
+  keywordsFa    String   @default("")
+  keywordsEn    String   @default("")
+  canonicalUrl  String   @default("")
+  ogImageUrl    String?
+  noIndex       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([routePath])
+  @@map("page_seo")
 }

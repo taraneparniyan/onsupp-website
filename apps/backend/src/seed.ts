@@ -67,8 +67,8 @@ export function assertDevelopmentOnly(customUrl?: string): void {
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
-  if (dbName !== 'onsupp_dev') {
-    const errorMsg = `[seed FATAL] Target database "${dbName}" is not approved for seeding. Only "onsupp_dev" is permitted.`;
+  if (dbName !== 'onsupp_dev' && dbName !== 'onsupp_redesign') {
+    const errorMsg = `[seed FATAL] Target database "${dbName}" is not approved for seeding. Only "onsupp_dev" or "onsupp_redesign" is permitted.`;
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
@@ -317,8 +317,8 @@ const existingStats = await prisma.stat.count();
       },
       {
         kind: 'number',
-        valueFa: '+۲۰۰',
-        valueEn: '200+',
+        valueFa: '+۷۰۰',
+        valueEn: '700+',
         labelFa: 'پروژه موفق',
         labelEn: 'Successful projects',
         descFa: 'پروژه‌های موفقی که به نتیجه رسیدند',
@@ -1079,6 +1079,8 @@ const existingStats = await prisma.stat.count();
     console.log('[seed] Testimonials already exist. Skipping creation.');
   }
 
+  await seedDynamicCms(prisma);
+
   console.log('Seeding completed successfully!');
 }
 
@@ -1096,4 +1098,257 @@ if (isDirectExecution) {
     .finally(async () => {
       await prisma.$disconnect();
     });
+}
+
+export async function seedDynamicCms(db: PrismaClient = prisma): Promise<void> {
+  console.log('[seed] Seeding Dynamic CMS modules...');
+
+  // SiteSetting
+  const siteSettingData = {
+    id: 1,
+    siteNameFa: 'آن‌ساپ',
+    siteNameEn: 'OnSupp',
+    siteDescriptionFa: 'آژانس خلاق دیجیتال مارکتینگ و توسعه نرم‌افزار',
+    siteDescriptionEn: 'Creative Digital Marketing & Software Development Agency',
+    headerCtaTextFa: 'شروع همکاری',
+    headerCtaTextEn: 'Get Started',
+    headerCtaLink: '/#contact',
+    addressTitleFa: 'آدرس و نشانی استودیو',
+    addressTitleEn: 'Office Address',
+    streetFa: 'عظیمیه، میدان کوهنورد، گلستان ۲۱',
+    streetEn: 'Golestan 21, Kouhnavard Sq, Azimiyeh',
+    cityFa: 'البرز، کرج، منطقه عظیمیه',
+    cityEn: 'Alborz, Karaj, Azimiyeh District',
+    workingHoursFa: 'شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰',
+    workingHoursEn: 'Sat - Wed: 09:00 - 18:00',
+    channels: [
+      { id: 'manager', titleFa: 'ارتباط مستقیم با مدیریت', titleEn: 'Direct Executive Line', value: '۰۹۳۳ ۱۸۰ ۵۶۲۸', link: 'tel:+989331805628', icon: 'phone' },
+      { id: 'web', titleFa: 'دپارتمان وب و تکنولوژی', titleEn: 'Web & Engineering Dept', value: '۰۹۱۸ ۲۹۲ ۴۹۸۱', link: 'tel:+989182924981', icon: 'code' },
+      { id: 'social', titleFa: 'تلگرام و مشاوره برخط', titleEn: 'Telegram & Online Chat', value: '@onsupp_web', link: 'https://t.me/onsupp_web', icon: 'send' },
+      { id: 'email', titleFa: 'پست الکترونیک رسمی', titleEn: 'Official Inquiries', value: 'info@onsupp.ir', link: 'mailto:info@onsupp.ir', icon: 'mail' },
+    ],
+    telegramUrl: 'https://t.me/onsupp_web',
+    telegramHandle: 'onsupp_web',
+    instagramUrl: 'https://instagram.com/onsupp_web',
+    linkedinUrl: 'https://linkedin.com/company/onsupp',
+    consultEmail: 'info@onsupp.ir',
+    footerTextFa: 'کلیه حقوق مادی و معنوی متعلق به آژانس دیجیتال مارکتینگ آن‌ساپ می‌باشد.',
+    footerTextEn: 'All rights reserved by OnSupp Digital Marketing Agency.',
+    copyrightTextFa: 'تمامی حقوق برای آن‌ساپ محفوظ است.',
+    copyrightTextEn: 'All rights reserved.',
+    defaultMetaTitleFa: 'آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار',
+    defaultMetaTitleEn: 'OnSupp | Digital Agency & Software Engineering',
+    defaultMetaDescFa: 'آژانس خلاق دیجیتال مارکتینگ آن‌ساپ، پیشرو در طراحی سایت مدرن، سئو تکنیکال، برندینگ و اتوماسیون سازمانی.',
+    defaultMetaDescEn: 'OnSupp Digital Agency specializes in Next.js web development, technical SEO, brand identity, and enterprise automation.',
+    defaultKeywordsFa: 'دیجیتال مارکتینگ, طراحی سایت, سئو تکنیکال, استودیو تولید محتوا, آن‌ساپ',
+    defaultKeywordsEn: 'digital marketing, web design, technical seo, content studio, onsupp',
+    headerLogoUrl: '/images/hero/onsupp-logo.webp',
+    footerLogoUrl: '/images/hero/onsupp-logo.webp',
+    faviconUrl: '/favicon.ico',
+    ogImageUrl: '/images/og/onsupp-default-og.png',
+  };
+
+  await db.siteSetting.upsert({
+    where: { id: 1 },
+    update: siteSettingData,
+    create: siteSettingData,
+  });
+
+  // AboutPageSetting
+  const aboutPageData = {
+    id: 1,
+    heroEyebrowFa: 'درباره آن‌ساپ',
+    heroEyebrowEn: 'About OnSupp',
+    heroTitleFa: 'آدم‌هایی که پشت هر پروژه ایستاده‌اند',
+    heroTitleEn: 'The people behind every project',
+    heroCaptionFa: 'تیم آن‌ساپ — تهران و کرج',
+    heroCaptionEn: 'The OnSupp team — Tehran & Karaj',
+    heroImageUrl: '/images/hero/hero-media-studio.webp',
+    heroImageAltFa: 'عکس گروهی تیم آن‌ساپ',
+    heroImageAltEn: 'OnSupp team group photograph',
+    introEyebrowFa: 'درباره ما',
+    introEyebrowEn: 'About Us',
+    introTitleFa: 'یک تیم، از استراتژی تا اجرا',
+    introTitleEn: 'One team, from strategy to delivery',
+    introLeadFa: 'آن‌ساپ یک آژانس دیجیتال است که استراتژی، طراحی، فناوری و رسانه را زیر یک سقف کنار هم آورده است.',
+    introLeadEn: 'OnSupp is a digital agency that brings strategy, design, technology and media together under one roof.',
+    introApproachFa: 'رویکرد ما ساده است: پیش از ساختن، گوش می‌دهیم. هر پروژه با شناخت کسب‌وکار و مخاطب شروع می‌شود.',
+    introApproachEn: 'Our approach is simple: we listen before we build. Every project starts with understanding the business and its audience.',
+    coreValues: [
+      { id: 'clarity', titleFa: 'شفافیت', titleEn: 'Clarity', descriptionFa: 'اهداف، زمان‌بندی و نتایج را روشن و قابل پیگیری نگه می‌داریم.', descriptionEn: 'Goals, timelines and results stay visible and trackable from day one.' },
+      { id: 'craft', titleFa: 'دقت در اجرا', titleEn: 'Craft', descriptionFa: 'جزئیات را جدی می‌گیریم؛ از یک خط کد تا انتخاب یک کلمه.', descriptionEn: 'We take details seriously — from a single line of code to the choice of a word.' },
+      { id: 'partnership', titleFa: 'همراهی بلندمدت', titleEn: 'Partnership', descriptionFa: 'پروژه با تحویل تمام نمی‌شود؛ کنار برند می‌مانیم تا رشد ادامه پیدا کند.', descriptionEn: 'Delivery isn\'t the finish line; we stay alongside the brand as it grows.' },
+    ],
+    ceoNameFa: 'علی شمس',
+    ceoNameEn: 'Ali Shams',
+    ceoRoleFa: 'بنیان‌گذار و مدیرعامل',
+    ceoRoleEn: 'Founder & CEO',
+    ceoQuoteFa: 'ما آن‌ساپ را ساختیم تا برندها مجبور نباشند بین خلاقیت و نتیجه یکی را انتخاب کنند.',
+    ceoQuoteEn: 'We built OnSupp so brands never have to choose between creativity and results.',
+    ceoBioFa: ['مسیر حرفه‌ای من با اشتیاق به خلق تجربیات دیجیتال متمایز و ساختن تیم‌های هم‌افزا آغاز شد.'],
+    ceoBioEn: ['My journey began with a passion for designing distinct digital experiences and building synergistic teams.'],
+    ceoPhotoUrl: '/images/team/ali-shams.webp',
+    ceoSocialLinks: [{ platform: 'linkedin', url: 'https://linkedin.com' }],
+  };
+
+  await db.aboutPageSetting.upsert({
+    where: { id: 1 },
+    update: aboutPageData,
+    create: aboutPageData,
+  });
+
+  // HomeSection
+  const homeSections = [
+    { key: 'hero', titleFa: 'اسلایدر هدر', titleEn: 'Hero Header', position: 0, isEnabled: true },
+    { key: 'partners', titleFa: 'مشتریان و همکاران تجاری', titleEn: 'Clients & Partners', position: 1, isEnabled: true },
+    { key: 'stats', titleFa: 'آمار و دستاوردها', titleEn: 'Statistics & Impact', position: 2, isEnabled: true },
+    { key: 'services', titleFa: 'خدمات تخصصی', titleEn: 'Services Carousel', position: 3, isEnabled: true },
+    { key: 'about', titleFa: 'معرفی آن‌ساپ', titleEn: 'About Us Overview', position: 4, isEnabled: true },
+    { key: 'logos', titleFa: 'برندهای همراه', titleEn: 'Client Logo Marquee', position: 5, isEnabled: true },
+    { key: 'case_studies', titleFa: 'نمونه‌کارها و پروژه‌ها', titleEn: 'Featured Case Studies', position: 6, isEnabled: true },
+    { key: 'pricing', titleFa: 'پلن‌ها و تعرفه‌ها', titleEn: 'Pricing & Plans', position: 7, isEnabled: true },
+    { key: 'testimonials', titleFa: 'نظرات و رضایت کارفرمایان', titleEn: 'Client Testimonials', position: 8, isEnabled: true },
+    { key: 'contact', titleFa: 'تماس و شروع همکاری', titleEn: 'Contact CTA', position: 9, isEnabled: true },
+  ];
+  for (const sec of homeSections) {
+    await db.homeSection.upsert({
+      where: { key: sec.key },
+      update: { titleFa: sec.titleFa, titleEn: sec.titleEn, position: sec.position, isEnabled: sec.isEnabled },
+      create: sec,
+    });
+  }
+
+  // ClientPartners
+  const existingPartnersCount = await db.clientPartner.count();
+  if (existingPartnersCount === 0) {
+    await db.clientPartner.createMany({
+      data: [
+        {
+          orderNumber: '01',
+          nameFa: 'نجما توکلیان',
+          nameEn: 'Najma Tavakolian',
+          titleFa: 'موسسه بین‌المللی مهاجرتی و حقوقی نجما توکلیان',
+          titleEn: 'Immigration & International Legal Consultancy',
+          industryFa: 'حقوقی و مهاجرت بین‌المللی',
+          industryEn: 'Legal & Global Mobility',
+          introFa: 'مشاوره استراتژیک، اخذ ویزا و امور مهاجرت تحصیلی و سرمایه‌گذاری به کشورهای پیشرو',
+          introEn: 'Strategic immigration consultancy, study permits, and global investment programs',
+          quoteFa: '«توسعه بستر ارتباطی دیجیتال، طراحی پلتفرم‌های چندزبانه و هویت‌سازی معتبر بین‌المللی با آن‌ساپ، مسیر جذب متقاضیان و اعتماد کارفرمایان را متحول ساخت.»',
+          quoteEn: '“Building our multilingual digital architecture and trusted global brand identity with OnSupp established unprecedented credibility and applicant trust.”',
+          servicesFa: ['طراحی وب‌سایت چندزبانه', 'سئو بین‌المللی', 'تولید محتوا و اینستاگرام'],
+          servicesEn: ['Multilingual Web Platform', 'International SEO', 'Content & Instagram Strategy'],
+          yearFa: '۱۴۰۲ - تاکنون',
+          yearEn: '2023 - Present',
+          monogram: 'NT',
+          portraitBadgeFa: 'کارفرمای بین‌المللی آن‌ساپ',
+          portraitBadgeEn: 'OnSupp Global Client Partner',
+          websites: [{ url: 'https://najmatavakolian.net/', label: 'najmatavakolian.net' }],
+          instagrams: [{ handle: '@najma.immigration', profileUrl: 'https://instagram.com/najma.immigration' }],
+          isActive: true,
+          status: 'PUBLISHED',
+          position: 0,
+        },
+        {
+          orderNumber: '02',
+          nameFa: 'مرکز زیبایی شین',
+          nameEn: 'Shin Beauty Center',
+          titleFa: 'کلینیک جامع مراقبت‌های پوستی، لیزر و جوانسازی',
+          titleEn: 'Advanced Medical Aesthetics & Skincare Center',
+          industryFa: 'پزشکی و سلامت زیبایی',
+          industryEn: 'Aesthetics & Dermatology',
+          introFa: 'به‌کارگیری پیشرفته‌ترین فناوری‌های لیزر، جوانسازی و پروتکل‌های پزشکی مراقبت از پوست',
+          introEn: 'Leading clinical lasers, modern anti-aging therapies, and high-standard skincare protocols',
+          quoteFa: '«طراحی هویت بصری منسجم، وب‌سایت نوبت‌دهی آنلاین و کمپین‌های هوشمند سوشال مدیا، جایگاه برند شین را در سطح کلینیک‌های تراز اول تثبیت کرد.»',
+          quoteEn: '“Unified luxury visual branding, seamless online booking, and targeted social growth elevated Shin to a premier aesthetic clinic tier.”',
+          servicesFa: ['هویت بصری و برندینگ', 'وب‌سایت نوبت‌دهی', 'کمپین‌های اینستاگرام'],
+          servicesEn: ['Visual Identity & Branding', 'Online Booking System', 'Instagram Campaigns'],
+          yearFa: '۱۴۰۱ - تاکنون',
+          yearEn: '2022 - Present',
+          monogram: 'SB',
+          portraitBadgeFa: 'مرکز تخصصی زیبایی',
+          portraitBadgeEn: 'Premier Aesthetic Center',
+          websites: [{ url: 'https://shinbeautycenter.com/', label: 'shinbeautycenter.com' }],
+          instagrams: [{ handle: '@shin.beautycenter', profileUrl: 'https://instagram.com/shin.beautycenter' }],
+          isActive: true,
+          status: 'PUBLISHED',
+          position: 1,
+        },
+        {
+          orderNumber: '03',
+          nameFa: 'مهدی ناظری (فیت بای ناظری)',
+          nameEn: 'Mehdi Nazeri (Fit by Nazeri)',
+          titleFa: 'آکادمی مربیگری حرفه‌ای، تناسب اندام و سبک زندگی سالم مهدی ناظری',
+          titleEn: 'Professional Fitness Coaching & Nutrition Academy by Mehdi Nazeri',
+          industryFa: 'ورزش، تندرستی و سلامت فیزیکی',
+          industryEn: 'Fitness & Wellness',
+          introFa: 'ارائه برنامه‌های تمرینی اختصاصی، تغذیه علمی و پایش مستمر نتایج ورزشکاران',
+          introEn: 'Bespoke fitness training, scientific nutrition regimens, and global athlete performance monitoring',
+          quoteFa: '«سامانه دریافت برنامه تمرینی آنلاین و هویت برند نوآورانه توسعه‌یافته توسط آن‌ساپ، مدیریت مراجعین از سراسر کشور را بهینه‌سازی کرد.»',
+          quoteEn: '“The online training portal and refined brand identity engineered by OnSupp streamlined client management nationwide.”',
+          servicesFa: ['طراحی پرتال آنلاین تمرینی', 'هویت بصری ورزشی', 'استودیو فیلم‌برداری حرکات'],
+          servicesEn: ['Online Training Portal', 'Sports Brand Identity', 'Movement Video Production'],
+          yearFa: '۱۴۰۳ - تاکنون',
+          yearEn: '2024 - Present',
+          monogram: 'FN',
+          portraitBadgeFa: 'آکادمی سلامت و فیتنس',
+          portraitBadgeEn: 'Fitness & Health Academy',
+          websites: [{ url: 'https://fitbynazeri.com/', label: 'fitbynazeri.com' }],
+          instagrams: [{ handle: '@fitbynazeri', profileUrl: 'https://instagram.com/fitbynazeri' }],
+          isActive: true,
+          status: 'PUBLISHED',
+          position: 2,
+        },
+      ],
+    });
+  }
+
+  // ClientLogos
+  const existingLogosCount = await db.clientLogo.count();
+  if (existingLogosCount === 0) {
+    await db.clientLogo.createMany({
+      data: [
+        { nameFa: 'کلینیک دکتر سینا پارسی‌پور', nameEn: 'Dr. Sina Parsi Pour Clinic', imageUrl: '/images/clients/cropped-دکتر-سینا-پارسی-پورDesign-tool.png', width: 522, height: 522, position: 0 },
+        { nameFa: 'آسمان شب', nameEn: 'Night Sky', imageUrl: '/images/clients/night-sky-logo-Fav-Icon.webp', width: 350, height: 100, position: 1 },
+        { nameFa: 'برند تخصصی همکار', nameEn: 'Partner Healthcare Brand', imageUrl: '/images/clients/cropped-داخل-مقاله-سایز-جدید-1-scaled-1.webp', width: 2558, height: 1004, position: 2 },
+        { nameFa: 'برند بین‌المللی همکار', nameEn: 'Global Partner Brand', imageUrl: '/images/clients/1784025437971-220284966.png', width: 3479, height: 2561, position: 3 },
+        { nameFa: 'نشان تجاری مشتریان', nameEn: 'Client Crest Identity', imageUrl: '/images/clients/cropped-fav-icon-180x180-1.png', width: 180, height: 180, position: 4 },
+        { nameFa: 'مرکز تخصصی همکار', nameEn: 'Specialized Partner Center', imageUrl: '/images/clients/1786532435122-428601052.png', width: 934, height: 880, position: 5 },
+        { nameFa: 'نشان برند مشتری', nameEn: 'Partner Identity', imageUrl: '/images/clients/cropped-Image-11.png', width: 1254, height: 1254, position: 6 },
+        { nameFa: 'برند تجاری همراه', nameEn: 'Enterprise Client', imageUrl: '/images/clients/dont-bg-logo-Edited.png', width: 1020, height: 643, position: 7 },
+        { nameFa: 'نشان همراهان آن‌ساپ', nameEn: 'OnSupp Client Partner', imageUrl: '/images/clients/d0e6674d-5672-4f41-94dd-2e3242594040.png', width: 2480, height: 2643, position: 8 },
+      ],
+    });
+  }
+
+  // TeamMember
+  const existingTeamCount = await db.teamMember.count();
+  if (existingTeamCount === 0) {
+    await db.teamMember.createMany({
+      data: [
+        { nameFa: 'علی شمس', nameEn: 'Ali Shams', roleFa: 'بنیان‌گذار و مدیرعامل', roleEn: 'Founder & CEO', departmentFa: 'مدیریت و استراتژی', departmentEn: 'Leadership & Strategy', bioFa: 'هدایت استراتژیک پروژه‌ها و تلفیق رویکرد داده‌محور با خلاقیت سازمانی.', bioEn: 'Strategic leadership and driving data-informed creative growth.', photoUrl: '/images/team/ali-shams.webp', isPublished: true, isLeadership: true, position: 0 },
+        { nameFa: 'پویا شمس', nameEn: 'Pouya Shams', roleFa: 'مدیر ارشد فنی و مهندسی نرم‌افزار', roleEn: 'Chief Technology Officer & Lead Architect', departmentFa: 'فناوری و مهندسی', departmentEn: 'Engineering & Tech', bioFa: 'معماری سامانه‌های مقیاس‌پذیر، زیرساخت ابری و نظارت بر کیفیت توسعه وب Next.js.', bioEn: 'Architecting scalable systems, cloud infrastructure, and Next.js engineering quality.', photoUrl: '/images/team/pouya-shams.webp', isPublished: true, isLeadership: true, position: 1 },
+        { nameFa: 'سارا احمدی', nameEn: 'Sara Ahmadi', roleFa: 'مدیر ارشد طراحی و هویت بصری', roleEn: 'Art Director & Head of Design', departmentFa: 'دیزاین و خلاقیت', departmentEn: 'Design & Creative', bioFa: 'طراحی زبان بصری ماندگار، تایپوگرافی اختصاصی و نظارت هنری بر تمام خروجی‌های استودیو.', bioEn: 'Crafting timeless design systems, typography, and artistic direction.', isPublished: true, isLeadership: false, position: 2 },
+        { nameFa: 'امیرحسین رضایی', nameEn: 'Amirhossein Rezaei', roleFa: 'سرپرست سئو تکنیکال و رشد ارگانیک', roleEn: 'Technical SEO Lead', departmentFa: 'مارکتینگ و سئو', departmentEn: 'Marketing & SEO', bioFa: 'تحلیل داده‌های سرچ کنسول، بهینه‌سازی معماری وب و افزایش ترافیک ارگانیک باکیفیت.', bioEn: 'Search analytics, web architecture optimization, and high-conversion organic growth.', isPublished: true, isLeadership: false, position: 3 },
+      ],
+    });
+  }
+
+  // PageSeo
+  const pageSeoList = [
+    { routePath: '/', titleFa: 'آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار', titleEn: 'OnSupp | Digital Agency & Software Engineering', descriptionFa: 'طراحی سایت‌های مدرن، سئو تکنیکال، تولید محتوای سینمایی و استقرار CRM.', descriptionEn: 'Enterprise web apps, technical SEO, cinematography, and automation.', canonicalUrl: 'https://onsupp.ir/' },
+    { routePath: '/about', titleFa: 'درباره ما | آژانس دیجیتال مارکتینگ آن‌ساپ', titleEn: 'About Us | OnSupp Digital Agency', descriptionFa: 'آشنایی با تیم متخصص، بنیان‌گذاران، ارزش‌های محوری و داستان شکل‌گیری آن‌ساپ.', descriptionEn: 'Learn about OnSupp team, core values, leadership, and our mission.', canonicalUrl: 'https://onsupp.ir/about' },
+    { routePath: '/services', titleFa: 'خدمات تخصصی دیجیتال مارکتینگ و توسعه وب | آن‌ساپ', titleEn: 'Our Services | OnSupp Digital Agency', descriptionFa: 'طراحی وب و اپلیکیشن، استودیو تصویربرداری، موشن گرافیک، سئو و اتوماسیون.', descriptionEn: 'Full suite of digital services: software development, SEO, cinematography, and CRM.', canonicalUrl: 'https://onsupp.ir/services' },
+    { routePath: '/case-studies', titleFa: 'نمونه‌کارها و پروژه‌های شاخص | آن‌ساپ', titleEn: 'Case Studies & Portfolio | OnSupp', descriptionFa: 'بررسی پروژه‌های موفق برندهایی که با همراهی آن‌ساپ رشد چشمگیر دیجیتال داشتند.', descriptionEn: 'Discover how we helped leading brands achieve digital transformation.', canonicalUrl: 'https://onsupp.ir/case-studies' },
+    { routePath: '/pricing', titleFa: 'تعرفه‌ها و پکیج‌های همکاری | آن‌ساپ', titleEn: 'Pricing & Plans | OnSupp', descriptionFa: 'پلن‌ها و تعرفه‌های شفاف خدمات دیجیتال مارکتینگ، طراحی سایت و سئو.', descriptionEn: 'Transparent pricing packages for web engineering, SEO, and digital marketing.', canonicalUrl: 'https://onsupp.ir/pricing' },
+    { routePath: '/contact', titleFa: 'تماس با ما و شروع همکاری | آن‌ساپ', titleEn: 'Contact Us | OnSupp', descriptionFa: 'رزرو جلسه مشاوره تخصصی، دریافت برآورد هزینه پروژه یا شروع همکاری.', descriptionEn: 'Get in touch to discuss your next project or schedule a consultation.', canonicalUrl: 'https://onsupp.ir/contact' },
+  ];
+  for (const item of pageSeoList) {
+    await db.pageSeo.upsert({
+      where: { routePath: item.routePath },
+      update: item,
+      create: item,
+    });
+  }
+
+  console.log('[seed] Dynamic CMS modules seeded successfully!');
 }

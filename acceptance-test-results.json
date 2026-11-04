@@ -1,0 +1,386 @@
+[
+  {
+    "test": "Admin Services Page Navigation",
+    "status": "PASS",
+    "evidence": "Navigated to /admin/services and loaded service management UI",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Services Update Visible on Homepage",
+    "status": "PASS",
+    "evidence": "Observed updated title \"سئو و بهینه‌سازی (تست پذیرش مرورگر)\" on homepage",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Services Update Visible on /services",
+    "status": "PASS",
+    "evidence": "Observed updated title on /services without rebuild",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Services Original Content Restored",
+    "status": "PASS",
+    "evidence": "Successfully restored service title to \"سئو و بهینه‌سازی\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Client Logos Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/client-logos management table",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Create Temporary Client Logo",
+    "status": "PASS",
+    "evidence": "Created test logo ID #20",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Temporary Logo Visible in Marquee",
+    "status": "PASS",
+    "evidence": "Found temporary logo name in Marquee track",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Marquee Logo Image Render",
+    "status": "PASS",
+    "evidence": "Logo rendered with natural image width",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Cleanup Temporary Logo",
+    "status": "PASS",
+    "evidence": "Deleted temporary logo #20",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Client Partners Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/client-partners management interface",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Partner Update Visible on Homepage",
+    "status": "PASS",
+    "evidence": "Observed test quote in VIP partners section",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Partner Content Restored",
+    "status": "PASS",
+    "evidence": "Restored original partner quote",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Statistics Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/stats management page",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Stat Value Update Visible on Homepage",
+    "status": "PASS",
+    "evidence": "Observed updated value 999 / ۹۹۹ on homepage",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Stat Value Restored",
+    "status": "PASS",
+    "evidence": "Restored original stat value \"۳.۲×\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin About Page Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/about-page editor with tabs",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Team Members Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/team-members management grid",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Team Member Update Visible on /about",
+    "status": "PASS",
+    "evidence": "Observed \"مهندس علی شمس (مدیر ارشد تست)\" on /about page",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Team Member Restored",
+    "status": "PASS",
+    "evidence": "Restored original member name \"علی شمس\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Home Sections Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/home-sections ordering manager",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Home Section Visibility Toggle (Hide)",
+    "status": "PASS",
+    "evidence": "Section #statistics cleanly excluded from homepage DOM",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Home Section Visibility Toggle (Restore)",
+    "status": "PASS",
+    "evidence": "Section #statistics cleanly restored to homepage DOM",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Site Settings Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/site-settings configuration panel",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Site Settings Update Visible in Footer",
+    "status": "PASS",
+    "evidence": "Observed telegram handle \"@onsupp_test_acceptance\" in footer",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Site Settings Restored",
+    "status": "PASS",
+    "evidence": "Restored telegram handle to \"onsupp_web\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Case Studies Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/casestudies table",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Create Draft Case Study",
+    "status": "PASS",
+    "evidence": "Created draft case study ID #29",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Draft Case Study Hidden from Public Slug",
+    "status": "PASS",
+    "evidence": "Public route /portfolio/test-acceptance-case-study returned HTTP 404 (expected 404)",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Published Case Study Accessible on /portfolio/[slug]",
+    "status": "PASS",
+    "evidence": "Case study detail loaded with 200 OK and correct title",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Deleted Case Study Inaccessible",
+    "status": "PASS",
+    "evidence": "After deletion, route returned HTTP 404 (expected 404)",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Admin Page SEO Navigation",
+    "status": "PASS",
+    "evidence": "Loaded /admin/page-seo manager with live Google preview",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Page SEO Document Title Verification",
+    "status": "PASS",
+    "evidence": "Document title: \"درباره ما | آژانس دیجیتال مارکتینگ آن‌ساپ | آن‌ساپ\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Page SEO Meta Description Verification",
+    "status": "PASS",
+    "evidence": "Meta description: \"آشنایی با تیم متخصص، بنیان‌گذاران، ارزش‌های محوری ...\"",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Dynamic Sitemap XML Verification",
+    "status": "PASS",
+    "evidence": "Sitemap returned HTTP 200 containing dynamic routes",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Unauthenticated User Redirected to Login",
+    "status": "PASS",
+    "evidence": "Unauthenticated URL redirected to: http://localhost:3004/admin/login",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Regular User Blocked from Admin Settings",
+    "status": "PASS",
+    "evidence": "Regular user redirected to: http://localhost:3004/admin",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "HR Role Permitted on Team Members",
+    "status": "PASS",
+    "evidence": "HR permitted on: http://localhost:3004/admin/team-members",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "CONTENT_SEO_MANAGER Role Permitted on Page SEO",
+    "status": "PASS",
+    "evidence": "SEO Manager permitted on: http://localhost:3004/admin/page-seo",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Desktop (1440x900)] Homepage",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Desktop (1440x900)] Services Archive",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Desktop (1440x900)] About Page",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Desktop (1440x900)] Portfolio Archive",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Desktop (1440x900)] Portfolio Detail",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Mobile (390x844 - iPhone 14)] Homepage",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Mobile (390x844 - iPhone 14)] Services Archive",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Mobile (390x844 - iPhone 14)] About Page",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Mobile (390x844 - iPhone 14)] Portfolio Archive",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  },
+  {
+    "test": "Responsive [Mobile (390x844 - iPhone 14)] Portfolio Detail",
+    "status": "PASS",
+    "evidence": "HTTP 200 | Horizontal Overflow: None",
+    "environment": "http://localhost:3004 / http://localhost:3002",
+    "issue": "None",
+    "severity": "Low"
+  }
+]

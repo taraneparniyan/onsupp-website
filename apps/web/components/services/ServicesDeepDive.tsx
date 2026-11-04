@@ -11,9 +11,11 @@ import { scrollToSection } from "@/lib/scroll";
 
 export default function ServicesDeepDive({
   isRtl,
+  services = DETAILED_SERVICES_DATA,
   onConsultationRequest,
 }: {
   isRtl: boolean;
+  services?: ServiceDetailItem[];
   onConsultationRequest?: (serviceId: string) => void;
 }) {
   const prefersReducedMotion = useReducedMotion();
@@ -64,7 +66,7 @@ export default function ServicesDeepDive({
 
         {/* ─── 7 Varied Editorial Service Dossiers ─── */}
         <div className="space-y-24 sm:space-y-36">
-          {DETAILED_SERVICES_DATA.map((service, idx) => {
+          {services.map((service, idx) => {
             // Alternate layout patterns:
             // 0: Asymmetric Split (Image Left in RTL)
             // 1: Cinematic Inverted Split (Image Right in RTL)

@@ -90,16 +90,18 @@ export default function AboutHero({ hero, isRtl }: Props) {
                 />
               </div>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, ease: EASE_PREMIUM, delay: 1.3 }}
-                className="flex items-center gap-4 text-foreground/60 shrink-0"
-              >
-                <span className={`${gendyClass} text-sm tracking-[0.2em]`}>(OS)</span>
-                <span aria-hidden="true" className="h-px w-12 bg-foreground/25" />
-                <span className="text-sm">{isRtl ? hero.captionFa : hero.captionEn}</span>
-              </motion.div>
+              {(isRtl ? hero.captionFa : hero.captionEn) ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, ease: EASE_PREMIUM, delay: 1.3 }}
+                  className="flex items-center gap-4 text-foreground/60 shrink-0"
+                >
+                  <span className={`${gendyClass} text-sm tracking-[0.2em]`}>(OS)</span>
+                  <span aria-hidden="true" className="h-px w-12 bg-foreground/25" />
+                  <span className="text-sm">{isRtl ? hero.captionFa : hero.captionEn}</span>
+                </motion.div>
+              ) : null}
             </div>
           </div>
         </motion.div>

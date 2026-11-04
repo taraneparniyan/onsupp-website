@@ -142,18 +142,39 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
 
-      // 7. Content sections (hero, services, stats, about, casestudies, pricing): ADMIN only
-      const contentPaths = [
+      // 7. Content sections & CMS config: ADMIN & SUPER_ADMIN only
+      const adminOnlyPaths = [
         "/admin/hero",
         "/admin/services",
         "/admin/stats",
         "/admin/about",
+        "/admin/about-page",
         "/admin/casestudies",
         "/admin/pricing",
+        "/admin/site-settings",
+        "/admin/client-partners",
+        "/admin/client-logos",
+        "/admin/home-sections",
       ];
       if (
-        contentPaths.some((p) => pathname.startsWith(p)) &&
+        adminOnlyPaths.some((p) => pathname.startsWith(p)) &&
         role !== "ADMIN"
+      ) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+
+      // 8. Team members (/admin/team-members): SUPER_ADMIN, ADMIN, HR
+      if (
+        pathname.startsWith("/admin/team-members") &&
+        !["ADMIN", "HR"].includes(role)
+      ) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+
+      // 9. Page SEO (/admin/page-seo): SUPER_ADMIN, ADMIN, CONTENT_SEO_MANAGER
+      if (
+        pathname.startsWith("/admin/page-seo") &&
+        !["ADMIN", "CONTENT_SEO_MANAGER"].includes(role)
       ) {
         return NextResponse.redirect(new URL("/admin", request.url));
       }

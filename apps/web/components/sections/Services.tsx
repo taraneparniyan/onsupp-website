@@ -7,6 +7,7 @@ import { useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { scrollToSection } from "@/lib/scroll";
+import { BACKEND_URL } from "@/config/api";
 
 const CLONE_COUNT = 7;
 const TRANSITION_DURATION_MS = 550;
@@ -211,20 +212,59 @@ function RectangularServiceCard({
 
 // ─── Main Services Component ─────────────────────────────────────────────────
 
-export default function Services() {
+export default function Services({ initialServices }: { initialServices?: any[] }) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
-  const totalServices = SERVICES_DATA.length;
+  const [servicesList, setServicesList] = useState<ServiceItem[]>(() => {
+    if (Array.isArray(initialServices) && initialServices.length > 0) {
+      return initialServices.map((s: any, idx: number) => ({
+        id: s.id ?? idx + 1,
+        slug: s.slug || `service-${s.id}`,
+        href: `/services?category=${s.slug || s.id}`,
+        tagFa: s.tagFa || s.title || "خدمات",
+        tagEn: s.tagEn || s.titleEn || "Services",
+        titleFa: s.title || "",
+        titleEn: s.titleEn || "",
+        image: s.imageUrl || "/images/services/web-development.webp",
+        objectPosition: "center center",
+      }));
+    }
+    return SERVICES_DATA;
+  });
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/services`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: ServiceItem[] = data.map((s: any, idx: number) => ({
+            id: s.id ?? idx + 1,
+            slug: s.slug || `service-${s.id}`,
+            href: `/services?category=${s.slug || s.id}`,
+            tagFa: s.tagFa || s.title || "خدمات",
+            tagEn: s.tagEn || s.titleEn || "Services",
+            titleFa: s.title || "",
+            titleEn: s.titleEn || "",
+            image: s.imageUrl || "/images/services/web-development.webp",
+            objectPosition: "center center",
+          }));
+          setServicesList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const totalServices = servicesList.length;
 
   // Cloned items for seamless continuous stepping (1 full clone set before and after)
   const trackItems = useMemo(() => {
-    const clonesBefore = SERVICES_DATA.slice(-CLONE_COUNT);
-    const clonesAfter = SERVICES_DATA.slice(0, CLONE_COUNT);
+    const clonesBefore = servicesList.slice(-CLONE_COUNT);
+    const clonesAfter = servicesList.slice(0, CLONE_COUNT);
     return [
       ...clonesBefore.map((s, i) => ({ ...s, trackKey: `clone-start-${i}-${s.id}` })),
-      ...SERVICES_DATA.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
+      ...servicesList.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
       ...clonesAfter.map((s, i) => ({ ...s, trackKey: `clone-end-${i}-${s.id}` })),
     ];
   }, []);

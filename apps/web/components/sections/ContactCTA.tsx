@@ -30,15 +30,79 @@ const DEFAULT_CONTENT: ContactContent = {
   titleEn: "Ready to build a sustainable digital growth path?",
   descriptionFa: "فرم زیر را تکمیل کنید تا کارشناسان آن‌ساپ نیاز پروژه شما را بررسی کرده و راهکار و نمونه‌کارهای مرتبط را ارائه دهند.",
   descriptionEn: "Fill out the form so our team can review your project needs and share relevant case studies and tailored solutions.",
-  phone: "", // Keep empty until official phone number is verified
-  phoneLabelFa: "تماس مستقیم",
-  phoneLabelEn: "Direct Call",
+  phone: "0910 262 6113",
+  phoneLabelFa: "آنساپ منیجر",
+  phoneLabelEn: "OnSupp Manager",
   email: "info@onsupp.ir",
   emailLabelFa: "ایمیل مشاوره",
   emailLabelEn: "Consultation Email",
   responseTimeFa: "پاسخگویی و هماهنگی مشاوره در ساعات کاری",
   responseTimeEn: "Prompt consultation response during business hours",
 };
+
+export interface ContactChannel {
+  id: string;
+  labelFa: string;
+  labelEn: string;
+  subLabelFa: string;
+  subLabelEn: string;
+  value: string;
+  displayFa: string;
+  displayEn: string;
+  href: string;
+  icon: "manager" | "web" | "social" | "email";
+}
+
+export const CONTACT_CHANNELS: ContactChannel[] = [
+  {
+    id: "manager",
+    labelFa: "آنساپ منیجر",
+    labelEn: "OnSupp Manager",
+    subLabelFa: "مدیریت و استراتژی",
+    subLabelEn: "Senior Management",
+    value: "0910 262 6113",
+    displayFa: "۰۹۱۰ ۲۶۲ ۶۱۱۳",
+    displayEn: "0910 262 6113",
+    href: "tel:09102626113",
+    icon: "manager",
+  },
+  {
+    id: "web",
+    labelFa: "آنساپ وب",
+    labelEn: "OnSupp Web",
+    subLabelFa: "پشتیبانی سایت",
+    subLabelEn: "Site Support",
+    value: "0938 308 7068",
+    displayFa: "۰۹۳۸ ۳۰۸ ۷۰۶۸",
+    displayEn: "0938 308 7068",
+    href: "tel:09383087068",
+    icon: "web",
+  },
+  {
+    id: "social",
+    labelFa: "آنساپ سوشیال مدیا",
+    labelEn: "OnSupp Social",
+    subLabelFa: "پشتیبانی اینستاگرام",
+    subLabelEn: "Instagram Support",
+    value: "+98 936 737 3510",
+    displayFa: "۰۹۳۶ ۷۳۷ ۳۵۱۰",
+    displayEn: "+98 936 737 3510",
+    href: "tel:+989367373510",
+    icon: "social",
+  },
+  {
+    id: "email",
+    labelFa: "ایمیل مشاوره",
+    labelEn: "Consultation Email",
+    subLabelFa: "ارسال مستندات",
+    subLabelEn: "Official Inquiries",
+    value: "info@onsupp.ir",
+    displayFa: "info@onsupp.ir",
+    displayEn: "info@onsupp.ir",
+    href: "mailto:info@onsupp.ir",
+    icon: "email",
+  },
+];
 
 export function isVerifiedPhone(p?: string): boolean {
   if (!p) return false;
@@ -56,6 +120,7 @@ export default function ContactCTA() {
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
   const [content, setContent] = useState<ContactContent>(DEFAULT_CONTENT);
+  const [channels, setChannels] = useState<ContactChannel[]>(CONTACT_CHANNELS);
   const [scheduleDemoCall, setScheduleDemoCall] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -75,6 +140,17 @@ export default function ContactCTA() {
       })
       .catch(() => {
         /* keep defaults */
+      });
+
+    fetch(`${BACKEND_URL}/api/v1/site-settings`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.channels) && data.channels.length > 0) {
+          setChannels(data.channels);
+        }
+      })
+      .catch(() => {
+        /* keep default channels */
       });
   }, []);
 
@@ -138,44 +214,47 @@ export default function ContactCTA() {
                 : "Our team will contact you promptly to review your project needs and share tailored solutions."}
             </p>
 
-            {/* Quick Contact Pills */}
-            <div className="flex items-center justify-center gap-2.5 mt-4 pt-1">
-              {isVerifiedPhone(content.phone) ? (
+            {/* Quick Contact Department Pills */}
+            <div className="grid grid-cols-2 gap-2 mt-4 pt-1 text-start">
+              {channels.map((ch) => (
                 <a
-                  href={`tel:${content.phone}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1a1c1b] border border-black/[0.08] dark:border-white/10 text-[11px] font-semibold text-foreground/85 hover:border-[#38534A]/40 hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-all shadow-sm active:scale-95"
+                  key={ch.id}
+                  href={ch.href}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-white dark:bg-[#1a1c1b] border border-black/[0.08] dark:border-white/10 text-[11px] font-semibold text-foreground/85 hover:border-[#38534A]/40 hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-all shadow-sm active:scale-95 min-w-0"
                 >
-                  <svg className="w-3.5 h-3.5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <span dir="ltr">
-                    {isRtl
-                      ? content.phone.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)])
-                      : content.phone}
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#38534A]/10 dark:bg-[#38534A]/25 text-[#38534A] dark:text-[#8AB3A0]">
+                    {ch.icon === "manager" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    )}
+                    {ch.icon === "web" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                    {ch.icon === "social" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" strokeWidth="2.2" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" strokeWidth="2.2" />
+                      </svg>
+                    )}
+                    {ch.icon === "email" && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    )}
                   </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[10px] text-foreground/55 truncate">
+                      {isRtl ? ch.labelFa : ch.labelEn}
+                    </span>
+                    <span className="block text-[11px] font-bold text-foreground truncate font-mono" dir="ltr">
+                      {isRtl ? ch.displayFa : ch.displayEn}
+                    </span>
+                  </div>
                 </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setScheduleDemoCall(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1a1c1b] border border-black/[0.08] dark:border-white/10 text-[11px] font-semibold text-foreground/85 hover:border-[#38534A]/40 hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-all shadow-sm active:scale-95"
-                >
-                  <svg className="w-3.5 h-3.5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span>{isRtl ? "جلسه آنلاین (Google Meet)" : "Video Call Meeting"}</span>
-                </button>
-              )}
-
-              <a
-                href={`mailto:${content.email}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1a1c1b] border border-black/[0.08] dark:border-white/10 text-[11px] font-semibold text-foreground/85 hover:border-[#38534A]/40 hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-all shadow-sm active:scale-95"
-              >
-                <svg className="w-3.5 h-3.5 text-[#38534A] dark:text-[#8AB3A0] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span>{content.email}</span>
-              </a>
+              ))}
             </div>
           </div>
         </ScrollReveal>
@@ -448,70 +527,50 @@ export default function ContactCTA() {
 
                 {/* Bottom Badges & Response Time Group */}
                 <div className="space-y-4 pt-8">
-                  {/* Refined Luxury Contact Badges */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                    {isVerifiedPhone(content.phone) ? (
-                      <div className="group/card flex items-center gap-4 rounded-2xl border border-black/[0.07] dark:border-white/10 bg-white dark:bg-[#1a1c1b] p-4 sm:p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:border-[#38534A]/40 dark:hover:border-[#8AB3A0]/40 hover:-translate-y-0.5 transition-all duration-300 min-w-0">
-                        <span className="flex h-12 w-12 sm:h-13 sm:w-13 shrink-0 items-center justify-center rounded-xl bg-[#38534A]/10 dark:bg-[#38534A]/25 text-[#38534A] dark:text-[#8AB3A0] group-hover/card:scale-105 transition-transform duration-300 shadow-sm">
-                          <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
+                  {/* Dedicated Department Contact Cards (4-Card Matrix) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                    {channels.map((ch) => (
+                      <div
+                        key={ch.id}
+                        className="group/card flex items-center gap-3.5 rounded-2xl border border-black/[0.07] dark:border-white/10 bg-white dark:bg-[#1a1c1b] p-3 sm:p-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:border-[#38534A]/40 dark:hover:border-[#8AB3A0]/40 hover:-translate-y-0.5 transition-all duration-300 min-w-0"
+                      >
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#38534A]/10 dark:bg-[#38534A]/25 text-[#38534A] dark:text-[#8AB3A0] group-hover/card:scale-105 transition-transform duration-300 shadow-sm">
+                          {ch.icon === "manager" && (
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          )}
+                          {ch.icon === "web" && (
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          )}
+                          {ch.icon === "social" && (
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" strokeWidth="2.2" />
+                              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" strokeWidth="2.2" />
+                            </svg>
+                          )}
+                          {ch.icon === "email" && (
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          )}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <span className="text-[11px] sm:text-xs font-semibold text-foreground/60 block truncate mb-0.5">
-                            {isRtl ? content.phoneLabelFa : content.phoneLabelEn}
+                          <span className="text-[11px] font-semibold text-foreground/60 block truncate mb-0.5">
+                            {isRtl ? ch.labelFa : ch.labelEn}
                           </span>
                           <a
-                            href={`tel:${content.phone}`}
-                            className="text-sm sm:text-base font-bold text-foreground hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-colors block tracking-wide truncate"
+                            href={ch.href}
+                            className="text-xs sm:text-[13px] font-bold text-foreground hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-colors block tracking-wide truncate font-mono"
                             dir="ltr"
                           >
-                            {isRtl
-                              ? content.phone.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)])
-                              : content.phone}
+                            {isRtl ? ch.displayFa : ch.displayEn}
                           </a>
                         </div>
                       </div>
-                    ) : (
-                      <div
-                        onClick={() => setScheduleDemoCall(true)}
-                        className="group/card flex items-center gap-4 rounded-2xl border border-black/[0.07] dark:border-white/10 bg-white dark:bg-[#1a1c1b] p-4 sm:p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:border-[#38534A]/40 dark:hover:border-[#8AB3A0]/40 hover:-translate-y-0.5 transition-all duration-300 min-w-0 cursor-pointer"
-                      >
-                        <span className="flex h-12 w-12 sm:h-13 sm:w-13 shrink-0 items-center justify-center rounded-xl bg-[#38534A]/10 dark:bg-[#38534A]/25 text-[#38534A] dark:text-[#8AB3A0] group-hover/card:scale-105 transition-transform duration-300 shadow-sm">
-                          <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[11px] sm:text-xs font-semibold text-foreground/60 block truncate mb-0.5">
-                            {isRtl ? "جلسه استراتژی آنلاین" : "Online Strategy Session"}
-                          </span>
-                          <span className="text-xs sm:text-sm font-bold text-foreground hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-colors block tracking-wide truncate">
-                            {isRtl ? "هماهنگی جلسه Google Meet" : "Schedule Google Meet"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="group/card flex items-center gap-4 rounded-2xl border border-black/[0.07] dark:border-white/10 bg-white dark:bg-[#1a1c1b] p-4 sm:p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:border-[#38534A]/40 dark:hover:border-[#8AB3A0]/40 hover:-translate-y-0.5 transition-all duration-300 min-w-0">
-                      <span className="flex h-12 w-12 sm:h-13 sm:w-13 shrink-0 items-center justify-center rounded-xl bg-[#38534A]/10 dark:bg-[#38534A]/25 text-[#38534A] dark:text-[#8AB3A0] group-hover/card:scale-105 transition-transform duration-300 shadow-sm">
-                        <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[11px] sm:text-xs font-semibold text-foreground/60 block truncate mb-0.5">
-                          {isRtl ? content.emailLabelFa : content.emailLabelEn}
-                        </span>
-                        <a
-                          href={`mailto:${content.email}`}
-                          className="text-xs sm:text-sm font-bold text-foreground hover:text-[#38534A] dark:hover:text-[#8AB3A0] transition-colors block tracking-wide truncate"
-                          dir="ltr"
-                        >
-                          {content.email}
-                        </a>
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
                   {/* Response Time Indicator */}

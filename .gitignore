@@ -55,3 +55,12 @@ scratch/
 /نمونه کارها/
 /screencapture-*
 
+
+# Backups and database dumps
+backups/
+**/backups/
+*.sql
+
+# Browser acceptance evidence screenshots
+acceptance-evidence/
+!apps/backend/prisma/migrations/**/*.sql

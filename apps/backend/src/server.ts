@@ -26,6 +26,13 @@ import usersRoutes from './routes/users.js';
 import commentsRoutes from './routes/comments.js';
 import dashboardRoutes from './routes/dashboard.js';
 import testimonialsRoutes from './routes/testimonials.js';
+import siteSettingsRoutes from './routes/siteSettings.js';
+import clientPartnersRoutes from './routes/clientPartners.js';
+import clientLogosRoutes from './routes/clientLogos.js';
+import teamMembersRoutes from './routes/teamMembers.js';
+import aboutPageRoutes from './routes/aboutPage.js';
+import homeSectionsRoutes from './routes/homeSections.js';
+import pageSeoRoutes from './routes/pageSeo.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -117,6 +124,13 @@ app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/articles', articlesRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/testimonials', testimonialsRoutes);
+app.use('/api/v1/site-settings', siteSettingsRoutes);
+app.use('/api/v1/client-partners', clientPartnersRoutes);
+app.use('/api/v1/client-logos', clientLogosRoutes);
+app.use('/api/v1/team-members', teamMembersRoutes);
+app.use('/api/v1/about-page', aboutPageRoutes);
+app.use('/api/v1/home-sections', homeSectionsRoutes);
+app.use('/api/v1/page-seo', pageSeoRoutes);
 export { app };
 export default app;
 

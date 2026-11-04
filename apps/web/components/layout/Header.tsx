@@ -140,12 +140,12 @@ export default function Header() {
 
           {/* Trailing Side: Controls & CTA */}
           <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Discreet Admin Portal Link */}
+            {/* Discreet Admin Portal Link (Height 36px) */}
             <Link
               href="/admin"
               title={isRtl ? "ورود همکاران (پنل مدیریت)" : "Admin Portal"}
               aria-label={isRtl ? "ورود همکاران به پنل مدیریت" : "Admin Portal"}
-              className={`hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-300 active:scale-95 ${
+              className={`hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-none border transition-all duration-300 active:scale-95 ${
                 isOverHero
                   ? "border-white/15 bg-white/10 text-white/80 hover:bg-white/20 hover:text-white hover:border-white/25"
                   : "border-foreground/10 bg-raised/80 text-foreground/70 hover:border-mint/35 hover:bg-panel hover:text-mint"
@@ -164,7 +164,7 @@ export default function Header() {
               </svg>
             </Link>
 
-            {/* Desktop Light / Dark Theme Toggle Button */}
+            {/* Desktop Light / Dark Theme Toggle Button (Height 36px) */}
             <button
               type="button"
               data-testid="theme-toggle"
@@ -187,7 +187,7 @@ export default function Header() {
                   ? "حالت تاریک"
                   : "Dark mode"
               }
-              className={`hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-300 active:scale-95 cursor-pointer ${
+              className={`hidden lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-none border transition-all duration-300 active:scale-95 cursor-pointer ${
                 isOverHero
                   ? "border-white/15 bg-white/10 text-white/85 hover:bg-white/20 hover:text-white hover:border-white/25"
                   : "border-foreground/10 bg-raised/80 text-foreground/75 hover:border-mint/35 hover:bg-panel hover:text-mint"
@@ -228,9 +228,9 @@ export default function Header() {
               )}
             </button>
 
-            {/* Desktop Language Switcher Pill */}
+            {/* Desktop Language Switcher Box (Height exactly 36px, matched) */}
             <div
-              className={`hidden lg:flex items-center gap-1 border rounded-full p-0.5 transition-colors ${
+              className={`hidden lg:flex h-9 items-center border rounded-none p-0.5 transition-colors box-border ${
                 isOverHero
                   ? "border-white/15 bg-white/10 text-white"
                   : "border-foreground/10 bg-raised/80 text-foreground"
@@ -239,7 +239,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => lang !== "fa" && toggleLanguage()}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all min-h-[28px] min-w-[32px] flex items-center justify-center cursor-pointer ${
+                className={`h-full w-8 text-xs font-semibold rounded-none transition-all flex items-center justify-center cursor-pointer ${
                   lang === "fa"
                     ? isOverHero
                       ? "bg-white/25 text-white"
@@ -255,7 +255,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => lang !== "en" && toggleLanguage()}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all min-h-[28px] min-w-[32px] flex items-center justify-center cursor-pointer ${
+                className={`h-full w-8 text-xs font-semibold rounded-none transition-all flex items-center justify-center cursor-pointer ${
                   lang === "en"
                     ? isOverHero
                       ? "bg-white/25 text-white"
@@ -270,7 +270,7 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Desktop Primary Call To Action (CTA) Button - Understated, Elegant Pill with Diagonal Arrow */}
+            {/* Desktop Primary Call To Action (CTA) Button (Height exactly 36px, matched) */}
             <Link
               href="/#contact"
               onClick={(e) => {
@@ -278,7 +278,7 @@ export default function Header() {
                   e.preventDefault();
                 }
               }}
-              className={`hidden lg:inline-flex items-center gap-1.5 px-4.5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-[0.98] shrink-0 ${
+              className={`hidden lg:inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-none text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-[0.98] shrink-0 border border-transparent box-border ${
                 isOverHero
                   ? "bg-white text-[#1f1f1e] hover:bg-white/90 shadow-sm"
                   : "bg-foreground text-background hover:opacity-90 shadow-sm"
@@ -302,7 +302,7 @@ export default function Header() {
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
               aria-label={isMobileMenuOpen ? (isRtl ? "بستن منو" : "Close menu") : (isRtl ? "باز کردن منو" : "Open menu")}
               aria-expanded={isMobileMenuOpen}
-              className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-xl bg-transparent transition-all active:scale-95 ${
+              className={`lg:hidden flex h-9 w-9 items-center justify-center rounded-none bg-transparent transition-all active:scale-95 ${
                 isOverHero ? "text-white hover:text-white/80" : "text-foreground hover:text-mint"
               }`}
             >
@@ -342,17 +342,17 @@ export default function Header() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto w-full max-w-md p-5 flex flex-col bg-panel rounded-2xl border border-foreground/10 shadow-2xl"
+              className="mx-auto w-full max-w-md p-5 flex flex-col bg-panel rounded-none border border-foreground/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
               dir={isRtl ? "rtl" : "ltr"}
             >
               {/* Drawer Top Bar: Language & Theme Controls */}
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-foreground/10">
-                <div className="flex items-center gap-1.5 border border-foreground/10 rounded-full p-1 bg-raised/80">
+                <div className="flex h-9 items-center border border-foreground/10 rounded-none p-0.5 bg-raised/80">
                   <button
                     type="button"
                     onClick={() => lang !== "fa" && toggleLanguage()}
-                    className={`px-3 py-1 text-xs font-bold rounded-full transition-colors min-h-[30px] min-w-[34px] flex items-center justify-center ${
+                    className={`h-full w-8 text-xs font-bold rounded-none transition-colors flex items-center justify-center ${
                       lang === "fa" ? "bg-panel shadow-sm text-foreground" : "bg-transparent text-foreground/70 hover:text-foreground"
                     }`}
                     aria-label="تغییر زبان به فارسی"
@@ -362,7 +362,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => lang !== "en" && toggleLanguage()}
-                    className={`px-3 py-1 text-xs font-bold rounded-full transition-colors min-h-[30px] min-w-[34px] flex items-center justify-center ${
+                    className={`h-full w-8 text-xs font-bold rounded-none transition-colors flex items-center justify-center ${
                       lang === "en" ? "bg-panel shadow-sm text-foreground" : "bg-transparent text-foreground/70 hover:text-foreground"
                     }`}
                     aria-label="Switch language to English"
@@ -393,7 +393,7 @@ export default function Header() {
                       ? "حالت تاریک"
                       : "Dark mode"
                   }
-                  className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-foreground/10 bg-raised/80 text-foreground/75 transition-all duration-300 hover:border-mint/35 hover:bg-panel hover:text-mint active:scale-95 cursor-pointer shadow-sm"
+                  className="flex h-9 w-9 items-center justify-center rounded-none border border-foreground/10 bg-raised/80 text-foreground/75 transition-all duration-300 hover:border-mint/35 hover:bg-panel hover:text-mint active:scale-95 cursor-pointer shadow-sm"
                 >
                   {theme === "dark" ? (
                     <svg

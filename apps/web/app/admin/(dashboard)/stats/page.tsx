@@ -6,35 +6,50 @@ import { adminFetch } from "@/lib/adminApi";
 type StatForm = {
   id?: number;
   kind: string;
+  iconType: string;
   valueFa: string;
   valueEn: string;
+  suffixFa: string;
+  suffixEn: string;
   labelFa: string;
   labelEn: string;
   descFa: string;
   descEn: string;
+  isRating: boolean;
+  published: boolean;
   position: number;
 };
 
 const EMPTY_STAT = (position: number): StatForm => ({
   kind: "number",
+  iconType: "chart",
   valueFa: "",
   valueEn: "",
+  suffixFa: "",
+  suffixEn: "",
   labelFa: "",
   labelEn: "",
   descFa: "",
   descEn: "",
+  isRating: false,
+  published: true,
   position,
 });
 
 function toPayload(s: StatForm) {
   return {
-    kind: s.kind === "medical" ? "medical" : "number",
+    kind: s.kind || "number",
+    iconType: s.iconType || "chart",
     valueFa: s.valueFa,
     valueEn: s.valueEn,
+    suffixFa: s.suffixFa,
+    suffixEn: s.suffixEn,
     labelFa: s.labelFa,
     labelEn: s.labelEn,
     descFa: s.descFa,
     descEn: s.descEn,
+    isRating: s.isRating,
+    published: s.published !== false,
     position: s.position,
   };
 }
@@ -54,13 +69,23 @@ export default function StatsAdminPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!Array.isArray(data)) return;
-        setItems(data.map((s) => ({ ...s, position: s.position ?? 0 })));
+        setItems(
+          data.map((s) => ({
+            ...s,
+            iconType: s.iconType || "chart",
+            suffixFa: s.suffixFa || "",
+            suffixEn: s.suffixEn || "",
+            isRating: Boolean(s.isRating),
+            published: s.published !== false,
+            position: s.position ?? 0,
+          }))
+        );
       })
       .catch(() => notify("err", "خطا در دریافت آمار"))
       .finally(() => setLoading(false));
   }, [notify]);
 
-  const update = (index: number, field: keyof StatForm, value: string) => {
+  const update = (index: number, field: keyof StatForm, value: any) => {
     setItems((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
   };
 
@@ -78,11 +103,10 @@ export default function StatsAdminPage() {
     const key = stat.id ? String(stat.id) : `new-${index}`;
     setSavingKey(key);
     try {
-      const endpoint = stat.id
-        ? `/api/v1/stats/${stat.id}`
-        : "/api/v1/stats";
+      const endpoint = stat.id ? `/api/v1/stats/${stat.id}` : "/api/v1/stats";
       const res = await adminFetch(endpoint, {
         method: stat.id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(toPayload(stat)),
       });
       const data = await res.json();
@@ -90,8 +114,10 @@ export default function StatsAdminPage() {
         notify("err", data.error || "ذخیره ناموفق بود");
         return;
       }
-      setItems((prev) => prev.map((s, i) => (i === index ? { ...s, ...data, id: data.id } : s)));
-      notify("ok", "آمار با موفقیت ذخیره شد");
+      setItems((prev) =>
+        prev.map((s, i) => (i === index ? { ...s, ...data, id: data.id } : s))
+      );
+      notify("ok", "شاخص آماری با موفقیت ذخیره و کش بازسازی شد");
     } catch {
       notify("err", "خطا در ارتباط با سرور");
     } finally {
@@ -100,13 +126,13 @@ export default function StatsAdminPage() {
   };
 
   const remove = async (index: number) => {
-    if (!confirm("این آمار حذف شود؟")) return;
+    if (!confirm("این شاخص آماری حذف شود؟")) return;
     const stat = items[index];
     if (stat.id) {
       await adminFetch(`/api/v1/stats/${stat.id}`, { method: "DELETE" });
     }
     setItems((prev) => prev.filter((_, i) => i !== index));
-    notify("ok", "آمار حذف شد");
+    notify("ok", "شاخص حذف شد");
   };
 
   const addNew = () => {
@@ -128,15 +154,17 @@ export default function StatsAdminPage() {
         await Promise.all([
           adminFetch(`/api/v1/stats/${a.id}`, {
             method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(toPayload(a)),
           }),
           adminFetch(`/api/v1/stats/${b.id}`, {
             method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(toPayload(b)),
           }),
         ]);
       } catch {
-        /* reorder persistence failure is non-critical */
+        /* reorder error */
       }
     }
   };
@@ -148,8 +176,10 @@ export default function StatsAdminPage() {
       {/* Top Banner */}
       <div className="bg-panel rounded-xl shadow-md border border-foreground/10 p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white">مدیریت آمار و ارقام</h2>
-          <p className="text-mint text-sm mt-1">افزودن و تنظیم اعداد کلیدی و شاخص‌های شرکت.</p>
+          <h2 className="text-2xl font-black text-white">مدیریت آمار و شاخص‌های رضایت (Stats CMS)</h2>
+          <p className="text-mint text-sm mt-1">
+            تنظیم شاخص‌های کلیدی، نمادهای دستاورد، رتبه‌بندی‌ها و پیش‌نمایش در سکشن آمار صفحه اصلی
+          </p>
         </div>
         <button
           type="button"
@@ -166,7 +196,9 @@ export default function StatsAdminPage() {
       {message && (
         <div
           className={`text-sm px-5 py-3.5 rounded-lg border ${
-            message.type === "ok" ? "text-mint bg-panel border-primary/20" : "text-rose-300 bg-[#2b1216] border-[#542129]"
+            message.type === "ok"
+              ? "text-mint bg-panel border-primary/20"
+              : "text-rose-300 bg-[#2b1216] border-[#542129]"
           }`}
         >
           {message.text}
@@ -180,147 +212,147 @@ export default function StatsAdminPage() {
           </div>
         )}
 
-        {items.map((stat, index) => {
-          const key = stat.id ? String(stat.id) : `new-${index}`;
-          const saving = savingKey === key;
-          const medical = stat.kind === "medical";
-
-          return (
-            <div key={key} className="bg-panel rounded-xl shadow-md border border-foreground/10 p-7 space-y-6">
-              <div className="flex items-center justify-between pb-5 border-b border-foreground/10">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raised border border-primary/20 text-mint font-black text-sm">
-                    {index + 1}
-                  </span>
-                  <h3 className="font-bold text-white text-base">
-                    آمار شماره {index + 1}
-                    {medical && <span className="text-xs text-mint mr-2 bg-mint/10 px-2 py-0.5 rounded-full border border-mint/20">(پزشکی)</span>}
-                    {!stat.id && <span className="text-xs text-mint mr-2 bg-mint/10 px-2 py-0.5 rounded-full border border-mint/20">(جدید)</span>}
-                  </h3>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => move(index, -1)}
-                    disabled={index === 0}
-                    aria-label="انتقال به بالا"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-raised border border-foreground/10 text-mint hover:text-white hover:border-[#3f6b59] disabled:opacity-30 transition-all"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(index, 1)}
-                    disabled={index === items.length - 1}
-                    aria-label="انتقال به پایین"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-raised border border-foreground/10 text-mint hover:text-white hover:border-[#3f6b59] disabled:opacity-30 transition-all"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors"
-                    aria-label="حذف آمار"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
+        {items.map((stat, idx) => (
+          <div
+            key={stat.id ? `stat-${stat.id}` : `new-${idx}`}
+            className="bg-[#131615] rounded-2xl border border-[#1f2623] p-6 space-y-4 shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-[#232c27] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-emerald-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                  شاخص ۰{idx + 1}
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {stat.labelFa || "شاخص بدون عنوان"}
+                </span>
               </div>
-
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-semibold text-mint">نوع کارت:</label>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => update(index, "kind", medical ? "number" : "medical")}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-                    medical
-                      ? "bg-mint/10 border-mint/20 text-mint"
-                      : "bg-raised border-foreground/10 text-mint"
-                  }`}
+                  disabled={idx === 0}
+                  onClick={() => move(idx, -1)}
+                  className="px-2 py-1 bg-[#1a221e] hover:bg-[#28322d] text-gray-400 hover:text-white rounded text-xs disabled:opacity-20"
                 >
-                  {medical ? "کارت اختصاصی پزشکی" : "کارت عددی عادی"}
+                  ▲
                 </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">مقدار (FA)</label>
-                      <input
-                        value={stat.valueFa}
-                        onChange={(e) => update(index, "valueFa", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">مقدار (EN)</label>
-                      <input
-                        value={stat.valueEn}
-                        onChange={(e) => update(index, "valueEn", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">برچسب (FA)</label>
-                      <input
-                        value={stat.labelFa}
-                        onChange={(e) => update(index, "labelFa", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">برچسب (EN)</label>
-                      <input
-                        value={stat.labelEn}
-                        onChange={(e) => update(index, "labelEn", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-mint mb-1.5">توضیحات (FA)</label>
-                    <textarea
-                      value={stat.descFa}
-                      onChange={(e) => update(index, "descFa", e.target.value)}
-                      rows={2}
-                      className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-mint mb-1.5">توضیحات (EN)</label>
-                    <textarea
-                      value={stat.descEn}
-                      onChange={(e) => update(index, "descEn", e.target.value)}
-                      rows={2}
-                      className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-4 py-2.5 text-sm focus:border-[#3f6b59] focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-foreground/10 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => save(index)}
-                  disabled={saving}
-                  className="bg-gradient-to-r from-primary to-primary-hover text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 disabled:opacity-50"
+                  disabled={idx === items.length - 1}
+                  onClick={() => move(idx, 1)}
+                  className="px-2 py-1 bg-[#1a221e] hover:bg-[#28322d] text-gray-400 hover:text-white rounded text-xs disabled:opacity-20"
                 >
-                  {saving ? "در حال ذخیره..." : stat.id ? "ذخیره آمار" : "ایجاد آمار جدید"}
+                  ▼
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(idx)}
+                  className="px-3 py-1 bg-red-950/40 hover:bg-red-950/70 text-red-400 rounded text-xs"
+                >
+                  حذف
                 </button>
               </div>
             </div>
-          );
-        })}
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#8fa397] mb-1">نوع آیکون</label>
+                <select
+                  value={stat.iconType}
+                  onChange={(e) => update(idx, "iconType", e.target.value)}
+                  className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-2.5 py-2"
+                >
+                  <option value="chart">نمودار و رشد (chart)</option>
+                  <option value="star">ستاره و رضایت (star)</option>
+                  <option value="user">کاربر و مشتریان (user)</option>
+                  <option value="clock">زمان و تجربه (clock)</option>
+                  <option value="building">سازمانی و برند (building)</option>
+                  <option value="shield">پایداری و امنیت (shield)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8fa397] mb-1">مقدار عددی (فارسی) *</label>
+                <input
+                  type="text"
+                  value={stat.valueFa}
+                  onChange={(e) => update(idx, "valueFa", e.target.value)}
+                  placeholder="مثال: ۹۹.۴ یا ۱۵۰"
+                  className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-2.5 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8fa397] mb-1">پسوند (مثال: ٪ یا +)</label>
+                <input
+                  type="text"
+                  value={stat.suffixFa}
+                  onChange={(e) => update(idx, "suffixFa", e.target.value)}
+                  placeholder="٪"
+                  className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-2.5 py-2 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8fa397] mb-1">عنوان شاخص (فارسی) *</label>
+                <input
+                  type="text"
+                  value={stat.labelFa}
+                  onChange={(e) => update(idx, "labelFa", e.target.value)}
+                  placeholder="رضایت کارفرمایان"
+                  className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-2.5 py-2"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#8fa397] mb-1">توضیح تکمیلی شاخص (فارسی)</label>
+                <input
+                  type="text"
+                  value={stat.descFa}
+                  onChange={(e) => update(idx, "descFa", e.target.value)}
+                  placeholder="سنجش دوره‌ای و بازخورد مستقیم پس از تحویل نهایی"
+                  className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-2.5 py-2"
+                />
+              </div>
+
+              <div className="flex items-center gap-6 pt-5">
+                <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={stat.isRating}
+                    onChange={(e) => update(idx, "isRating", e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-600 text-primary"
+                  />
+                  <span>نمایش به عنوان امتیاز ستاره‌ای (از ۵)</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs text-white cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={stat.published}
+                    onChange={(e) => update(idx, "published", e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-600 text-primary"
+                  />
+                  <span>وضعیت انتشار در صفحه اصلی</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => save(idx)}
+                disabled={savingKey !== null}
+                className="px-5 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-primary to-primary-hover text-white shadow"
+              >
+                {savingKey === (stat.id ? String(stat.id) : `new-${idx}`)
+                  ? "در حال ذخیره..."
+                  : "ذخیره تغییرات شاخص"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

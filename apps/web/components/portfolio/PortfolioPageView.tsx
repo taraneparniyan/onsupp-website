@@ -2,18 +2,20 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
-import { CaseStudyItem, SHOWCASE_PROJECTS, getAllCaseStudies } from "@/lib/case-studies";
+import { CaseStudyItem, SHOWCASE_PROJECTS, getAllCaseStudies, normalizeCaseStudy } from "@/lib/case-studies";
 import { BACKEND_URL } from "@/config/api";
+import PortfolioHero from "./PortfolioHero";
+import PortfolioAsymmetricSwiper from "./PortfolioAsymmetricSwiper";
 import PortfolioCategoryFilter, {
   PortfolioCategoryKey,
   PORTFOLIO_CATEGORY_TABS,
   matchesCategory,
 } from "./PortfolioCategoryFilter";
+import ScrollableProjectFrame from "./ScrollableProjectFrame";
 import PortfolioCreativeApproach from "./PortfolioCreativeApproach";
 import PortfolioIndustriesSection from "./PortfolioIndustriesSection";
 import PortfolioCTASection from "./PortfolioCTASection";
@@ -26,7 +28,6 @@ export default function PortfolioPageView({
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [projectList, setProjectList] = useState<CaseStudyItem[]>(allProjects);
 
@@ -44,59 +45,22 @@ export default function PortfolioPageView({
             const match = SHOWCASE_PROJECTS.find(
               (p) => p.slug === item.slug || p.titleFa === item.titleFa || p.id === item.slug
             );
+            const normalized = normalizeCaseStudy(item, idx);
             if (match) {
               return {
                 ...match,
-                titleFa: item.titleFa || match.titleFa,
-                titleEn: item.titleEn || match.titleEn,
-                client: item.client || match.client,
-                clientEn: item.clientEn || match.clientEn,
-                taglineFa: item.taglineFa || match.taglineFa,
-                taglineEn: item.taglineEn || match.taglineEn,
-                categoryFa: item.categoryFa || match.categoryFa,
-                categoryEn: item.categoryEn || match.categoryEn,
-                image: item.imageUrl || match.image,
-                secondaryImage: item.secondaryImage || match.secondaryImage,
-                liveUrl: item.liveUrl || match.liveUrl,
-                position: item.position ?? match.position ?? idx,
-                featured: item.featured ?? match.featured,
-                year: item.year || match.year,
+                ...normalized,
+                servicesFa: (Array.isArray(item.servicesFa) && item.servicesFa.length > 0) ? item.servicesFa : match.servicesFa,
+                servicesEn: (Array.isArray(item.servicesEn) && item.servicesEn.length > 0) ? item.servicesEn : match.servicesEn,
+                metricsFa: (Array.isArray(item.metricsFa) && item.metricsFa.length > 0) ? item.metricsFa : match.metricsFa,
+                metricsEn: (Array.isArray(item.metricsEn) && item.metricsEn.length > 0) ? item.metricsEn : match.metricsEn,
+                colorGradient: item.colorGradient || match.colorGradient,
+                accentColor: item.accentColor || match.accentColor,
+                glowColor: item.glowColor || match.glowColor,
+                previewType: item.previewType || match.previewType,
               };
             }
-
-            const previewType: "mobile" | "web" | "platform" =
-              item.projectType === "app"
-                ? "mobile"
-                : item.projectType === "instagram"
-                ? "platform"
-                : "web";
-
-            return {
-              id: item.slug || `project-${item.id}`,
-              slug: item.slug || `project-${item.id}`,
-              client: item.client || item.titleFa || "مشتری سازمانی",
-              clientEn: item.clientEn || item.titleEn || "Enterprise Client",
-              titleFa: item.titleFa || "",
-              titleEn: item.titleEn || "",
-              taglineFa: item.taglineFa || item.descriptionFa || "",
-              taglineEn: item.taglineEn || item.descriptionEn || "",
-              categoryFa: item.categoryFa || "دیجیتال",
-              categoryEn: item.categoryEn || "Digital",
-              servicesFa: [item.categoryFa || "توسعه محصول"],
-              servicesEn: [item.categoryEn || "Product Development"],
-              metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
-              metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
-              colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
-              accentColor: "#38bdf8",
-              glowColor: "rgba(56, 189, 248, 0.15)",
-              previewType,
-              image: item.imageUrl || "/case_study_1.jpg",
-              secondaryImage: item.secondaryImage || undefined,
-              liveUrl: item.liveUrl || "#",
-              featured: item.featured !== false,
-              position: item.position ?? idx,
-              year: item.year || "۲۰۲۵",
-            };
+            return normalized;
           });
 
           setProjectList(getAllCaseStudies(merged));
@@ -170,22 +134,43 @@ export default function PortfolioPageView({
     return matched.length > 0 ? matched : projectList;
   }, [projectList, activeCategory]);
 
+  // Featured flagship projects for Swiper stage
+  const featuredProjects = useMemo(() => {
+    return projectList.filter((p) => p.featured);
+  }, [projectList]);
+
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-[#F8F9FA] dark:bg-[#111416] text-[#1F1F1E] dark:text-[#EAEAEA] antialiased selection:bg-[#B7FF00] selection:text-black transition-colors"
+      className="min-h-screen bg-[#F4F5F2] dark:bg-[#121413] text-[#1F1F1E] dark:text-[#EAEAEA] antialiased selection:bg-[#38534A] selection:text-white transition-colors"
     >
       <Header />
 
       <main className="relative flex flex-col w-full overflow-hidden">
-        {/* ── 1. Showcase & Projects Archive Directory (Filtered by Category) ── */}
+        {/* ── 1. Editorial Hero ── */}
+        <PortfolioHero isRtl={isRtl} />
+
+        {/* ── 2. Asymmetric Swiper Stage (Curated Flagship Spotlight) ── */}
+        <section
+          aria-label={isRtl ? "ویترین پروژه‌های شاخص" : "Curated Project Stage"}
+          className="relative w-full py-14 sm:py-20 border-b border-[#1F1F1E]/10 dark:border-white/10 overflow-hidden"
+        >
+          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-14">
+            <PortfolioAsymmetricSwiper
+              isRtl={isRtl}
+              projects={featuredProjects.length >= 3 ? featuredProjects : projectList}
+            />
+          </div>
+        </section>
+
+        {/* ── 3. Showcase & Projects Archive Directory (Filtered by Category) ── */}
         <section
           id="showcase"
           aria-label={isRtl ? "آرشیو پروژه‌ها و نمونه‌کارها" : "Projects Archive & Portfolio Directory"}
-          className="relative w-full pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-black/[0.06] dark:border-white/[0.08]"
+          className="relative w-full py-16 sm:py-24 border-b border-[#1F1F1E]/10 dark:border-white/10"
         >
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-14">
-            {/* Category Filter Pills */}
+            {/* Category Filter Tabs (Sharp Rectangular Geometry) */}
             <PortfolioCategoryFilter
               isRtl={isRtl}
               activeCategory={activeCategory}
@@ -197,9 +182,8 @@ export default function PortfolioPageView({
             <div className="mt-12 sm:mt-16">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12">
                 <div>
-                  {/* Section Eyebrow - Matching About Us Pattern */}
                   <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-2">
-                    <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50" />
+                    <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
                     <span>{isRtl ? "آرشیو مطالعات موردی و پروژه‌ها" : "CASE STUDY ARCHIVES & PORTFOLIO"}</span>
                   </div>
                   <h3
@@ -221,87 +205,111 @@ export default function PortfolioPageView({
                 </p>
               </div>
 
-              {/* Editorial List / Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <Link
-                    key={project.slug || project.id}
-                    href={`/portfolio/${project.slug}`}
-                    className="group relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-[#1A1A19]/80 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] hover:border-[#38534A]/50 dark:hover:border-[#8AB3A0]/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-                  >
-                    <div>
-                      {/* Media Thumbnail */}
-                      <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-black/10 dark:bg-white/[0.04] mb-5">
-                        <Image
-                          src={project.image || "/case_study_1.jpg"}
-                          alt={isRtl ? project.titleFa : project.titleEn}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                        />
-                        
-                        <div className="absolute top-3 inset-x-3 flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-white tracking-wider">
-                            {project.year}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-[10px] font-bold text-foreground">
+              {/* ── Editorial Asymmetrical Cards Grid ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                {filteredProjects.map((project, idx) => {
+                  const cardImage = project.secondaryImage || project.image || "/case_study_1.jpg";
+                  // Make the first item span 2 columns on large screens for an editorial magazine rhythm
+                  const isLargeSpan = idx === 0 && filteredProjects.length > 2;
+
+                  return (
+                    <article
+                      key={project.slug || project.id}
+                      className={`group relative flex flex-col justify-between p-6 sm:p-7 rounded-none bg-[#EAEBE7] dark:bg-[#1A1D1C] border border-[#1F1F1E]/12 dark:border-white/10 hover:border-[#38534A]/50 dark:hover:border-[#8AB3A0]/50 transition-all duration-300 hover:shadow-md ${
+                        isLargeSpan ? "md:col-span-2 lg:col-span-2" : "col-span-1"
+                      }`}
+                    >
+                      <div>
+                        {/* Media Frame with Hover Scroll */}
+                        <div className="mb-5">
+                          <ScrollableProjectFrame
+                            src={cardImage}
+                            alt={isRtl ? project.titleFa : project.titleEn}
+                            isRtl={isRtl}
+                            className={
+                              isLargeSpan
+                                ? "h-[320px] sm:h-[400px] lg:h-[440px]"
+                                : "h-[260px] sm:h-[300px] lg:h-[320px]"
+                            }
+                            previewType={project.previewType}
+                            liveUrl={project.liveUrl}
+                          />
+                        </div>
+
+                        {/* Top Category & Year Row */}
+                        <div className="flex items-center justify-between gap-3 mb-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#38534A] dark:text-[#8AB3A0]">
                             {isRtl ? project.categoryFa : project.categoryEn}
                           </span>
+                          <span className="font-mono text-[11px] text-foreground/50">
+                            {project.year || "۲۰۲۵"}
+                          </span>
                         </div>
+
+                        {/* Client & Title */}
+                        <span className="text-xs font-semibold text-foreground/60 block mb-1">
+                          {isRtl ? project.client : project.clientEn}
+                        </span>
+                        <h4
+                          className={`font-bold text-foreground mb-2 group-hover:text-[#38534A] dark:group-hover:text-[#8AB3A0] transition-colors leading-snug ${
+                            isLargeSpan ? "text-lg sm:text-2xl" : "text-base sm:text-lg"
+                          }`}
+                        >
+                          <Link href={`/portfolio/${project.slug}`}>
+                            {isRtl ? project.titleFa : project.titleEn}
+                          </Link>
+                        </h4>
+                        <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed mb-4">
+                          {isRtl ? project.taglineFa : project.taglineEn}
+                        </p>
                       </div>
 
-                      {/* Client & Title */}
-                      <span className="text-[11px] font-semibold text-[#38534A] dark:text-[#8AB3A0] block mb-1">
-                        {isRtl ? project.client : project.clientEn}
-                      </span>
-                      <h4 className="text-base sm:text-lg font-bold text-foreground mb-2 group-hover:text-[#38534A] dark:group-hover:text-[#8AB3A0] transition-colors leading-snug">
-                        {isRtl ? project.titleFa : project.titleEn}
-                      </h4>
-                      <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed mb-4">
-                        {isRtl ? project.taglineFa : project.taglineEn}
-                      </p>
-                    </div>
+                      {/* Card Bottom: Metric Highlight + Detail Link */}
+                      <div className="pt-4 border-t border-[#1F1F1E]/10 dark:border-white/10 flex items-center justify-between">
+                        {project.metricsFa && project.metricsFa[0] ? (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="font-bold text-[#38534A] dark:text-[#8AB3A0] font-mono">
+                              {isRtl ? project.metricsFa[0].value : project.metricsEn?.[0]?.value || project.metricsFa[0].value}
+                            </span>
+                            <span className="text-[10px] text-foreground/60">
+                              {isRtl ? project.metricsFa[0].label : project.metricsEn?.[0]?.label || project.metricsFa[0].label}
+                            </span>
+                          </div>
+                        ) : (
+                          <span />
+                        )}
 
-                    {/* Card Bottom: Metric Highlight + Explore Link */}
-                    <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
-                      {project.metricsFa && project.metricsFa[0] && (
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="font-bold text-foreground font-mono">
-                            {isRtl ? project.metricsFa[0].value : project.metricsEn?.[0]?.value || project.metricsFa[0].value}
-                          </span>
-                          <span className="text-[10px] text-foreground/50">
-                            {isRtl ? project.metricsFa[0].label : project.metricsEn?.[0]?.label || project.metricsFa[0].label}
-                          </span>
-                        </div>
-                      )}
-
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#38534A] dark:text-[#8AB3A0] group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
-                        <span>{isRtl ? "مطالعه پروژه" : "View Case"}</span>
-                        <svg
-                          className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
+                        <Link
+                          href={`/portfolio/${project.slug}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#38534A] dark:text-[#8AB3A0] group-hover:underline cursor-pointer"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                          <span>{isRtl ? "مطالعه پروژه" : "View Case"}</span>
+                          <svg
+                            className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 2. Creative Philosophy & Engineering Pillars ── */}
+        {/* ── 4. Creative Philosophy & Engineering Pillars ── */}
         <PortfolioCreativeApproach isRtl={isRtl} />
 
-        {/* ── 3. Sector & Industries Breakdown ── */}
+        {/* ── 5. Sector & Industries Breakdown ── */}
         <PortfolioIndustriesSection isRtl={isRtl} />
 
-        {/* ── 4. Closing Consultation CTA ── */}
+        {/* ── 6. Closing Consultation CTA ── */}
         <PortfolioCTASection isRtl={isRtl} />
       </main>
 
