@@ -16,6 +16,7 @@ const translations = {
     { name: "پلن‌ها و تعرفه‌ها", href: "/pricing" },
     { name: "مقالات", href: "/blog" },
     { name: "درباره ما", href: "/about" },
+    { name: "تماس با ما", href: "/contact" },
   ],
   en: [
     { name: "Home", href: "/" },
@@ -24,6 +25,7 @@ const translations = {
     { name: "Pricing", href: "/pricing" },
     { name: "Articles", href: "/blog" },
     { name: "About Us", href: "/about" },
+    { name: "Contact Us", href: "/contact" },
   ],
 };
 

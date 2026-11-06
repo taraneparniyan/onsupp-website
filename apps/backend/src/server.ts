@@ -19,6 +19,7 @@ import servicesRoutes from './routes/services.js';
 import statsRoutes from './routes/stats.js';
 import aboutRoutes from './routes/about.js';
 import caseStudiesRoutes from './routes/casestudies.js';
+import portfolioCategoriesRoutes from './routes/portfolioCategories.js';
 import pricingRoutes from './routes/pricing.js';
 import contactRoutes from './routes/contact.js';
 import articlesRoutes from './routes/articles.js';
@@ -26,6 +27,12 @@ import usersRoutes from './routes/users.js';
 import commentsRoutes from './routes/comments.js';
 import dashboardRoutes from './routes/dashboard.js';
 import testimonialsRoutes from './routes/testimonials.js';
+import settingsRoutes from './routes/settings.js';
+import clientsRoutes from './routes/clients.js';
+import clientLogosRoutes from './routes/client-logos.js';
+import teamRoutes from './routes/team.js';
+import sectionsRoutes from './routes/sections.js';
+import revalidateRoutes from './routes/revalidate.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -103,20 +110,33 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Authentication & Users
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', usersRoutes);
-app.use('/api/v1/comments', commentsRoutes);
-app.use('/api/v1/media', mediaRoutes);
+
+// CMS Content Management & Site Foundation
+app.use('/api/v1/settings', settingsRoutes);
+app.use('/api/v1/sections', sectionsRoutes);
 app.use('/api/v1/hero', heroRoutes);
 app.use('/api/v1/services', servicesRoutes);
 app.use('/api/v1/stats', statsRoutes);
 app.use('/api/v1/about', aboutRoutes);
+app.use('/api/v1/team', teamRoutes);
+app.use('/api/v1/clients', clientsRoutes);
+app.use('/api/v1/client-logos', clientLogosRoutes);
 app.use('/api/v1/casestudies', caseStudiesRoutes);
-app.use('/api/v1/pricing', pricingRoutes);
-app.use('/api/v1/contact', contactRoutes);
-app.use('/api/v1/articles', articlesRoutes);
-app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/portfolio/categories', portfolioCategoriesRoutes);
 app.use('/api/v1/testimonials', testimonialsRoutes);
+app.use('/api/v1/pricing', pricingRoutes);
+app.use('/api/v1/articles', articlesRoutes);
+app.use('/api/v1/comments', commentsRoutes);
+app.use('/api/v1/contact', contactRoutes);
+app.use('/api/v1/media', mediaRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+
+// Cache Revalidation
+app.use('/api/v1/revalidate', revalidateRoutes);
+
 export { app };
 export default app;
 

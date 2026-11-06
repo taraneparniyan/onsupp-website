@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { adminFetch } from "@/lib/adminApi";
 import MediaPickerModal, { type MediaItem } from "@/components/admin/MediaPickerModal";
+import CategoryTemplateManager, {
+  type AdminCategoryWithCount,
+} from "@/components/admin/portfolio/CategoryTemplateManager";
+import DynamicAttributesForm, {
+  type AttributeValueItem,
+} from "@/components/admin/portfolio/DynamicAttributesForm";
 
 export type AdminCaseStudy = {
-  id: number;
+  id?: number;
   slug: string;
   client: string;
   clientEn: string;
@@ -14,6 +20,8 @@ export type AdminCaseStudy = {
   titleEn: string;
   taglineFa: string;
   taglineEn: string;
+  categoryId?: number | null;
+  category?: AdminCategoryWithCount | null;
   categoryFa: string;
   categoryEn: string;
   projectType: "website" | "instagram" | "app";
@@ -25,9 +33,31 @@ export type AdminCaseStudy = {
   featured: boolean;
   position: number;
   year: string;
+  challengeFa: string;
+  challengeEn: string;
+  solutionFa: string;
+  solutionEn: string;
+  resultsFa: string;
+  resultsEn: string;
+  deliverablesFa: string[];
+  deliverablesEn: string[];
+  servicesFa: string[];
+  servicesEn: string[];
+  metricsFa: Array<{ value: string; label: string }>;
+  attributeValues?: AttributeValueItem[];
+  colorGradient: string;
+  accentColor: string;
+  glowColor: string;
+  previewType: string;
+  metaTitleFa: string;
+  metaDescFa: string;
+  keywords: string;
+  ogImage: string;
+  isPublished: boolean;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
 };
 
-const EMPTY_FORM: Omit<AdminCaseStudy, "id"> = {
+const EMPTY_FORM: AdminCaseStudy = {
   slug: "",
   client: "",
   clientEn: "",
@@ -35,100 +65,325 @@ const EMPTY_FORM: Omit<AdminCaseStudy, "id"> = {
   titleEn: "",
   taglineFa: "",
   taglineEn: "",
-  categoryFa: "",
-  categoryEn: "",
+  categoryId: null,
+  category: null,
+  categoryFa: "طراحی و توسعه وب",
+  categoryEn: "Web Development",
   projectType: "website",
   descriptionFa: "",
   descriptionEn: "",
-  imageUrl: "",
-  secondaryImage: "",
-  liveUrl: "",
+  imageUrl: null,
+  secondaryImage: null,
+  liveUrl: "https://",
   featured: true,
   position: 0,
-  year: "۲۰۲۵",
+  year: "۱۴۰۳",
+  challengeFa: "",
+  challengeEn: "",
+  solutionFa: "",
+  solutionEn: "",
+  resultsFa: "",
+  resultsEn: "",
+  deliverablesFa: [],
+  deliverablesEn: [],
+  servicesFa: [],
+  servicesEn: [],
+  metricsFa: [],
+  attributeValues: [],
+  colorGradient: "from-[#1a1315] via-[#241a1e] to-[#100b0d]",
+  accentColor: "#D4A5A8",
+  glowColor: "rgba(212, 165, 168, 0.2)",
+  previewType: "web",
+  metaTitleFa: "",
+  metaDescFa: "",
+  keywords: "",
+  ogImage: "",
+  isPublished: true,
+  status: "PUBLISHED",
 };
 
 export default function AdminCaseStudiesPage() {
   const [items, setItems] = useState<AdminCaseStudy[]>([]);
+  const [categories, setCategories] = useState<AdminCategoryWithCount[]>([]);
+  const [mainTab, setMainTab] = useState<"casestudies" | "categories">("casestudies");
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [mediaPickerTarget, setMediaPickerTarget] = useState<"image" | "secondary" | null>(null);
+  const [formData, setFormData] = useState<AdminCaseStudy>(EMPTY_FORM);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<
+    "general" | "attributes" | "narrative" | "media" | "deliverables" | "seo"
+  >("general");
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<"image" | "secondary" | "og" | null>(null);
+  const [dynamicMediaTarget, setDynamicMediaTarget] = useState<{ key: string; subField?: "before" | "after" } | null>(null);
+  const [deliverablesInput, setDeliverablesInput] = useState("");
+  const [servicesInput, setServicesInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const notify = (type: "ok" | "err", text: string) => {
+  const notify = useCallback((type: "ok" | "err", text: string) => {
     setMessage({ type, text });
     setTimeout(() => {
       setMessage((cur) => (cur?.text === text ? null : cur));
     }, 4500);
-  };
+  }, []);
 
-  const loadData = () => {
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await adminFetch("/api/v1/portfolio/categories/admin", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch {
+      // Ignore background category error
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
     setLoading(true);
-    adminFetch("/api/v1/casestudies")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data)) setItems(data);
-      })
-      .catch(() => notify("err", "خطا در دریافت لیست نمونه‌کارها"))
-      .finally(() => setLoading(false));
-  };
+    try {
+      const [csRes, catRes] = await Promise.all([
+        adminFetch("/api/v1/casestudies/all", { cache: "no-store" }),
+        adminFetch("/api/v1/portfolio/categories/admin", { cache: "no-store" }),
+      ]);
+
+      if (csRes.ok) {
+        const data = await csRes.json();
+        setItems(data.sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0)));
+      } else {
+        notify("err", "خطا در دریافت لیست نمونه‌کارها");
+      }
+
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        setCategories(catData);
+      }
+    } catch {
+      notify("err", "خطای شبکه هنگام ارتباط با سرور");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const handleEdit = (item: AdminCaseStudy) => {
-    setEditingId(item.id);
-    setFormData({
-      slug: item.slug || "",
-      client: item.client || "",
-      clientEn: item.clientEn || "",
-      titleFa: item.titleFa || "",
-      titleEn: item.titleEn || "",
-      taglineFa: item.taglineFa || "",
-      taglineEn: item.taglineEn || "",
-      categoryFa: item.categoryFa || "",
-      categoryEn: item.categoryEn || "",
-      projectType: item.projectType || "website",
-      descriptionFa: item.descriptionFa || "",
-      descriptionEn: item.descriptionEn || "",
-      imageUrl: item.imageUrl || "",
-      secondaryImage: item.secondaryImage || "",
-      liveUrl: item.liveUrl || "",
-      featured: item.featured !== false,
-      position: item.position ?? 0,
-      year: item.year || "۲۰۲۵",
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleReset = () => {
+  const openCreateModal = () => {
     setEditingId(null);
+    const defaultCat = categories.find((c) => c.slug === "website-design") || categories[0] || null;
     setFormData({
       ...EMPTY_FORM,
       position: items.length,
+      categoryId: defaultCat ? defaultCat.id : null,
+      category: defaultCat,
+      categoryFa: defaultCat ? defaultCat.titleFa : "طراحی و توسعه وب",
+      categoryEn: defaultCat ? defaultCat.titleEn : "Web Development",
+      attributeValues: [],
     });
+    setDeliverablesInput("");
+    setServicesInput("");
+    setModalTab("general");
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: AdminCaseStudy) => {
+    setEditingId(item.id || null);
+    const itemCat = categories.find((c) => c.id === item.categoryId) || item.category || null;
+
+    setFormData({
+      ...item,
+      categoryId: item.categoryId ?? null,
+      category: itemCat,
+      attributeValues: Array.isArray(item.attributeValues) ? item.attributeValues : [],
+      deliverablesFa: Array.isArray(item.deliverablesFa) ? item.deliverablesFa : [],
+      servicesFa: Array.isArray(item.servicesFa) ? item.servicesFa : [],
+      metricsFa: Array.isArray(item.metricsFa) ? item.metricsFa : [],
+    });
+    setDeliverablesInput(
+      Array.isArray(item.deliverablesFa) ? item.deliverablesFa.join("\n") : ""
+    );
+    setServicesInput(
+      Array.isArray(item.servicesFa) ? item.servicesFa.join("\n") : ""
+    );
+    setModalTab("general");
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData(EMPTY_FORM);
+    setDynamicMediaTarget(null);
+  };
+
+  const handleMediaSelect = (media: MediaItem) => {
+    // 1. Dynamic Attribute Media Selection
+    if (dynamicMediaTarget) {
+      const { key, subField } = dynamicMediaTarget;
+      const currentValues = formData.attributeValues || [];
+      const existingIdx = currentValues.findIndex((v) => v.attributeKey === key);
+
+      let nextValues = [...currentValues];
+      if (subField === "before" || subField === "after") {
+        const curJson = existingIdx >= 0 ? currentValues[existingIdx].valueJson || {} : {};
+        const nextJson = {
+          ...curJson,
+          [subField === "before" ? "beforeImage" : "afterImage"]: media.url,
+        };
+        if (existingIdx >= 0) {
+          nextValues[existingIdx] = {
+            ...nextValues[existingIdx],
+            valueJson: nextJson,
+            valueText: "مقایسه قبل و بعد",
+          };
+        } else {
+          nextValues.push({
+            attributeKey: key,
+            type: "BEFORE_AFTER",
+            valueJson: nextJson,
+            valueText: "مقایسه قبل و بعد",
+          });
+        }
+      } else {
+        if (existingIdx >= 0) {
+          nextValues[existingIdx] = {
+            ...nextValues[existingIdx],
+            valueText: media.url,
+          };
+        } else {
+          nextValues.push({
+            attributeKey: key,
+            type: "IMAGE",
+            valueText: media.url,
+          });
+        }
+      }
+
+      setFormData((prev) => ({ ...prev, attributeValues: nextValues }));
+      setDynamicMediaTarget(null);
+      return;
+    }
+
+    // 2. Standard CaseStudy Media
+    if (mediaPickerTarget === "image") {
+      setFormData((prev) => ({ ...prev, imageUrl: media.url }));
+    } else if (mediaPickerTarget === "secondary") {
+      setFormData((prev) => ({ ...prev, secondaryImage: media.url }));
+    } else if (mediaPickerTarget === "og") {
+      setFormData((prev) => ({ ...prev, ogImage: media.url }));
+    }
+    setMediaPickerTarget(null);
+  };
+
+  const handleTogglePublish = async (item: AdminCaseStudy) => {
+    if (!item.id) return;
+    const nextStatus = !item.isPublished;
+    try {
+      const res = await adminFetch(`/api/v1/casestudies/${item.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          isPublished: nextStatus,
+          status: nextStatus ? "PUBLISHED" : "DRAFT",
+        }),
+      });
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((c) =>
+            c.id === item.id
+              ? { ...c, isPublished: nextStatus, status: nextStatus ? "PUBLISHED" : "DRAFT" }
+              : c
+          )
+        );
+        notify("ok", `وضعیت نمایش ${item.titleFa} تغییر یافت.`);
+      } else {
+        notify("err", "تغییر وضعیت ناموفق بود.");
+      }
+    } catch {
+      notify("err", "خطای شبکه");
+    }
+  };
+
+  const handleDelete = async (item: AdminCaseStudy) => {
+    if (!item.id) return;
+    if (!confirm(`آیا از حذف نمونه‌کار "${item.titleFa}" اطمینان دارید؟`)) return;
+
+    try {
+      const res = await adminFetch(`/api/v1/casestudies/${item.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((c) => c.id !== item.id));
+        notify("ok", `نمونه‌کار "${item.titleFa}" حذف گردید.`);
+      } else {
+        notify("err", "حذف ناموفق بود.");
+      }
+    } catch {
+      notify("err", "خطای شبکه");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.titleFa.trim()) {
-      notify("err", "عنوان فارسی الزامی است.");
+    if (!formData.titleFa.trim() && !formData.titleEn.trim()) {
+      notify("err", "عنوان نمونه‌کار الزامی است.");
       return;
     }
 
-    const endpoint = editingId
-      ? `/api/v1/casestudies/${editingId}`
-      : "/api/v1/casestudies";
-    const method = editingId ? "PUT" : "POST";
+    // Validate Required Attributes for Selected Category
+    const activeCat = categories.find((c) => c.id === formData.categoryId);
+    if (activeCat && activeCat.attributes) {
+      for (const attr of activeCat.attributes) {
+        if (attr.isRequired && attr.isActive) {
+          const val = formData.attributeValues?.find((v) => v.attributeKey === attr.key);
+          const isMissing =
+            !val ||
+            ((val.valueText === null || val.valueText === undefined || val.valueText.trim() === "") &&
+              (val.valueNumber === null || val.valueNumber === undefined) &&
+              !val.valueJson);
+
+          if (isMissing) {
+            notify("err", `ویژگی الزامی «${attr.titleFa}» تکمیل نشده است.`);
+            setModalTab("attributes");
+            return;
+          }
+        }
+      }
+    }
+
+    setSaving(true);
+    const isEdit = !!editingId;
+    const endpoint = isEdit ? `/api/v1/casestudies/${editingId}` : "/api/v1/casestudies";
+    const method = isEdit ? "PUT" : "POST";
+
+    const parsedDeliverables = deliverablesInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const parsedServices = servicesInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const slug = formData.slug.trim()
+      ? formData.slug.trim().toLowerCase().replace(/[^a-z0-9\u0600-\u06FF-]+/g, "-")
+      : (formData.titleEn || formData.titleFa)
+          .toLowerCase()
+          .replace(/[^a-z0-9\u0600-\u06FF-]+/g, "-")
+          .replace(/^-+|-+$/g, "");
 
     const payload = {
       ...formData,
-      slug: formData.slug.trim() || formData.titleEn.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      slug,
+      categoryId: formData.categoryId ? Number(formData.categoryId) : null,
+      attributeValues: formData.attributeValues || [],
+      deliverablesFa: parsedDeliverables,
+      servicesFa: parsedServices,
+      position: Number(formData.position) || 0,
       imageUrl: formData.imageUrl?.trim() || null,
       secondaryImage: formData.secondaryImage?.trim() || null,
-      position: Number(formData.position) || 0,
     };
 
     try {
@@ -142,410 +397,933 @@ export default function AdminCaseStudiesPage() {
         throw new Error(errData.error || "خطا در ذخیره نمونه‌کار");
       }
 
-      notify("ok", editingId ? "تغییرات با موفقیت ذخیره شد." : "نمونه‌کار جدید با موفقیت اضافه شد.");
-      handleReset();
+      notify("ok", isEdit ? "تغییرات نمونه‌کار ذخیره شد." : "نمونه‌کار جدید با موفقیت ایجاد شد.");
+      closeModal();
       loadData();
     } catch (err: any) {
-      notify("err", err.message || "خطا در ثبت اطلاعات");
+      notify("err", err.message || "خطا در برقراری ارتباط");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("آیا از حذف این نمونه‌کار مطمئن هستید؟")) return;
-    try {
-      const res = await adminFetch(`/api/v1/casestudies/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("حذف ناموفق بود");
-      notify("ok", "نمونه‌کار با موفقیت حذف گردید.");
-      loadData();
-    } catch (err: any) {
-      notify("err", err.message || "خطا در حذف نمونه‌کار");
-    }
+  // Metrics helper
+  const addMetric = () => {
+    setFormData((prev) => ({
+      ...prev,
+      metricsFa: [...prev.metricsFa, { value: "", label: "" }],
+    }));
   };
 
-  const handleSelectMedia = (media: MediaItem) => {
-    if (mediaPickerTarget === "image") {
-      setFormData((prev) => ({ ...prev, imageUrl: media.url }));
-    } else if (mediaPickerTarget === "secondary") {
-      setFormData((prev) => ({ ...prev, secondaryImage: media.url }));
-    }
-    setMediaPickerTarget(null);
+  const updateMetric = (idx: number, key: "value" | "label", val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      metricsFa: prev.metricsFa.map((m, i) => (i === idx ? { ...m, [key]: val } : m)),
+    }));
   };
+
+  const removeMetric = (idx: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      metricsFa: prev.metricsFa.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const filteredItems = items.filter((c) =>
+    (c.titleFa + c.titleEn + c.client + c.categoryFa + c.slug)
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  const selectedCategoryObj =
+    categories.find((c) => c.id === formData.categoryId) || null;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-12" dir="rtl">
-      {/* Header Banner */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#262625] border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-lg">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8BB3A4]/10 border border-[#8BB3A4]/20 text-[#8BB3A4] text-xs font-bold">
-            📁 مدیریت نمونه‌کارها و کیس‌استادی‌های آن‌ساپ
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">مدیریت کیس‌استادی‌ها و پورتفولیو</h1>
-          <p className="text-sm text-neutral-400">
-            مدیریت یکپارچه نمونه‌کارهای رسمی، پیوندهای زنده، تصاویر کاور، دسته‌بندی‌ها و متادیتا برای وب‌سایت اصلی.
+    <div className="space-y-8" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+        <div>
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+            <span className="p-2.5 rounded-xl bg-mint/10 text-mint border border-mint/20">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </span>
+            مدیریت نمونه‌کارها و سیستم CMS داینامیک
+          </h1>
+          <p className="text-sm text-muted mt-1">
+            سیستم داینامیک دسته‌بندی‌محور، قالب‌های ویژگی هوشمند (KPI، قبل/بعد، مشخصات فنی)، و مستندات اختصاصی کیس‌استادی‌ها
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openCreateModal}
+            className="px-5 py-2.5 rounded-xl bg-lime text-ink font-semibold hover:opacity-90 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            افزودن پروژه جدید
+          </button>
         </div>
       </div>
 
-      {/* Notification Toast */}
+      {/* Main Mode Tabs Switcher */}
+      <div className="flex items-center gap-3 border-b border-border pb-2">
+        <button
+          type="button"
+          onClick={() => setMainTab("casestudies")}
+          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center gap-2.5 ${
+            mainTab === "casestudies"
+              ? "bg-lime text-ink shadow-sm"
+              : "text-muted hover:text-foreground bg-panel border border-border hover:bg-raised"
+          }`}
+        >
+          <span>📋</span>
+          <span>لیست پروژه‌ها و کیس‌استادی‌ها</span>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-mono ${
+              mainTab === "casestudies" ? "bg-black/15 text-ink" : "bg-raised text-muted"
+            }`}
+          >
+            {items.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMainTab("categories")}
+          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center gap-2.5 ${
+            mainTab === "categories"
+              ? "bg-lime text-ink shadow-sm"
+              : "text-muted hover:text-foreground bg-panel border border-border hover:bg-raised"
+          }`}
+        >
+          <span>🗂️</span>
+          <span>مدیریت دسته‌بندی‌ها و قالب‌های ویژگی</span>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-mono ${
+              mainTab === "categories" ? "bg-black/15 text-ink" : "bg-raised text-muted"
+            }`}
+          >
+            {categories.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Notification Banner */}
       {message && (
         <div
-          className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          className={`p-4 rounded-xl text-sm font-medium flex items-center justify-between border ${
             message.type === "ok"
-              ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-200"
-              : "bg-rose-950/60 border-rose-500/40 text-rose-200"
+              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+              : "bg-rose-500/10 text-rose-500 border-rose-500/20"
           }`}
         >
           <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-xs opacity-70 hover:opacity-100">
-            ✕
+          <button onClick={() => setMessage(null)} className="text-xs opacity-70 hover:opacity-100">
+            بستن
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Form Panel */}
-        <div className="lg:col-span-5 bg-[#262625] border border-white/10 rounded-2xl p-6 space-y-6 shadow-md h-fit">
-          <h2 className="text-lg font-bold text-white pb-3 border-b border-white/10 flex items-center justify-between">
-            <span>{editingId ? "ویرایش کیس‌استادی" : "افزودن کیس‌استادی جدید"}</span>
-            {editingId && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="text-xs text-rose-400 hover:underline"
-              >
-                انصراف و فرم جدید
-              </button>
-            )}
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title FA */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                عنوان پروژه (فارسی) <span className="text-rose-400">*</span>
-              </label>
+      {/* ── TAB 1: CASE STUDIES LIST VIEW ── */}
+      {mainTab === "casestudies" && (
+        <div className="space-y-6">
+          {/* Search & Stats Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-panel border border-border p-4 rounded-2xl">
+            <div className="relative w-full sm:w-80">
               <input
                 type="text"
-                required
-                value={formData.titleFa}
-                onChange={(e) => setFormData({ ...formData, titleFa: e.target.value })}
-                placeholder="مثال: برندینگ دیجیتال، پرتال نوبت‌دهی و هویت شبکه‌های اجتماعی"
-                className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="جستجوی نام پروژه، کارفرما، دسته..."
+                className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-mint transition-colors"
               />
+              <svg className="w-4 h-4 text-muted absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
 
-            {/* Title EN */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                عنوان پروژه (انگلیسی)
-              </label>
-              <input
-                type="text"
-                dir="ltr"
-                value={formData.titleEn}
-                onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
-                placeholder="e.g. Digital Branding, Booking Portal & Social Identity"
-                className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-              />
+            <div className="text-xs text-muted flex items-center gap-4">
+              <span>تعداد کل: <strong className="text-foreground font-mono">{items.length}</strong></span>
+              <span className="text-border">|</span>
+              <span>پروژه‌های ویژه: <strong className="text-mint font-mono">{items.filter((c) => c.featured).length}</strong></span>
+              <span className="text-border">|</span>
+              <span>منتشر شده: <strong className="text-emerald-500 font-mono">{items.filter((c) => c.isPublished).length}</strong></span>
             </div>
-
-            {/* Client FA & EN */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  نام کارفرما / برند (فارسی)
-                </label>
-                <input
-                  type="text"
-                  value={formData.client}
-                  onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                  placeholder="کلینیک دکتر علیرضا میراسماعیلی"
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  نام کارفرما (انگلیسی)
-                </label>
-                <input
-                  type="text"
-                  dir="ltr"
-                  value={formData.clientEn}
-                  onChange={(e) => setFormData({ ...formData, clientEn: e.target.value })}
-                  placeholder="Dr. Miresmaeli Clinic"
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                />
-              </div>
-            </div>
-
-            {/* Slug & Year */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  شناسه URL (Slug)
-                </label>
-                <input
-                  type="text"
-                  dir="ltr"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  placeholder="dr-miresmaeli-clinic"
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4] font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  سال اجرا
-                </label>
-                <input
-                  type="text"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  placeholder="۲۰۲۴ یا ۱۴۰۳"
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                />
-              </div>
-            </div>
-
-            {/* Category & Project Type */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  دسته‌بندی (فارسی)
-                </label>
-                <input
-                  type="text"
-                  value={formData.categoryFa}
-                  onChange={(e) => setFormData({ ...formData, categoryFa: e.target.value })}
-                  placeholder="طراحی وب و هویت دیجیتال"
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  نوع پروژه
-                </label>
-                <select
-                  value={formData.projectType}
-                  onChange={(e) => setFormData({ ...formData, projectType: e.target.value as any })}
-                  className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                >
-                  <option value="website">🌐 وب‌سایت و پلتفرم</option>
-                  <option value="app">📱 نرم‌افزار اختصاصی و وب‌اپ</option>
-                  <option value="instagram">📸 استودیو و سوشال مدیا</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Live URL */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                لینک زنده پروژه (Direct Live URL)
-              </label>
-              <input
-                type="text"
-                dir="ltr"
-                value={formData.liveUrl}
-                onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
-                placeholder="https://drmiresmaeli.com/ یا /portfolio/dr-miresmaeli-clinic"
-                className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-              />
-            </div>
-
-            {/* Image URL & Picker */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                تصویر شاخص کاور (Cover Image)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  dir="ltr"
-                  value={formData.imageUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="/images/portfolio/project-hero.webp"
-                  className="flex-1 bg-neutral-900/60 border border-white/10 text-xs text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setMediaPickerTarget("image")}
-                  className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-neutral-300 hover:bg-white/10 transition"
-                >
-                  انتخاب رسانه
-                </button>
-              </div>
-              {formData.imageUrl && (
-                <div className="mt-2 relative h-20 w-36 rounded-lg overflow-hidden border border-white/10">
-                  <Image src={formData.imageUrl} alt="preview" fill className="object-cover" />
-                </div>
-              )}
-            </div>
-
-            {/* Tagline FA */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                شعار / توضیح کوتاه (Tagline)
-              </label>
-              <input
-                type="text"
-                value={formData.taglineFa}
-                onChange={(e) => setFormData({ ...formData, taglineFa: e.target.value })}
-                placeholder="تدوین هویت بصری منسجم و طراحی وب‌سایت پرفورمنس‌محور"
-                className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-              />
-            </div>
-
-            {/* Description FA */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                شرح پروژه و راه‌حل اجرا شده (فارسی)
-              </label>
-              <textarea
-                rows={3}
-                value={formData.descriptionFa}
-                onChange={(e) => setFormData({ ...formData, descriptionFa: e.target.value })}
-                placeholder="توضیح خلاصه درباره چالش‌ها و نتایج همکاری..."
-                className="w-full bg-neutral-900/60 border border-white/10 text-sm text-white rounded-xl py-2 px-3 focus:outline-none focus:border-[#8BB3A4]"
-              />
-            </div>
-
-            {/* Featured & Position */}
-            <div className="flex items-center justify-between border-t border-white/10 pt-4">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-neutral-300">
-                <input
-                  type="checkbox"
-                  checked={formData.featured}
-                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                  className="rounded bg-neutral-900 border-white/20 text-[#8BB3A4] focus:ring-0"
-                />
-                نمایش به عنوان پروژه شاخص در صفحه اصلی
-              </label>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-neutral-400">ترتیب:</span>
-                <input
-                  type="number"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) || 0 })}
-                  className="w-16 bg-neutral-900/60 border border-white/10 text-xs text-white rounded-xl py-1 px-2 text-center"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 rounded-xl bg-[#8BB3A4] text-neutral-950 font-bold text-sm hover:bg-[#9cc1b3] shadow-lg transition-all"
-            >
-              {editingId ? "ذخیره تغییرات کیس‌استادی" : "افزودن کیس‌استادی جدید"}
-            </button>
-          </form>
-        </div>
-
-        {/* List Items */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>لیست پروژه‌ها</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#8BB3A4]/10 text-[#8BB3A4] border border-[#8BB3A4]/20 font-mono">
-                {items.length}
-              </span>
-            </h2>
           </div>
 
-          {loading ? (
-            <div className="text-center py-12 text-neutral-400 animate-pulse">در حال بارگذاری نمونه‌کارها...</div>
-          ) : items.length === 0 ? (
-            <div className="text-center py-12 bg-[#262625] rounded-2xl border border-white/10 text-neutral-400">
-              هیچ کیس‌استادی‌ای ثبت نشده است.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-[#262625] border border-white/10 hover:border-[#8BB3A4]/40 p-4 sm:p-5 rounded-2xl flex items-center justify-between gap-4 transition-all"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    {item.imageUrl ? (
-                      <div className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-white/10 bg-neutral-900">
-                        <Image src={item.imageUrl} alt={item.titleFa} fill className="object-cover" />
-                      </div>
-                    ) : (
-                      <div className="h-14 w-14 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs text-neutral-500 font-mono">
-                        No Img
-                      </div>
-                    )}
+          {/* Table */}
+          <div className="bg-panel border border-border rounded-2xl overflow-hidden backdrop-blur">
+            {loading ? (
+              <div className="py-20 text-center text-muted">
+                <div className="inline-block w-8 h-8 border-2 border-mint border-t-transparent rounded-full animate-spin mb-3" />
+                <p>در حال بارگذاری نمونه‌کارها...</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="py-20 text-center text-muted">
+                هیچ نمونه‌کاری یافت نشد. برای شروع «افزودن پروژه جدید» را بزنید.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-sm">
+                  <thead className="bg-raised/80 text-muted text-xs border-b border-border">
+                    <tr>
+                      <th className="py-3.5 px-4 font-medium">ترتیب</th>
+                      <th className="py-3.5 px-4 font-medium">تصویر کاور</th>
+                      <th className="py-3.5 px-4 font-medium">عنوان پروژه</th>
+                      <th className="py-3.5 px-4 font-medium">کارفرما</th>
+                      <th className="py-3.5 px-4 font-medium">دسته‌بندی داینامیک</th>
+                      <th className="py-3.5 px-4 font-medium">فیلدهای ویژه</th>
+                      <th className="py-3.5 px-4 font-medium">سال</th>
+                      <th className="py-3.5 px-4 font-medium">ویژه</th>
+                      <th className="py-3.5 px-4 font-medium">وضعیت</th>
+                      <th className="py-3.5 px-4 font-medium text-left">عملیات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {filteredItems.map((item, idx) => {
+                      const catColor = item.category?.color || "#38534A";
+                      const attrValCount = item.attributeValues?.length || 0;
 
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-sm text-white truncate max-w-[280px]">
-                          {item.client ? `${item.client} — ${item.titleFa}` : item.titleFa}
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[#8BB3A4] text-[10px]">
-                          {item.categoryFa || item.projectType}
-                        </span>
-                        {item.featured && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px]">
-                            شاخص هوم‌پیج
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-neutral-400 truncate max-w-[320px]">
-                        {item.taglineFa || item.descriptionFa}
-                      </p>
-                      {item.liveUrl && (
-                        <a
-                          href={item.liveUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[11px] text-[#8BB3A4]/80 hover:text-[#8BB3A4] hover:underline inline-block truncate max-w-[280px]"
-                        >
-                          {item.liveUrl}
-                        </a>
+                      return (
+                        <tr key={item.id || idx} className="hover:bg-raised/40 transition-colors">
+                          <td className="py-4 px-4 font-mono text-xs text-muted">{item.position ?? idx}</td>
+                          <td className="py-4 px-4">
+                            {item.imageUrl ? (
+                              <div className="w-14 h-10 rounded-lg overflow-hidden relative border border-border bg-raised">
+                                <Image src={item.imageUrl} alt={item.titleFa} fill className="object-cover" sizes="56px" />
+                              </div>
+                            ) : (
+                              <div className="w-14 h-10 rounded-lg bg-raised border border-border flex items-center justify-center text-[10px] text-muted">
+                                بدون عکس
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-foreground">{item.titleFa}</div>
+                            <a
+                              href={`/portfolio/${item.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-mint hover:underline font-mono"
+                            >
+                              /portfolio/{item.slug}
+                            </a>
+                          </td>
+                          <td className="py-4 px-4 text-muted">{item.client || "—"}</td>
+                          <td className="py-4 px-4">
+                            <span
+                              className="px-2.5 py-1 rounded-md text-xs border inline-flex items-center gap-1.5 font-medium"
+                              style={{
+                                borderColor: `${catColor}50`,
+                                backgroundColor: `${catColor}15`,
+                                color: catColor,
+                              }}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: catColor }} />
+                              <span>{item.category?.titleFa || item.categoryFa}</span>
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-raised text-foreground border border-border">
+                              {attrValCount} فیلد
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 font-mono text-xs text-muted">{item.year}</td>
+                          <td className="py-4 px-4">
+                            {item.featured ? (
+                              <span className="px-2 py-0.5 rounded text-[11px] bg-amber-500/10 text-amber-500 border border-amber-500/30 font-medium">
+                                ★ ویژه
+                              </span>
+                            ) : (
+                              <span className="text-muted text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">
+                            <button
+                              onClick={() => handleTogglePublish(item)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                                item.isPublished
+                                  ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/20"
+                                  : "bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20"
+                              }`}
+                            >
+                              {item.isPublished ? "منتشر شده" : "پیش‌نویس"}
+                            </button>
+                          </td>
+                          <td className="py-4 px-4 text-left">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => openEditModal(item)}
+                                className="px-3 py-1.5 rounded-lg bg-raised text-foreground text-xs hover:bg-mint/15 hover:text-mint border border-border transition-colors cursor-pointer"
+                              >
+                                ویرایش کامل
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item)}
+                                className="px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-xs hover:bg-rose-500/20 border border-rose-500/20 transition-colors cursor-pointer"
+                              >
+                                حذف
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 2: CATEGORIES & TEMPLATES CMS VIEW ── */}
+      {mainTab === "categories" && (
+        <CategoryTemplateManager onCategoriesUpdated={loadCategories} />
+      )}
+
+      {/* ── CASE STUDY EDIT / CREATE MODAL ── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-panel border border-border rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 md:p-8 space-y-6 shadow-2xl relative">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-mint" />
+                {editingId ? `ویرایش نمونه‌کار: ${formData.titleFa}` : "ایجاد نمونه‌کار جدید"}
+              </h2>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-muted hover:text-foreground text-sm p-1.5 rounded-lg bg-raised hover:opacity-80 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Subtabs */}
+            <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto text-xs">
+              <button
+                type="button"
+                onClick={() => setModalTab("general")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "general"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۱. مشخصات کلی و دسته‌بندی
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("attributes")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  modalTab === "attributes"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                <span>۲. فیلدهای داینامیک</span>
+                {selectedCategoryObj && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-mint/20 text-mint font-mono">
+                    {selectedCategoryObj.attributes?.filter((a) => a.isActive).length || 0}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("narrative")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "narrative"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۳. چالش، راهکار و نتایج
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("media")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "media"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۴. تصاویر و هویت بصری
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("deliverables")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "deliverables"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۵. خروجی‌ها و شاخص‌ها ({formData.metricsFa.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("seo")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "seo"
+                    ? "bg-mint/15 text-mint border border-mint/30"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۶. سئو و انتشار
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* TAB 1: GENERAL & CATEGORY */}
+              {modalTab === "general" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        نام پروژه (فارسی) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.titleFa}
+                        onChange={(e) => setFormData({ ...formData, titleFa: e.target.value })}
+                        placeholder="مثال: کلینیک دکتر میر اسماعیلی"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        Project Title (English)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.titleEn}
+                        onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
+                        placeholder="e.g. Dr. Miresmaeli Clinic"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        نام کارفرما / برند (فارسی)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.client}
+                        onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+                        placeholder="کلینیک پوست و مو / هلدینگ کانزا"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        Client Brand (English)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.clientEn}
+                        onChange={(e) => setFormData({ ...formData, clientEn: e.target.value })}
+                        placeholder="Dr. Miresmaeli Clinic"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category Selection Dropdown */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        اسلاگ URL (Slug)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.slug}
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        placeholder="dr-miresmaeli-clinic"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-mint"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-muted mb-1.5 flex items-center justify-between">
+                        <span>دسته‌بندی نمونه‌کار (Portfolio Category) *</span>
+                        <span className="text-[10px] text-mint">سیستم داینامیک CMS</span>
+                      </label>
+                      <select
+                        value={formData.categoryId ? String(formData.categoryId) : ""}
+                        onChange={(e) => {
+                          const selectedId = e.target.value ? parseInt(e.target.value, 10) : null;
+                          const matched = categories.find((c) => c.id === selectedId);
+                          setFormData({
+                            ...formData,
+                            categoryId: selectedId,
+                            category: matched || null,
+                            categoryFa: matched ? matched.titleFa : formData.categoryFa,
+                            categoryEn: matched ? matched.titleEn : formData.categoryEn,
+                          });
+                        }}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      >
+                        <option value="">-- بدون دسته‌بندی داینامیک --</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.titleFa} ({c.titleEn}) — {c.attributes?.length || 0} فیلد اختصاصی
+                          </option>
+                        ))}
+                      </select>
+                      {editingId && formData.categoryId && (
+                        <p className="text-[10px] text-muted mt-1">
+                          انتخاب هر دسته، فرم «فیلدهای داینامیک» را بر اساس قالب آن به‌روزرسانی می‌کند.
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                      className="p-2 rounded-xl bg-white/5 border border-white/10 text-neutral-300 hover:bg-white/10 hover:text-[#8BB3A4] transition-all"
-                      title="ویرایش"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-all"
-                      title="حذف"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        نوع پروژه (Project Type)
+                      </label>
+                      <select
+                        value={formData.projectType}
+                        onChange={(e) => setFormData({ ...formData, projectType: e.target.value as any })}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      >
+                        <option value="website">وب‌سایت و پلتفرم (Website)</option>
+                        <option value="app">اپلیکیشن کاربردی (App / SaaS)</option>
+                        <option value="instagram">کمپین و استودیو (Creative / Social)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        لینک زنده پروژه (Live URL)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.liveUrl}
+                        onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        سال اجرا
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.year}
+                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                        placeholder="۱۴۰۳ / ۲۰۲۴"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        ترتیب نمایش (Position)
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.position}
+                        onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) || 0 })}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    <div className="flex items-center gap-6 pt-6">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={formData.featured}
+                          onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                          className="w-5 h-5 rounded bg-raised border-border accent-amber-500"
+                        />
+                        نمایش به عنوان پروژه ویژه (Featured)
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={formData.isPublished}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              isPublished: e.target.checked,
+                              status: e.target.checked ? "PUBLISHED" : "DRAFT",
+                            })
+                          }
+                          className="w-5 h-5 rounded bg-raised border-border accent-[#38534a]"
+                        />
+                        منتشر شده در سایت
+                      </label>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              )}
+
+              {/* TAB 2: DYNAMIC ATTRIBUTES */}
+              {modalTab === "attributes" && (
+                <DynamicAttributesForm
+                  category={selectedCategoryObj}
+                  attributeValues={formData.attributeValues || []}
+                  onChange={(nextValues) => setFormData({ ...formData, attributeValues: nextValues })}
+                  onOpenMediaPicker={(key, subField) => {
+                    setDynamicMediaTarget({ key, subField });
+                  }}
+                />
+              )}
+
+              {/* TAB 3: NARRATIVE */}
+              {modalTab === "narrative" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1.5">
+                      شعار / تگ‌لاین پروژه (Tagline Fa)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.taglineFa}
+                      onChange={(e) => setFormData({ ...formData, taglineFa: e.target.value })}
+                      placeholder="مهندسی مجدد هویت و پلتفرم برای نسل جدید کاربران"
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1.5">
+                      خلاصه شرح پروژه (Description Fa)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.descriptionFa}
+                      onChange={(e) => setFormData({ ...formData, descriptionFa: e.target.value })}
+                      placeholder="مروری بر ماموریت و اهداف پروژه..."
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        چالش اولیه پروژه (Challenge Fa)
+                      </label>
+                      <textarea
+                        rows={6}
+                        value={formData.challengeFa}
+                        onChange={(e) => setFormData({ ...formData, challengeFa: e.target.value })}
+                        placeholder="مسئله کارفرما چه بود؟ نقایص ساختاری یا افت شاخص‌ها..."
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        راهکار پیاده‌سازی شده (Solution Fa)
+                      </label>
+                      <textarea
+                        rows={6}
+                        value={formData.solutionFa}
+                        onChange={(e) => setFormData({ ...formData, solutionFa: e.target.value })}
+                        placeholder="چگونه با معماری اختصاصی و طراحی سیستم مسئله حل شد؟"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        دستاوردهای نهایی (Results Fa)
+                      </label>
+                      <textarea
+                        rows={6}
+                        value={formData.resultsFa}
+                        onChange={(e) => setFormData({ ...formData, resultsFa: e.target.value })}
+                        placeholder="اثر نهایی پروژه بر شاخص‌ها و رشد پایدار برند..."
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: MEDIA & BRANDING */}
+              {modalTab === "media" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        تصویر شاخص کاور (Main Cover Image)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          dir="ltr"
+                          value={formData.imageUrl || ""}
+                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                          placeholder="/images/portfolio/... یا https://"
+                          className="flex-1 bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-mint"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget("image")}
+                          className="px-4 py-2.5 bg-raised hover:opacity-80 text-foreground text-xs rounded-xl border border-border whitespace-nowrap cursor-pointer"
+                        >
+                          انتخاب رسانه
+                        </button>
+                      </div>
+                      {formData.imageUrl && (
+                        <div className="mt-3 relative w-48 h-28 rounded-xl overflow-hidden border border-border bg-black">
+                          <Image src={formData.imageUrl} alt="کاور" fill className="object-cover" sizes="192px" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        تصویر نمای پرتال / اسکرین‌شات بلند (Secondary / Fullpage)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          dir="ltr"
+                          value={formData.secondaryImage || ""}
+                          onChange={(e) => setFormData({ ...formData, secondaryImage: e.target.value })}
+                          placeholder="/images/... یا https://"
+                          className="flex-1 bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-mint"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget("secondary")}
+                          className="px-4 py-2.5 bg-raised hover:opacity-80 text-foreground text-xs rounded-xl border border-border whitespace-nowrap cursor-pointer"
+                        >
+                          انتخاب رسانه
+                        </button>
+                      </div>
+                      {formData.secondaryImage && (
+                        <div className="mt-3 relative w-48 h-28 rounded-xl overflow-hidden border border-border bg-black">
+                          <Image src={formData.secondaryImage} alt="اسکرین‌شات" fill className="object-cover object-top" sizes="192px" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        رنگ اکسنت (Accent Color)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.accentColor}
+                        onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
+                        placeholder="#D4A5A8"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        نوع نمایشگر (Preview Type)
+                      </label>
+                      <select
+                        value={formData.previewType}
+                        onChange={(e) => setFormData({ ...formData, previewType: e.target.value })}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground"
+                      >
+                        <option value="web">پرتال وب (Web Browser Frame)</option>
+                        <option value="mobile">موبایل / اپلیکیشن (Mobile Screen)</option>
+                        <option value="platform">داشبورد و پلتفرم (Platform Console)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        هاله نورانی (Glow Color)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={formData.glowColor}
+                        onChange={(e) => setFormData({ ...formData, glowColor: e.target.value })}
+                        placeholder="rgba(212, 165, 168, 0.2)"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: DELIVERABLES & LEGACY METRICS */}
+              {modalTab === "deliverables" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        خروجی‌های تحویل‌شده (Deliverables Fa - هر خط یک مورد)
+                      </label>
+                      <textarea
+                        rows={6}
+                        value={deliverablesInput}
+                        onChange={(e) => setDeliverablesInput(e.target.value)}
+                        placeholder={`طراحی رابط کاربری دیزاین سیستم اختصاصی\nتوسعه فول‌استک Next.js 15\nپیاده‌سازی درگاه پرداخت آنلاین`}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint font-mono text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted mb-1.5">
+                        خدمات ارائه‌شده (Services Fa - هر خط یک برچسب)
+                      </label>
+                      <textarea
+                        rows={6}
+                        value={servicesInput}
+                        onChange={(e) => setServicesInput(e.target.value)}
+                        placeholder={`طراحی وب‌سایت\nدیزاین سیستم\nسئو تکنیکال`}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Legacy Metrics */}
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-foreground">
+                          شاخص‌های کمی پیش‌فرض / فال‌بک (Fallback Metrics)
+                        </h4>
+                        <p className="text-xs text-muted">
+                          این شاخص‌ها در صورتی نمایش داده می‌شوند که ویژگی‌های داینامیک در تب ۲ تعریف نشده باشند.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addMetric}
+                        className="px-3 py-1.5 rounded-lg bg-mint/15 text-mint hover:bg-mint/25 text-xs border border-mint/30 cursor-pointer"
+                      >
+                        + افزودن شاخص
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {formData.metricsFa.map((m, idx) => (
+                        <div key={idx} className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={m.value}
+                            onChange={(e) => updateMetric(idx, "value", e.target.value)}
+                            placeholder="مقدار (مثال: ۳.۴ برابر یا ۹۸٪)"
+                            className="w-1/3 bg-raised border border-border rounded-xl px-3 py-2 text-sm text-foreground"
+                          />
+                          <input
+                            type="text"
+                            value={m.label}
+                            onChange={(e) => updateMetric(idx, "label", e.target.value)}
+                            placeholder="عنوان شاخص (مثال: نرخ تعامل ماهانه)"
+                            className="flex-1 bg-raised border border-border rounded-xl px-3 py-2 text-sm text-foreground"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeMetric(idx)}
+                            className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg text-xs"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 6: SEO & PUBLISHING */}
+              {modalTab === "seo" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1.5">
+                      عنوان متاتگ سئو (Meta Title Fa)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.metaTitleFa}
+                      onChange={(e) => setFormData({ ...formData, metaTitleFa: e.target.value })}
+                      placeholder="کیس‌استادی طراحی پلتفرم داریس | آژانس آن‌ساپ"
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1.5">
+                      توضیحات متاتگ سئو (Meta Description Fa)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.metaDescFa}
+                      onChange={(e) => setFormData({ ...formData, metaDescFa: e.target.value })}
+                      placeholder="روایت مستند بازطراحی پلتفرم داریس، حل گلوگاه‌های فنی و دستیابی به رشد ۱۰۰ درصدی..."
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-mint resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-1.5">
+                      کلمات کلیدی (Keywords - جدا شده با کاما)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.keywords}
+                      onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                      placeholder="طراحی سایت، داریس، نمونه کار وب، سئو"
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={saving}
+                  className="px-5 py-2.5 rounded-xl bg-raised border border-border text-muted hover:text-foreground text-sm font-medium transition-colors cursor-pointer"
+                >
+                  انصراف
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-2.5 rounded-xl bg-lime text-ink text-sm font-semibold hover:opacity-90 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                >
+                  {saving && (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {editingId ? "ذخیره تغییرات نمونه‌کار" : "ایجاد نمونه‌کار"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Media Picker Modal */}
-      {mediaPickerTarget !== null && (
+      {(mediaPickerTarget || dynamicMediaTarget) && (
         <MediaPickerModal
           open={true}
-          onClose={() => setMediaPickerTarget(null)}
-          onSelect={handleSelectMedia}
+          onSelect={handleMediaSelect}
+          onClose={() => {
+            setMediaPickerTarget(null);
+            setDynamicMediaTarget(null);
+          }}
         />
       )}
     </div>

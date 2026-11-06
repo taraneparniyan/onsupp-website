@@ -1,4 +1,70 @@
+import { BACKEND_URL } from "@/config/api";
+
 // ─── Shared Case Study Types & Canonical Data ───────────────────────────────
+
+export type DynamicAttributeType =
+  | "TEXT"
+  | "NUMBER"
+  | "PERCENTAGE"
+  | "IMAGE"
+  | "LINK"
+  | "BEFORE_AFTER"
+  | "TEXTAREA"
+  | "SELECT"
+  | "MULTI_SELECT"
+  | "BOOLEAN";
+
+export type PortfolioAttributeTemplate = {
+  id: number;
+  categoryId: number;
+  key: string;
+  titleFa: string;
+  titleEn: string;
+  descriptionFa?: string;
+  descriptionEn?: string;
+  type: DynamicAttributeType;
+  isRequired: boolean;
+  unit?: string;
+  showInFrontend: boolean;
+  position: number;
+  isActive: boolean;
+  options?: Record<string, any>;
+};
+
+export type PortfolioCategory = {
+  id: number;
+  slug: string;
+  titleFa: string;
+  titleEn: string;
+  descriptionFa?: string;
+  descriptionEn?: string;
+  icon?: string;
+  color?: string;
+  position: number;
+  isActive: boolean;
+  attributes?: PortfolioAttributeTemplate[];
+  _count?: {
+    caseStudies: number;
+  };
+};
+
+export type PortfolioAttributeValue = {
+  id?: number;
+  caseStudyId?: number;
+  attributeId?: number | null;
+  attributeKey: string;
+  type: DynamicAttributeType;
+  valueText?: string | null;
+  valueNumber?: number | null;
+  valueJson?: any;
+  attribute?: PortfolioAttributeTemplate;
+};
+
+export type CaseStudyGalleryItem = {
+  src: string;
+  labelFa?: string;
+  labelEn?: string;
+};
 
 export type CaseStudyItem = {
   id: string;
@@ -11,6 +77,9 @@ export type CaseStudyItem = {
   taglineEn: string;
   categoryFa: string;
   categoryEn: string;
+  categoryId?: number | null;
+  category?: PortfolioCategory;
+  attributeValues?: PortfolioAttributeValue[];
   servicesFa: string[];
   servicesEn: string[];
   metricsFa: { value: string; label: string }[];
@@ -21,6 +90,7 @@ export type CaseStudyItem = {
   previewType: "mobile" | "web" | "platform";
   image?: string;
   secondaryImage?: string;
+  gallery?: CaseStudyGalleryItem[];
   projectType?: string;
   liveUrl?: string;
   featured?: boolean;
@@ -64,6 +134,18 @@ export const SHOWCASE_PROJECTS: CaseStudyItem[] = [
     previewType: "web",
     image: "/images/portfolio/dr-miresmaeli-clinic-hero.webp",
     secondaryImage: "/images/portfolio/dr-miresmaeli-clinic-full.webp",
+    gallery: [
+      {
+        src: "/images/portfolio/dr-miresmaeli-clinic-full.webp",
+        labelFa: "نسخه فارسی",
+        labelEn: "Persian",
+      },
+      {
+        src: "/images/portfolio/dr-miresmaeli-clinic-en.webp",
+        labelFa: "نسخه انگلیسی",
+        labelEn: "English",
+      },
+    ],
     liveUrl: "https://drmiresmaeli.com/",
     featured: true,
     position: 1,
@@ -104,6 +186,18 @@ export const SHOWCASE_PROJECTS: CaseStudyItem[] = [
     previewType: "web",
     image: "/images/portfolio/canza-construction-hero.webp",
     secondaryImage: "/images/portfolio/canza-construction-full.webp",
+    gallery: [
+      {
+        src: "/images/portfolio/canza-construction-full.webp",
+        labelFa: "حالت روشن",
+        labelEn: "Light Mode",
+      },
+      {
+        src: "/images/portfolio/canza-construction-dark.webp",
+        labelFa: "حالت تاریک",
+        labelEn: "Dark Mode",
+      },
+    ],
     liveUrl: "https://canzaconstruction.ca/",
     featured: true,
     position: 2,
@@ -144,6 +238,13 @@ export const SHOWCASE_PROJECTS: CaseStudyItem[] = [
     previewType: "web",
     image: "/images/portfolio/dr-hatam-clinic-hero.webp",
     secondaryImage: "/images/portfolio/dr-hatam-clinic-full.webp",
+    gallery: [
+      {
+        src: "/images/portfolio/dr-hatam-clinic-full.webp",
+        labelFa: "نمای پرتال",
+        labelEn: "Clinical Portal",
+      },
+    ],
     liveUrl: "https://dr-hatam.com/",
     featured: true,
     position: 3,
@@ -184,6 +285,13 @@ export const SHOWCASE_PROJECTS: CaseStudyItem[] = [
     previewType: "web",
     image: "/images/portfolio/shin-beauty-center-hero.webp",
     secondaryImage: "/images/portfolio/shin-beauty-center-full.webp",
+    gallery: [
+      {
+        src: "/images/portfolio/shin-beauty-center-full.webp",
+        labelFa: "نمای پلتفرم",
+        labelEn: "Platform View",
+      },
+    ],
     liveUrl: "https://shinbeautycenter.com/",
     featured: true,
     position: 4,
@@ -381,4 +489,119 @@ export function getAllCaseStudies(projects: CaseStudyItem[] = SHOWCASE_PROJECTS)
  */
 export function getCaseStudyBySlug(slug: string, projects: CaseStudyItem[] = SHOWCASE_PROJECTS): CaseStudyItem | undefined {
   return projects.find((p) => p.slug === slug || p.id === slug);
+}
+
+/**
+ * Dynamically retrieves published case studies from the backend database with fallback.
+ */
+export async function getDynamicCaseStudies(): Promise<CaseStudyItem[]> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/casestudies`, {
+      next: { tags: ["casestudies", "portfolio"] },
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return getAllCaseStudies();
+    const dbItems = await res.json();
+    if (Array.isArray(dbItems) && dbItems.length > 0) {
+      return dbItems.map((item: any, idx: number) => {
+        const match = SHOWCASE_PROJECTS.find(
+          (p) => p.slug === item.slug || p.id === item.slug
+        );
+        return {
+          id: item.slug || `cs-${item.id}`,
+          slug: item.slug || `project-${item.id}`,
+          client: item.client || match?.client || item.titleFa,
+          clientEn: item.clientEn || match?.clientEn || item.titleEn,
+          titleFa: item.titleFa,
+          titleEn: item.titleEn || item.titleFa,
+          taglineFa: item.taglineFa || match?.taglineFa || "",
+          taglineEn: item.taglineEn || match?.taglineEn || "",
+          categoryFa: item.categoryFa || match?.categoryFa || "طراحی و توسعه وب",
+          categoryEn: item.categoryEn || match?.categoryEn || "Web Development",
+          servicesFa: Array.isArray(item.servicesFa) ? item.servicesFa : match?.servicesFa || [],
+          servicesEn: Array.isArray(item.servicesEn) ? item.servicesEn : match?.servicesEn || [],
+          metricsFa: Array.isArray(item.metricsFa) ? item.metricsFa : match?.metricsFa || [],
+          metricsEn: Array.isArray(item.metricsEn) ? item.metricsEn : match?.metricsEn || [],
+          colorGradient: item.colorGradient || match?.colorGradient || "from-[#1a1315] via-[#241a1e] to-[#100b0d]",
+          accentColor: item.accentColor || match?.accentColor || "#D4A5A8",
+          glowColor: item.glowColor || match?.glowColor || "rgba(212, 165, 168, 0.2)",
+          previewType: (item.previewType as any) || match?.previewType || "web",
+          image: item.imageUrl || match?.image || "/images/portfolio/dr-miresmaeli-clinic-hero.webp",
+          secondaryImage: item.secondaryImage || match?.secondaryImage,
+          gallery: Array.isArray(item.gallery) && item.gallery.length > 0 ? item.gallery : match?.gallery,
+          projectType: item.projectType || match?.projectType || "پروژه جامع",
+          liveUrl: item.liveUrl || match?.liveUrl || "",
+          featured: item.featured ?? match?.featured ?? true,
+          position: item.position ?? match?.position ?? idx,
+          year: item.year || match?.year || "۱۴۰۳",
+          challengeFa: item.challengeFa || match?.challengeFa,
+          challengeEn: item.challengeEn || match?.challengeEn,
+          solutionFa: item.solutionFa || match?.solutionFa,
+          solutionEn: item.solutionEn || match?.solutionEn,
+          deliverablesFa: Array.isArray(item.deliverablesFa) ? item.deliverablesFa : match?.deliverablesFa || [],
+          deliverablesEn: Array.isArray(item.deliverablesEn) ? item.deliverablesEn : match?.deliverablesEn || [],
+        };
+      });
+    }
+  } catch (err) {
+    /* fallback */
+  }
+  return getAllCaseStudies();
+}
+
+/**
+ * Dynamically retrieves a single published case study by its slug from the backend database with fallback.
+ */
+export async function getDynamicCaseStudyBySlug(slug: string): Promise<CaseStudyItem | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/casestudies/${encodeURIComponent(slug)}`, {
+      next: { tags: ["casestudies", `casestudy-${slug}`] },
+      headers: { Accept: "application/json" },
+    });
+    if (res.ok) {
+      const item = await res.json();
+      if (item && item.slug) {
+        const match = SHOWCASE_PROJECTS.find(
+          (p) => p.slug === item.slug || p.id === item.slug
+        );
+        return {
+          id: item.slug || `cs-${item.id}`,
+          slug: item.slug,
+          client: item.client || match?.client || item.titleFa,
+          clientEn: item.clientEn || match?.clientEn || item.titleEn,
+          titleFa: item.titleFa,
+          titleEn: item.titleEn || item.titleFa,
+          taglineFa: item.taglineFa || match?.taglineFa || "",
+          taglineEn: item.taglineEn || match?.taglineEn || "",
+          categoryFa: item.categoryFa || match?.categoryFa || "طراحی و توسعه وب",
+          categoryEn: item.categoryEn || match?.categoryEn || "Web Development",
+          servicesFa: Array.isArray(item.servicesFa) ? item.servicesFa : match?.servicesFa || [],
+          servicesEn: Array.isArray(item.servicesEn) ? item.servicesEn : match?.servicesEn || [],
+          metricsFa: Array.isArray(item.metricsFa) ? item.metricsFa : match?.metricsFa || [],
+          metricsEn: Array.isArray(item.metricsEn) ? item.metricsEn : match?.metricsEn || [],
+          colorGradient: item.colorGradient || match?.colorGradient || "from-[#1a1315] via-[#241a1e] to-[#100b0d]",
+          accentColor: item.accentColor || match?.accentColor || "#D4A5A8",
+          glowColor: item.glowColor || match?.glowColor || "rgba(212, 165, 168, 0.2)",
+          previewType: (item.previewType as any) || match?.previewType || "web",
+          image: item.imageUrl || match?.image || "/images/portfolio/dr-miresmaeli-clinic-hero.webp",
+          secondaryImage: item.secondaryImage || match?.secondaryImage,
+          gallery: Array.isArray(item.gallery) && item.gallery.length > 0 ? item.gallery : match?.gallery,
+          projectType: item.projectType || match?.projectType || "پروژه جامع",
+          liveUrl: item.liveUrl || match?.liveUrl || "",
+          featured: item.featured ?? match?.featured ?? true,
+          position: item.position ?? match?.position ?? 0,
+          year: item.year || match?.year || "۱۴۰۳",
+          challengeFa: item.challengeFa || match?.challengeFa,
+          challengeEn: item.challengeEn || match?.challengeEn,
+          solutionFa: item.solutionFa || match?.solutionFa,
+          solutionEn: item.solutionEn || match?.solutionEn,
+          deliverablesFa: Array.isArray(item.deliverablesFa) ? item.deliverablesFa : match?.deliverablesFa || [],
+          deliverablesEn: Array.isArray(item.deliverablesEn) ? item.deliverablesEn : match?.deliverablesEn || [],
+        };
+      }
+    }
+  } catch (err) {
+    /* fallback */
+  }
+  return getCaseStudyBySlug(slug) || null;
 }

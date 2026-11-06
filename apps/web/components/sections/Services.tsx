@@ -7,6 +7,7 @@ import { useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { scrollToSection } from "@/lib/scroll";
+import type { ServiceData } from "@/lib/publicApi";
 
 const CLONE_COUNT = 7;
 const TRANSITION_DURATION_MS = 550;
@@ -30,7 +31,7 @@ export interface ServiceItem {
   objectPosition?: string;
 }
 
-const SERVICES_DATA: ServiceItem[] = [
+export const SERVICES_DATA: ServiceItem[] = [
   {
     id: 1,
     slug: "social-identity",
@@ -211,23 +212,66 @@ function RectangularServiceCard({
 
 // ─── Main Services Component ─────────────────────────────────────────────────
 
-export default function Services() {
+export interface ServicesProps {
+  initialServices?: ServiceData[] | null;
+}
+
+export default function Services({ initialServices }: ServicesProps = {}) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
-  const totalServices = SERVICES_DATA.length;
+  // Merge CMS records with static presentation items by matching on slug
+  const servicesList: ServiceItem[] = useMemo(() => {
+    const published = Array.isArray(initialServices)
+      ? initialServices.filter((s) => s.isPublished !== false && s.status !== "DRAFT")
+      : [];
+
+    if (published.length === 0) {
+      return SERVICES_DATA;
+    }
+
+    return SERVICES_DATA.map((fallback) => {
+      const match = published.find(
+        (s) =>
+          (s.slug && s.slug.trim().toLowerCase() === fallback.slug.toLowerCase()) ||
+          (s.slug && s.slug.trim().toLowerCase() === fallback.slug.replace(/-/g, "_").toLowerCase())
+      );
+
+      if (!match) {
+        return fallback;
+      }
+
+      const validImage =
+        (typeof match.coverImage === "string" && match.coverImage.trim() !== "")
+          ? match.coverImage
+          : (typeof match.imageUrl === "string" && match.imageUrl.trim() !== "")
+          ? match.imageUrl
+          : fallback.image;
+
+      return {
+        ...fallback,
+        titleFa: (match.title && match.title.trim() !== "") ? match.title : fallback.titleFa,
+        titleEn: (match.titleEn && match.titleEn.trim() !== "") ? match.titleEn : fallback.titleEn,
+        tagFa: (match.tagFa && match.tagFa.trim() !== "") ? match.tagFa : fallback.tagFa,
+        tagEn: (match.tagEn && match.tagEn.trim() !== "") ? match.tagEn : fallback.tagEn,
+        image: validImage,
+      };
+    });
+  }, [initialServices]);
+
+  const totalServices = servicesList.length;
 
   // Cloned items for seamless continuous stepping (1 full clone set before and after)
   const trackItems = useMemo(() => {
-    const clonesBefore = SERVICES_DATA.slice(-CLONE_COUNT);
-    const clonesAfter = SERVICES_DATA.slice(0, CLONE_COUNT);
+    const clonesBefore = servicesList.slice(-CLONE_COUNT);
+    const clonesAfter = servicesList.slice(0, CLONE_COUNT);
     return [
       ...clonesBefore.map((s, i) => ({ ...s, trackKey: `clone-start-${i}-${s.id}` })),
-      ...SERVICES_DATA.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
+      ...servicesList.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
       ...clonesAfter.map((s, i) => ({ ...s, trackKey: `clone-end-${i}-${s.id}` })),
     ];
-  }, []);
+  }, [servicesList]);
 
   const [trackIndex, setTrackIndex] = useState(CLONE_COUNT);
   const [isTransitioning, setIsTransitioning] = useState(false);

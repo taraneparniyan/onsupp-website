@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { getAllCaseStudies } from "@/lib/case-studies";
+import { getDynamicCaseStudies } from "@/lib/case-studies";
 import PortfolioPageView from "@/components/portfolio/PortfolioPageView";
 
 export const metadata: Metadata = {
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PortfolioPage() {
-  const allProjects = getAllCaseStudies();
+export default async function PortfolioPage() {
+  const allProjects = await getDynamicCaseStudies();
 
   return (
     <Suspense

@@ -94,10 +94,6 @@ export default function HeroAdminPage() {
       notify("err", "عنوان اسلاید الزامی است");
       return;
     }
-    if (slide.imageUrl && !slide.imageAlt?.trim()) {
-      notify("err", "برای تصویر، متن جایگزین (Alt) الزامی است");
-      return;
-    }
 
     const key = slide.id ? String(slide.id) : `new-${index}`;
     setSavingKey(key);
@@ -180,9 +176,9 @@ export default function HeroAdminPage() {
         <button
           type="button"
           onClick={addNew}
-          className="bg-gradient-to-r from-primary to-primary-hover text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg hover:shadow-[#3f6b59]/30 transition-all border border-primary/40 flex items-center gap-2"
+          className="bg-lime text-ink px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 flex items-center gap-2 cursor-pointer"
         >
-          <svg className="w-5 h-5 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
           افزودن اسلاید جدید
@@ -194,7 +190,7 @@ export default function HeroAdminPage() {
           className={`text-sm px-5 py-3.5 rounded-lg border ${
             message.type === "ok"
               ? "text-mint bg-panel border-primary/20"
-              : "text-rose-300 bg-[#2b1216] border-[#542129]"
+              : "text-burgundy bg-burgundy/10 border-burgundy/30"
           }`}
         >
           {message.text}
@@ -351,14 +347,21 @@ export default function HeroAdminPage() {
                     <button
                       type="button"
                       onClick={() => setPickerIdx(index)}
-                      className="bg-raised border border-primary/30 text-mint px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#255243] transition-all"
+                      className="bg-raised border border-primary/30 text-mint px-5 py-2 rounded-xl text-xs font-bold hover:bg-primary/15 transition-all cursor-pointer"
                     >
                       {previewSrc ? "تغییر تصویر" : "انتخاب از کتابخانه رسانه"}
                     </button>
                   </div>
-                  {slide.imageAlt && (
-                    <p className="text-xs text-mint bg-raised p-2 rounded-xl border border-[#1f3d33]">Alt: {slide.imageAlt}</p>
-                  )}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-foreground/70">متن جایگزین تصویر (Alt Text)</label>
+                    <input
+                      type="text"
+                      value={slide.imageAlt || ""}
+                      onChange={(e) => update(index, "imageAlt", e.target.value)}
+                      placeholder="متن جایگزین تصویر (برای تصاویر تزئینی خالی بگذارید)..."
+                      className="w-full bg-raised border border-foreground/15 text-xs text-foreground rounded-xl px-3 py-2 focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -367,7 +370,7 @@ export default function HeroAdminPage() {
                   type="button"
                   onClick={() => save(index)}
                   disabled={saving}
-                  className="bg-gradient-to-r from-primary to-primary-hover text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 disabled:opacity-50"
+                  className="bg-lime text-ink px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? "در حال ذخیره..." : slide.id ? "ذخیره تغییرات اسلاید" : "ایجاد اسلاید"}
                 </button>

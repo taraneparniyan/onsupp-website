@@ -152,13 +152,13 @@ export default function AdminCommentsPage() {
             <div
               key={item.id}
               className={`bg-panel border rounded-xl p-6 sm:p-8 space-y-6 shadow-md transition-all ${
-                item.approved ? "border-foreground/10" : "border-amber-500/40 bg-[#141b16]"
+                item.approved ? "border-foreground/10" : "border-amber-500/40 bg-amber-500/5"
               }`}
             >
               {/* Header Info */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-foreground/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#173027] border border-[#275243] text-mint font-black flex items-center justify-center text-sm shadow-md">
+                  <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/30 text-mint font-black flex items-center justify-center text-sm shadow-xs">
                     {item.name ? item.name.charAt(0) : "ک"}
                   </div>
                   <div>
@@ -200,20 +200,20 @@ export default function AdminCommentsPage() {
 
               {/* Existing Admin Reply */}
               {item.reply && (
-                <div className="p-4 rounded-lg bg-[#18332a] border border-[#2c5b4b] space-y-2 mr-6">
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-2 mr-6">
                   <div className="flex items-center gap-2 text-xs font-bold text-mint">
                     <svg className="w-4 h-4 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
                     <span>پاسخ ثبت‌شده توسط مدیریت:</span>
                   </div>
-                  <p className="text-xs text-white/90 leading-6">{item.reply}</p>
+                  <p className="text-xs text-foreground leading-6">{item.reply}</p>
                 </div>
               )}
 
               {/* Reply Input Box (If replying) */}
               {replyingId === item.id && (
-                <div className="p-4 rounded-lg bg-background border border-[#1b3d33] space-y-4 mr-6">
+                <div className="p-4 rounded-lg bg-background border border-primary/30 space-y-4 mr-6">
                   <h4 className="text-xs font-bold text-mint">ثبت پاسخ مدیریت به این دیدگاه:</h4>
                   <textarea
                     rows={3}
@@ -228,13 +228,13 @@ export default function AdminCommentsPage() {
                         setReplyingId(null);
                         setReplyText("");
                       }}
-                      className="px-4 py-2 rounded-xl bg-raised text-mint text-xs font-bold"
+                      className="px-4 py-2 rounded-xl bg-raised text-mint text-xs font-bold cursor-pointer"
                     >
                       انصراف
                     </button>
                     <button
                       onClick={() => handleSendReply(item.id)}
-                      className="px-5 py-2 rounded-xl bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400"
+                      className="px-5 py-2 rounded-xl bg-lime text-ink font-bold text-xs hover:opacity-90 cursor-pointer"
                     >
                       ارسال پاسخ و تایید
                     </button>

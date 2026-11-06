@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from "react";
+import React, { use, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,7 +12,9 @@ import {
   getCaseStudyBySlug,
   type CaseStudyItem,
 } from "@/lib/case-studies";
+import DynamicAttributesShowcase from "@/components/portfolio/DynamicAttributesShowcase";
 import { scrollToSection } from "@/lib/scroll";
+import { BACKEND_URL } from "@/config/api";
 
 export default function PortfolioDetailPage({
   params,
@@ -21,13 +23,72 @@ export default function PortfolioDetailPage({
 }) {
   const resolvedParams = use(params);
   const { slug } = resolvedParams;
-  const project = getCaseStudyBySlug(slug);
+
+  const [project, setProject] = useState<CaseStudyItem | null>(() => getCaseStudyBySlug(slug) || null);
+  const [loading, setLoading] = useState(!project);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/casestudies/${encodeURIComponent(slug)}`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((dbItem) => {
+        if (dbItem && dbItem.slug) {
+          const match = getCaseStudyBySlug(slug);
+          setProject({
+            id: dbItem.slug || `cs-${dbItem.id}`,
+            slug: dbItem.slug,
+            client: dbItem.client || match?.client || dbItem.titleFa,
+            clientEn: dbItem.clientEn || match?.clientEn || dbItem.titleEn,
+            titleFa: dbItem.titleFa,
+            titleEn: dbItem.titleEn || dbItem.titleFa,
+            taglineFa: dbItem.taglineFa || match?.taglineFa || "",
+            taglineEn: dbItem.taglineEn || match?.taglineEn || "",
+            categoryFa: dbItem.categoryFa || match?.categoryFa || "طراحی و توسعه وب",
+            categoryEn: dbItem.categoryEn || match?.categoryEn || "Web Development",
+            servicesFa: Array.isArray(dbItem.servicesFa) ? dbItem.servicesFa : match?.servicesFa || [],
+            servicesEn: Array.isArray(dbItem.servicesEn) ? dbItem.servicesEn : match?.servicesEn || [],
+            metricsFa: Array.isArray(dbItem.metricsFa) ? dbItem.metricsFa : match?.metricsFa || [],
+            metricsEn: Array.isArray(dbItem.metricsEn) ? dbItem.metricsEn : match?.metricsEn || [],
+            colorGradient: dbItem.colorGradient || match?.colorGradient || "from-[#1a1315] via-[#241a1e] to-[#100b0d]",
+            accentColor: dbItem.accentColor || match?.accentColor || "#D4A5A8",
+            glowColor: dbItem.glowColor || match?.glowColor || "rgba(212, 165, 168, 0.2)",
+            previewType: (dbItem.previewType as any) || match?.previewType || "web",
+            image: dbItem.imageUrl || match?.image || "/images/portfolio/dr-miresmaeli-clinic-hero.webp",
+            secondaryImage: dbItem.secondaryImage || match?.secondaryImage,
+            gallery: Array.isArray(dbItem.gallery) && dbItem.gallery.length > 0 ? dbItem.gallery : match?.gallery,
+            projectType: dbItem.projectType || match?.projectType || "پروژه جامع",
+            liveUrl: dbItem.liveUrl || match?.liveUrl || "",
+            featured: dbItem.featured ?? match?.featured ?? true,
+            position: dbItem.position ?? match?.position ?? 0,
+            year: dbItem.year || match?.year || "۱۴۰۳",
+            challengeFa: dbItem.challengeFa || match?.challengeFa,
+            challengeEn: dbItem.challengeEn || match?.challengeEn,
+            solutionFa: dbItem.solutionFa || match?.solutionFa,
+            solutionEn: dbItem.solutionEn || match?.solutionEn,
+            deliverablesFa: Array.isArray(dbItem.deliverablesFa) ? dbItem.deliverablesFa : match?.deliverablesFa || [],
+            deliverablesEn: Array.isArray(dbItem.deliverablesEn) ? dbItem.deliverablesEn : match?.deliverablesEn || [],
+            category: dbItem.category || match?.category || null,
+            categoryId: dbItem.categoryId ?? match?.categoryId ?? null,
+            attributeValues: Array.isArray(dbItem.attributeValues) ? dbItem.attributeValues : (match?.attributeValues || []),
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug]);
 
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
 
-  if (!project) {
+  if (!project && !loading) {
     notFound();
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-mint border-t-transparent animate-spin" />
+      </div>
+    );
   }
 
   // Find next project for the bottom carousel link
@@ -96,24 +157,13 @@ export default function PortfolioDetailPage({
             />
           </div>
 
-          {/* ── Metrics Strip ── */}
-          {project.metricsFa && project.metricsFa.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-16 sm:mb-20">
-              {(isRtl ? project.metricsFa : project.metricsEn).map((m, idx) => (
-                <div
-                  key={idx}
-                  className="p-6 sm:p-8 rounded-2xl bg-foreground/[0.03] border border-foreground/10 text-center flex flex-col items-center justify-center"
-                >
-                  <span className="text-3xl sm:text-4xl lg:text-5xl font-bold font-mono tracking-tight text-foreground mb-2">
-                    {m.value}
-                  </span>
-                  <span className="text-xs sm:text-sm text-foreground/60 font-medium">
-                    {m.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* ── Dynamic Category Attributes & Metrics Showcase ── */}
+          <DynamicAttributesShowcase
+            attributeValues={project.attributeValues}
+            category={project.category}
+            isRtl={isRtl}
+            fallbackMetrics={isRtl ? project.metricsFa : project.metricsEn}
+          />
 
           {/* ── Detailed Narrative Grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 mb-20 sm:mb-28">

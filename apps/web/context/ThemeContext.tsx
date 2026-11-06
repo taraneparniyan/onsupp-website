@@ -52,9 +52,23 @@ function applyThemeToDOM(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Start with default dark or whatever data-theme is already on <html> from the blocking inline script
-  const [theme, setThemeState] = useState<Theme>("dark");
-  const [preference, setPreferenceState] = useState<ThemePreference>("system");
+  // Initialize synchronously from <html> attribute set by the blocking anti-FOUC script
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof document !== "undefined") {
+      const attr = document.documentElement.getAttribute("data-theme");
+      if (attr === "light" || attr === "dark") return attr;
+    }
+    return "dark";
+  });
+  const [preference, setPreferenceState] = useState<ThemePreference>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "light" || stored === "dark") return stored;
+      } catch {}
+    }
+    return "system";
+  });
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

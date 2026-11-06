@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, requireAdmin, AuthenticatedRequest } from '../middleware/auth.js';
+import { authenticate, requireContentManager, AuthenticatedRequest } from '../middleware/auth.js';
+import { triggerRevalidation } from '../services/revalidateService.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -21,23 +22,36 @@ function slideData(body: any) {
     'imageUrl',
     'imageAlt',
     'position',
+    'isPublished',
+    'status',
   ]) {
     if (body[key] !== undefined) {
-      data[key] = key === 'imageUrl' || key === 'imageAlt'
-        ? (body[key] ? String(body[key]) : null)
-        : body[key];
+      if (key === 'imageUrl') {
+        data[key] = body[key] ? String(body[key]) : null;
+      } else if (key === 'imageAlt') {
+        data[key] = body[key] !== undefined && body[key] !== null ? String(body[key]) : '';
+      } else if (key === 'isPublished') {
+        data[key] = Boolean(body[key]);
+      } else if (key === 'status') {
+        data[key] = ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(body[key]) ? body[key] : 'PUBLISHED';
+      } else {
+        data[key] = body[key];
+      }
     }
-  }
-  if (data.imageUrl && !data.imageAlt) {
-    throw new Error('ALT_REQUIRED');
   }
   return data;
 }
 
-// GET /api/v1/hero  (public — ordered slides)
+// GET /api/v1/hero  (public — published slides only)
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const slides = await prisma.heroSlide.findMany({ orderBy: { position: 'asc' } });
+    const slides = await prisma.heroSlide.findMany({
+      where: {
+        isPublished: true,
+        status: 'PUBLISHED',
+      },
+      orderBy: { position: 'asc' },
+    });
     res.json(slides);
   } catch (error) {
     console.error('[hero] list error:', error);
@@ -45,8 +59,21 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/v1/hero/all  (admin / CMS — all slides including drafts)
+router.get('/all', authenticate, requireContentManager, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const slides = await prisma.heroSlide.findMany({
+      orderBy: { position: 'asc' },
+    });
+    res.json(slides);
+  } catch (error) {
+    console.error('[hero] admin list error:', error);
+    res.status(500).json({ error: 'دریافت تمام اسلایدهای هیرو ناموفق بود' });
+  }
+});
+
 // POST /api/v1/hero  (admin — create slide)
-router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const data = slideData(req.body);
     const count = await prisma.heroSlide.count();
@@ -54,6 +81,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
       data.position = count;
     }
     const slide = await prisma.heroSlide.create({ data });
+    await triggerRevalidation({ tags: ['hero', 'homepage'], paths: ['/'] }).catch(() => {});
     res.status(201).json(slide);
   } catch (error) {
     if (error instanceof Error && error.message === 'ALT_REQUIRED') {
@@ -65,7 +93,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
 });
 
 // PUT /api/v1/hero/:id  (admin — update slide)
-router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) {
@@ -73,6 +101,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
     }
     const data = slideData(req.body);
     const slide = await prisma.heroSlide.update({ where: { id }, data });
+    await triggerRevalidation({ tags: ['hero', 'homepage'], paths: ['/'] }).catch(() => {});
     res.json(slide);
   } catch (error) {
     if (error instanceof Error && error.message === 'ALT_REQUIRED') {
@@ -84,13 +113,14 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
 });
 
 // DELETE /api/v1/hero/:id  (admin — delete slide)
-router.delete('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) {
       return res.status(400).json({ error: 'شناسه نامعتبر' });
     }
     await prisma.heroSlide.delete({ where: { id } });
+    await triggerRevalidation({ tags: ['hero', 'homepage'], paths: ['/'] }).catch(() => {});
     res.json({ message: 'حذف شد' });
   } catch (error) {
     console.error('[hero] delete error:', error);

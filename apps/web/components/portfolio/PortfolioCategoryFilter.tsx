@@ -3,19 +3,14 @@
 import React from "react";
 import { CaseStudyItem } from "@/lib/case-studies";
 
-export type PortfolioCategoryKey =
-  | "all"
-  | "web-design"
-  | "instagram"
-  | "coding"
-  | "video"
-  | "animation"
-  | "seo";
+export type PortfolioCategoryKey = string;
 
 export interface CategoryTab {
   id: PortfolioCategoryKey;
   labelFa: string;
   labelEn: string;
+  color?: string;
+  icon?: string;
 }
 
 export const PORTFOLIO_CATEGORY_TABS: CategoryTab[] = [
@@ -33,6 +28,19 @@ export function matchesCategory(
   catId: PortfolioCategoryKey
 ): boolean {
   if (catId === "all") return true;
+
+  // 1. Direct ID or Slug match from Dynamic Portfolio Category
+  if (project.category?.slug && project.category.slug === catId) return true;
+  if (project.categoryId !== undefined && project.categoryId !== null && String(project.categoryId) === String(catId)) return true;
+
+  // Dynamic cross-matching with canonical seed categories
+  if (catId === "web-design" && (project.category?.slug === "website-design" || project.category?.slug === "web-design")) return true;
+  if (catId === "website-design" && (project.category?.slug === "web-design" || project.category?.slug === "website-design")) return true;
+  if (catId === "instagram" && (project.category?.slug === "instagram-management" || project.category?.slug === "branding")) return true;
+  if (catId === "instagram-management" && (project.category?.slug === "instagram" || project.category?.slug === "instagram-management")) return true;
+  if (catId === "seo" && (project.category?.slug === "seo-growth" || project.category?.slug === "seo")) return true;
+  if (catId === "seo-growth" && (project.category?.slug === "seo" || project.category?.slug === "seo-growth")) return true;
+  if (catId === "branding" && (project.category?.slug === "branding" || project.category?.slug === "instagram-management")) return true;
 
   const text = [
     project.categoryFa,
@@ -52,6 +60,7 @@ export function matchesCategory(
 
   switch (catId) {
     case "web-design":
+    case "website-design":
       return (
         project.projectType === "website" ||
         project.previewType === "web" ||
@@ -62,6 +71,7 @@ export function matchesCategory(
         text.includes("next.js")
       );
     case "instagram":
+    case "instagram-management":
       return (
         project.projectType === "instagram" ||
         text.includes("اینستاگرام") ||
@@ -69,6 +79,13 @@ export function matchesCategory(
         text.includes("هویت") ||
         text.includes("برندینگ") ||
         text.includes("شبکه‌های اجتماعی")
+      );
+    case "branding":
+      return (
+        text.includes("برندینگ") ||
+        text.includes("هویت بصری") ||
+        text.includes("لوگو") ||
+        text.includes("branding")
       );
     case "coding":
       return (
@@ -101,6 +118,7 @@ export function matchesCategory(
         text.includes("motion")
       );
     case "seo":
+    case "seo-growth":
       return (
         project.projectType === "seo" ||
         text.includes("سئو") ||
@@ -109,7 +127,7 @@ export function matchesCategory(
         text.includes("رتبه‌بندی")
       );
     default:
-      return true;
+      return text.includes(catId.toLowerCase());
   }
 }
 
@@ -120,6 +138,7 @@ export default function PortfolioCategoryFilter({
   onSelectCategory,
   allProjects = [],
   counts,
+  tabs = PORTFOLIO_CATEGORY_TABS,
 }: {
   isRtl: boolean;
   activeCategory?: PortfolioCategoryKey;
@@ -127,6 +146,7 @@ export default function PortfolioCategoryFilter({
   onSelectCategory: (id: PortfolioCategoryKey) => void;
   allProjects?: CaseStudyItem[];
   counts?: Record<PortfolioCategoryKey, number>;
+  tabs?: CategoryTab[];
 }) {
   const currentCategory = activeCategory || selectedCategory || "all";
 
@@ -145,7 +165,7 @@ export default function PortfolioCategoryFilter({
   return (
     <div className="w-full overflow-x-auto no-scrollbar py-2 select-none">
       <div className="flex items-center gap-2 sm:gap-2.5 min-w-max">
-        {PORTFOLIO_CATEGORY_TABS.map((cat) => {
+        {tabs.map((cat) => {
           const isSelected = currentCategory === cat.id;
           const count = getCount(cat.id);
 

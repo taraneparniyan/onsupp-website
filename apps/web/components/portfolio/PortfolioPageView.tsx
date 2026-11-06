@@ -11,12 +11,14 @@ import { CaseStudyItem, SHOWCASE_PROJECTS, getAllCaseStudies } from "@/lib/case-
 import { BACKEND_URL } from "@/config/api";
 import PortfolioCategoryFilter, {
   PortfolioCategoryKey,
+  CategoryTab,
   PORTFOLIO_CATEGORY_TABS,
   matchesCategory,
 } from "./PortfolioCategoryFilter";
 import PortfolioCreativeApproach from "./PortfolioCreativeApproach";
 import PortfolioIndustriesSection from "./PortfolioIndustriesSection";
 import PortfolioCTASection from "./PortfolioCTASection";
+import PortfolioCardImagePreview from "./PortfolioCardImagePreview";
 
 export default function PortfolioPageView({
   allProjects,
@@ -29,10 +31,36 @@ export default function PortfolioPageView({
   const router = useRouter();
 
   const [projectList, setProjectList] = useState<CaseStudyItem[]>(allProjects);
+  const [categoryTabs, setCategoryTabs] = useState<CategoryTab[]>(PORTFOLIO_CATEGORY_TABS);
 
   // Sync with backend API if available
   useEffect(() => {
     const controller = new AbortController();
+
+    // 1. Fetch Dynamic Categories
+    fetch(`${BACKEND_URL}/api/v1/portfolio/categories`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((cats) => {
+        if (Array.isArray(cats) && cats.length > 0) {
+          const dynamicTabs: CategoryTab[] = [
+            { id: "all", labelFa: "همه پروژه‌ها", labelEn: "All Projects" },
+            ...cats.map((c: any) => ({
+              id: c.slug,
+              labelFa: c.titleFa,
+              labelEn: c.titleEn,
+              color: c.color,
+              icon: c.icon,
+            })),
+          ];
+          setCategoryTabs(dynamicTabs);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch Dynamic Case Studies
     fetch(`${BACKEND_URL}/api/v1/casestudies`, {
       signal: controller.signal,
       cache: "no-store",
@@ -57,10 +85,14 @@ export default function PortfolioPageView({
                 categoryEn: item.categoryEn || match.categoryEn,
                 image: item.imageUrl || match.image,
                 secondaryImage: item.secondaryImage || match.secondaryImage,
+                gallery: match.gallery,
                 liveUrl: item.liveUrl || match.liveUrl,
                 position: item.position ?? match.position ?? idx,
                 featured: item.featured ?? match.featured,
                 year: item.year || match.year,
+                category: item.category || match.category,
+                categoryId: item.categoryId ?? match.categoryId,
+                attributeValues: Array.isArray(item.attributeValues) ? item.attributeValues : (match.attributeValues || []),
               };
             }
 
@@ -96,6 +128,9 @@ export default function PortfolioPageView({
               featured: item.featured !== false,
               position: item.position ?? idx,
               year: item.year || "۲۰۲۵",
+              category: item.category || null,
+              categoryId: item.categoryId ?? null,
+              attributeValues: Array.isArray(item.attributeValues) ? item.attributeValues : [],
             };
           });
 
@@ -113,9 +148,7 @@ export default function PortfolioPageView({
 
   // Initialize category from URL query param if present
   const initialCategory = (searchParams.get("category") as PortfolioCategoryKey) || "all";
-  const [activeCategory, setActiveCategory] = useState<PortfolioCategoryKey>(
-    PORTFOLIO_CATEGORY_TABS.some((t) => t.id === initialCategory) ? initialCategory : "all"
-  );
+  const [activeCategory, setActiveCategory] = useState<PortfolioCategoryKey>(initialCategory);
 
   // Sync category changes with URL query parameter without full-page reload
   const handleSelectCategory = (catId: PortfolioCategoryKey) => {
@@ -132,10 +165,10 @@ export default function PortfolioPageView({
 
   // Synchronize if user navigates back/forward
   useEffect(() => {
-    const cat = searchParams.get("category") as PortfolioCategoryKey;
-    if (cat && PORTFOLIO_CATEGORY_TABS.some((t) => t.id === cat)) {
+    const cat = searchParams.get("category");
+    if (cat) {
       setActiveCategory(cat);
-    } else if (!cat) {
+    } else {
       setActiveCategory("all");
     }
   }, [searchParams]);
@@ -144,24 +177,16 @@ export default function PortfolioPageView({
   const categoryCounts = useMemo(() => {
     const counts: Record<PortfolioCategoryKey, number> = {
       all: projectList.length,
-      "web-design": 0,
-      instagram: 0,
-      coding: 0,
-      video: 0,
-      animation: 0,
-      seo: 0,
     };
 
-    projectList.forEach((proj) => {
-      PORTFOLIO_CATEGORY_TABS.forEach((tab) => {
-        if (tab.id !== "all" && matchesCategory(proj, tab.id)) {
-          counts[tab.id] = (counts[tab.id] || 0) + 1;
-        }
-      });
+    categoryTabs.forEach((tab) => {
+      if (tab.id !== "all") {
+        counts[tab.id] = projectList.filter((p) => matchesCategory(p, tab.id)).length;
+      }
     });
 
     return counts;
-  }, [projectList]);
+  }, [projectList, categoryTabs]);
 
   // Filtered projects for the showcase
   const filteredProjects = useMemo(() => {
@@ -191,6 +216,7 @@ export default function PortfolioPageView({
               activeCategory={activeCategory}
               onSelectCategory={handleSelectCategory}
               counts={categoryCounts}
+              tabs={categoryTabs}
             />
 
             {/* Editorial Projects Archive Directory */}
@@ -230,25 +256,8 @@ export default function PortfolioPageView({
                     className="group relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-[#1A1A19]/80 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] hover:border-[#38534A]/50 dark:hover:border-[#8AB3A0]/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                   >
                     <div>
-                      {/* Media Thumbnail */}
-                      <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-black/10 dark:bg-white/[0.04] mb-5">
-                        <Image
-                          src={project.image || "/case_study_1.jpg"}
-                          alt={isRtl ? project.titleFa : project.titleEn}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                        />
-                        
-                        <div className="absolute top-3 inset-x-3 flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-white tracking-wider">
-                            {project.year}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-[10px] font-bold text-foreground">
-                            {isRtl ? project.categoryFa : project.categoryEn}
-                          </span>
-                        </div>
-                      </div>
+                      {/* Media Thumbnail with Interactive Hover-to-Scroll & Multi-Image Carousel */}
+                      <PortfolioCardImagePreview project={project} isRtl={isRtl} />
 
                       {/* Client & Title */}
                       <span className="text-[11px] font-semibold text-[#38534A] dark:text-[#8AB3A0] block mb-1">

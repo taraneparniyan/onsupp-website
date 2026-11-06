@@ -599,3 +599,232 @@ html[lang="en"] .jodit-content ol {
     animation-play-state: paused !important;
   }
 }
+
+/* ─── OnSupp Admin Panel Unified Theme & Identity System ─────────────────── */
+.admin-shell {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+/* Reusable semantic admin surfaces & components */
+.admin-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--glass-shadow);
+}
+
+.admin-card-elevated {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.admin-input {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+.admin-input::placeholder {
+  color: var(--text-tertiary);
+}
+.admin-input:focus {
+  border-color: var(--brand-green);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand-green-surface);
+}
+
+.admin-btn-primary {
+  background-color: var(--action-primary-bg);
+  color: var(--action-primary-text);
+  box-shadow: var(--action-primary-shadow);
+  border: 1px solid var(--brand-green-border);
+}
+.admin-btn-primary:hover {
+  background-color: var(--action-primary-hover);
+}
+
+.admin-btn-secondary {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+.admin-btn-secondary:hover {
+  background-color: var(--brand-green-surface);
+  border-color: var(--brand-green-border);
+  color: var(--brand-green-text);
+}
+
+.admin-badge-success {
+  background-color: rgba(45, 106, 79, 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(45, 106, 79, 0.3);
+}
+
+.admin-badge-warning {
+  background-color: rgba(146, 64, 14, 0.12);
+  color: var(--color-warning);
+  border: 1px solid rgba(146, 64, 14, 0.3);
+}
+
+.admin-badge-danger {
+  background-color: var(--accent-burgundy-surface);
+  color: var(--accent-burgundy-text);
+  border: 1px solid var(--accent-burgundy-border);
+}
+
+.admin-badge-brand {
+  background-color: var(--brand-green-surface);
+  color: var(--brand-green-text);
+  border: 1px solid var(--brand-green-border);
+}
+
+/* Harmonize legacy dark/purple utility classes within .admin-shell for both Light & Dark themes */
+:root:not(.dark) .admin-shell .text-white:not(.bg-\[\#38534a\], .bg-primary, .admin-btn-primary, .bg-rose-600, .bg-emerald-600, [class*="from-[#38534a]"], [class*="bg-[#4f0001]"]) {
+  color: var(--text-primary);
+}
+:root:not(.dark) .admin-shell .hover\:text-white:hover {
+  color: var(--text-primary);
+}
+:root:not(.dark) .admin-shell .group:hover .group-hover\:text-white {
+  color: var(--text-primary);
+}
+:root:not(.dark) .admin-shell .text-gray-200,
+:root:not(.dark) .admin-shell .text-gray-300,
+:root:not(.dark) .admin-shell .text-neutral-200,
+:root:not(.dark) .admin-shell .text-neutral-300 {
+  color: var(--text-primary);
+}
+:root:not(.dark) .admin-shell .text-gray-400,
+:root:not(.dark) .admin-shell .text-gray-500,
+:root:not(.dark) .admin-shell .text-neutral-400,
+:root:not(.dark) .admin-shell .text-neutral-500 {
+  color: var(--text-secondary);
+}
+
+/* Convert hardcoded dark surfaces inside .admin-shell in Light Mode */
+:root:not(.dark) .admin-shell .bg-gray-900,
+:root:not(.dark) .admin-shell .bg-gray-900\/40,
+:root:not(.dark) .admin-shell .bg-gray-900\/50,
+:root:not(.dark) .admin-shell .bg-gray-900\/60,
+:root:not(.dark) .admin-shell .bg-gray-900\/80,
+:root:not(.dark) .admin-shell .bg-\[\#191c1e\],
+:root:not(.dark) .admin-shell .bg-\[\#262625\],
+:root:not(.dark) .admin-shell .bg-white\/\[0\.02\],
+:root:not(.dark) .admin-shell .bg-white\/\[0\.03\] {
+  background-color: var(--bg-surface) !important;
+}
+
+:root:not(.dark) .admin-shell .bg-gray-950,
+:root:not(.dark) .admin-shell .bg-gray-950\/50,
+:root:not(.dark) .admin-shell .bg-gray-950\/60,
+:root:not(.dark) .admin-shell .bg-gray-950\/70,
+:root:not(.dark) .admin-shell .bg-gray-950\/80,
+:root:not(.dark) .admin-shell .bg-gray-800,
+:root:not(.dark) .admin-shell .bg-gray-800\/40,
+:root:not(.dark) .admin-shell .bg-gray-800\/60,
+:root:not(.dark) .admin-shell .bg-gray-800\/80,
+:root:not(.dark) .admin-shell .bg-neutral-900,
+:root:not(.dark) .admin-shell .bg-neutral-900\/60,
+:root:not(.dark) .admin-shell .bg-neutral-800,
+:root:not(.dark) .admin-shell .bg-black\/20,
+:root:not(.dark) .admin-shell .bg-black\/30,
+:root:not(.dark) .admin-shell .bg-black\/40,
+:root:not(.dark) .admin-shell .bg-white\/5,
+:root:not(.dark) .admin-shell .bg-white\/10,
+:root:not(.dark) .admin-shell .bg-\[\#23272a\],
+:root:not(.dark) .admin-shell .bg-\[\#121416\],
+:root:not(.dark) .admin-shell .bg-\[\#121a15\],
+:root:not(.dark) .admin-shell .bg-\[\#142e26\],
+:root:not(.dark) .admin-shell .bg-\[\#11261f\],
+:root:not(.dark) .admin-shell .bg-\[\#0f201b\] {
+  background-color: var(--bg-surface-elevated) !important;
+}
+
+:root:not(.dark) .admin-shell .border-gray-800,
+:root:not(.dark) .admin-shell .border-gray-800\/60,
+:root:not(.dark) .admin-shell .border-gray-700,
+:root:not(.dark) .admin-shell .border-gray-700\/60,
+:root:not(.dark) .admin-shell .border-white\/5,
+:root:not(.dark) .admin-shell .border-white\/10,
+:root:not(.dark) .admin-shell .border-white\/15,
+:root:not(.dark) .admin-shell .border-white\/20,
+:root:not(.dark) .admin-shell .border-\[\#1c3a30\] {
+  border-color: var(--border-default) !important;
+}
+
+:root:not(.dark) .admin-shell .divide-gray-800,
+:root:not(.dark) .admin-shell .divide-gray-800\/60,
+:root:not(.dark) .admin-shell .divide-white\/5,
+:root:not(.dark) .admin-shell .divide-white\/10 {
+  --tw-divide-color: var(--border-subtle) !important;
+}
+
+/* Replace off-brand purple accents with OnSupp Brand Green across both Light & Dark modes in .admin-shell */
+.admin-shell .bg-purple-600,
+.admin-shell .from-purple-600 {
+  background-color: var(--action-primary-bg) !important;
+  background-image: none !important;
+  color: var(--action-primary-text) !important;
+  box-shadow: var(--action-primary-shadow) !important;
+}
+.admin-shell .bg-purple-600:hover,
+.admin-shell .from-purple-600:hover {
+  background-color: var(--action-primary-hover) !important;
+}
+.admin-shell .bg-purple-500 {
+  background-color: var(--brand-green) !important;
+}
+.admin-shell .bg-purple-500\/10,
+.admin-shell .bg-purple-600\/20,
+.admin-shell .bg-purple-950\/40,
+.admin-shell .bg-purple-950\/50 {
+  background-color: var(--brand-green-surface) !important;
+}
+.admin-shell .text-purple-300,
+.admin-shell .text-purple-400,
+.admin-shell .hover\:text-purple-300:hover,
+.admin-shell .hover\:text-purple-400:hover {
+  color: var(--brand-green-text) !important;
+}
+.admin-shell .border-purple-500,
+.admin-shell .border-purple-500\/20,
+.admin-shell .border-purple-500\/30,
+.admin-shell .border-purple-500\/40,
+.admin-shell .focus\:border-purple-500:focus {
+  border-color: var(--brand-green-border) !important;
+}
+
+/* Status badges in Light Mode for high legibility */
+:root:not(.dark) .admin-shell .bg-emerald-950\/40,
+:root:not(.dark) .admin-shell .bg-emerald-950\/50,
+:root:not(.dark) .admin-shell .bg-emerald-950\/60,
+:root:not(.dark) .admin-shell .bg-emerald-950\/70 {
+  background-color: rgba(45, 106, 79, 0.12) !important;
+}
+:root:not(.dark) .admin-shell .text-emerald-200,
+:root:not(.dark) .admin-shell .text-emerald-300,
+:root:not(.dark) .admin-shell .text-emerald-400 {
+  color: #1b5e3c !important;
+}
+:root:not(.dark) .admin-shell .bg-amber-950\/40,
+:root:not(.dark) .admin-shell .bg-amber-950\/50,
+:root:not(.dark) .admin-shell .bg-amber-950\/60,
+:root:not(.dark) .admin-shell .bg-amber-950\/70 {
+  background-color: rgba(180, 83, 9, 0.12) !important;
+}
+:root:not(.dark) .admin-shell .text-amber-200,
+:root:not(.dark) .admin-shell .text-amber-300,
+:root:not(.dark) .admin-shell .text-amber-400 {
+  color: #92400e !important;
+}
+:root:not(.dark) .admin-shell .bg-rose-950\/40,
+:root:not(.dark) .admin-shell .bg-rose-950\/50,
+:root:not(.dark) .admin-shell .bg-rose-950\/60,
+:root:not(.dark) .admin-shell .bg-rose-950\/70 {
+  background-color: rgba(79, 0, 1, 0.08) !important;
+}
+:root:not(.dark) .admin-shell .text-rose-200,
+:root:not(.dark) .admin-shell .text-rose-300,
+:root:not(.dark) .admin-shell .text-rose-400 {
+  color: #7f1d1d !important;
+}
+

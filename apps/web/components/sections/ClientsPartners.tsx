@@ -6,7 +6,8 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { EASE_PREMIUM } from "@/lib/motion";
-import { CLIENT_PARTNERS } from "@/config/clients-partners";
+import { CLIENT_PARTNERS, type ClientPartnerItem } from "@/config/clients-partners";
+import { BACKEND_URL } from "@/config/api";
 
 const toFaDigits = (val: string | number): string =>
   String(val).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]);
@@ -16,12 +17,49 @@ export default function ClientsPartners() {
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
+  const [clients, setClients] = useState<ClientPartnerItem[]>(CLIENT_PARTNERS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const selectorRef = useRef<HTMLDivElement>(null);
 
-  const totalClients = CLIENT_PARTNERS.length;
-  const currentClient = CLIENT_PARTNERS[currentIndex];
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/clients`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: ClientPartnerItem[] = data.map((cp: any, idx: number) => ({
+            id: cp.slug || `partner-${cp.id}`,
+            orderNumber: String(idx + 1).padStart(2, "0"),
+            nameFa: cp.nameFa,
+            nameEn: cp.nameEn,
+            titleFa: cp.titleFa,
+            titleEn: cp.titleEn,
+            industryFa: cp.industryFa,
+            industryEn: cp.industryEn,
+            introFa: cp.introFa,
+            introEn: cp.introEn,
+            quoteFa: cp.quoteFa || undefined,
+            quoteEn: cp.quoteEn || undefined,
+            servicesFa: cp.servicesFa || [],
+            servicesEn: cp.servicesEn || [],
+            yearFa: cp.yearFa || "۱۴۰۲ - تاکنون",
+            yearEn: cp.yearEn || "2023 - Present",
+            monogram: cp.monogram || cp.nameEn?.slice(0, 2)?.toUpperCase() || "OP",
+            portraitImage: cp.portraitImage || undefined,
+            portraitBadgeFa: cp.portraitBadgeFa || "کارفرمای منتخب آن‌ساپ",
+            portraitBadgeEn: cp.portraitBadgeEn || "OnSupp Verified Partner",
+            websites: cp.websites || [],
+            instagrams: cp.instagrams || [],
+          }));
+          setClients(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const totalClients = clients.length;
+  const safeIndex = currentIndex < totalClients ? currentIndex : 0;
+  const currentClient = clients[safeIndex] || CLIENT_PARTNERS[0];
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -542,7 +580,7 @@ export default function ClientsPartners() {
               className="flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth no-scrollbar"
               style={{ scrollbarWidth: "none" }}
             >
-              {CLIENT_PARTNERS.map((client, idx) => {
+              {clients.map((client, idx) => {
                 const isActive = idx === currentIndex;
                 return (
                   <button

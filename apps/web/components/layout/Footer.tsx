@@ -1,41 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { scrollToSection, scrollToTop as smoothScrollToTop } from "@/lib/scroll";
 import { BACKEND_URL } from "@/config/api";
+import type { SiteSettingsData } from "@/lib/publicApi";
 
 const toFaDigits = (val: string | number): string =>
   String(val).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d, 10)]);
 
-type ContactInfo = {
-  phone: string;
-  phoneLabelFa: string;
-  phoneLabelEn: string;
-  email: string;
-  emailLabelFa: string;
-  emailLabelEn: string;
-  responseTimeFa: string;
-  responseTimeEn: string;
-};
-
-const DEFAULT_CONTACT: ContactInfo = {
-  phone: "",
-  phoneLabelFa: "تلفن",
-  phoneLabelEn: "Phone",
-  email: "info@onsupp.ir",
-  emailLabelFa: "ایمیل رسمی",
-  emailLabelEn: "Official Email",
-  responseTimeFa: "پاسخگویی و هماهنگی مشاوره در ساعات کاری",
-  responseTimeEn: "Consultation response during business hours",
-};
-
-
-
-// Column 1: Quick Links
+// Quick Links
 const QUICK_LINKS = [
   { nameFa: "صفحه اصلی", nameEn: "Home", href: "/" },
   { nameFa: "گالری تصاویر و نمونه‌کارها", nameEn: "Portfolio & Gallery", href: "/portfolio" },
@@ -45,61 +21,22 @@ const QUICK_LINKS = [
   { nameFa: "تماس با ما", nameEn: "Contact Us", href: "/#contact" },
 ];
 
-// Column 2: Office & Studio Address
-const OFFICE_ADDRESS = {
-  titleFa: "آدرس و نشانی",
-  titleEn: "Office Address",
-  labelFa: "دفتر مرکزی:",
-  labelEn: "Headquarters:",
-  streetFa: "عظیمیه، میدان کوه نورد، گلستان ۲۱",
-  streetEn: "Golestan 21, Kouhnavard Sq, Azimiyeh",
-  cityFa: "البرز، کرج، منطقه عظیمیه",
-  cityEn: "Alborz, Karaj, Azimiyeh District",
-};
-
-// Column 3: Working Hours & Channels
-const CONTACT_DETAILS = {
-  hoursTitleFa: "ساعات کاری:",
-  hoursTitleEn: "Working Hours:",
-  hoursFa: "شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰",
-  hoursEn: "Sat - Wed: 09:00 - 18:00",
-  phoneLabelFa: "تلفن:",
-  phoneLabelEn: "Phone:",
-  phoneValue: "", // جلوی تلفن خالی بماند
-  telegramLabelFa: "تلگرام:",
-  telegramLabelEn: "Telegram:",
-  telegramHandle: "onsupp_web",
-  telegramUrl: "https://t.me/onsupp_web",
-  emailValue: "info@onsupp.ir",
-  instagramUrl: "https://instagram.com/onsupp_web",
-};
-
-export default function Footer() {
+export default function Footer({ initialSettings }: { initialSettings?: SiteSettingsData | null }) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const pathname = usePathname();
-  const [contact, setContact] = useState<ContactInfo>(DEFAULT_CONTACT);
+  const [settings, setSettings] = useState<SiteSettingsData | null>(initialSettings || null);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/contact/content`, { cache: "no-store" })
+    fetch(`${BACKEND_URL}/api/v1/settings`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) {
-          setContact((prev) => ({
-            ...prev,
-            phone: "", // Keep empty as instructed
-            phoneLabelFa: data.phoneLabelFa || prev.phoneLabelFa,
-            phoneLabelEn: data.phoneLabelEn || prev.phoneLabelEn,
-            email: data.email || prev.email,
-            emailLabelFa: data.emailLabelFa || prev.emailLabelFa,
-            emailLabelEn: data.emailLabelEn || prev.emailLabelEn,
-            responseTimeFa: data.responseTimeFa || prev.responseTimeFa,
-            responseTimeEn: data.responseTimeEn || prev.responseTimeEn,
-          }));
+          setSettings(data);
         }
       })
       .catch(() => {
-        /* retain defaults */
+        /* retain fallback */
       });
   }, []);
 
@@ -129,6 +66,36 @@ export default function Footer() {
     }
   };
 
+  const quickLinks =
+    settings?.footerLinks && Array.isArray(settings.footerLinks) && settings.footerLinks.length > 0
+      ? settings.footerLinks
+      : QUICK_LINKS;
+
+  // Contact details strictly per user specification
+  const address = isRtl ? "عظیمیه" : "Azimiyeh";
+  const workingHours = isRtl
+    ? settings?.workingHoursFa || "شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰"
+    : settings?.workingHoursEn || "Sat - Wed: 09:00 - 18:00";
+
+  const mainPhone = "09102626113";
+  const instagramSupportPhone = "09367373510";
+  const websiteSupportPhone = ""; // فعلاً شماره‌ای نمایش داده نشود. امکان اضافه کردن شماره در آینده حفظ شده است.
+  const telegramWebHandle = "onsupp_web";
+  const telegramWebUrl = "https://t.me/onsupp_web";
+  const telegramSocialHandle = "onsupp_socialmedia";
+  const telegramSocialUrl = "https://t.me/onsupp_socialmedia";
+  const instagramHandle = "onsupp.ir";
+  const instagramUrl = "https://instagram.com/onsupp.ir";
+  const mapsUrl = settings?.googleMapsUrl || "https://maps.google.com/?q=عظیمیه";
+
+  const brandDescription = isRtl
+    ? "ما باور داریم تمایز و درخشش در فضای دیجیتال یک اتفاق تصادفی نیست، بلکه انتخابی آگاهانه و استراتژیک است. با تلفیق هنر، فناوری و دانش داده‌محور، اصالت و هویت برند شما را به بالاترین سطح ممکن ارتقا می‌دهیم."
+    : "We believe true distinction in the digital sphere is never accidental, but a conscious strategic choice. By harmonizing creative art, engineering, and data-driven insight, we elevate your brand to unprecedented heights.";
+
+  const copyrightText = isRtl
+    ? "© ۲۰۲۶ تمام حقوق برای OnSupp محفوظ است | آژانس دیجیتال مارکتینگ و مهندسی نرم‌افزار آن‌ساپ"
+    : "© 2026 OnSupp. All Rights Reserved | Digital Marketing & Software Engineering Agency";
+
   return (
     <>
       <footer
@@ -142,8 +109,8 @@ export default function Footer() {
         />
 
         <div className="relative z-10 mx-auto w-full max-w-[1550px] px-6 sm:px-10 lg:px-16 pt-14 sm:pt-16 lg:pt-20 pb-8 sm:pb-10">
-          {/* ── Top Centered Brand Identity ── */}
-          <div className="flex flex-col items-center justify-center text-center mb-12 sm:mb-16">
+          {/* ── Top Centered Brand Identity & Social Icons ── */}
+          <div className="flex flex-col items-center justify-center text-center mb-10 sm:mb-14">
             <Link
               href="/"
               onClick={(e) => handleAnchorClick(e, "/")}
@@ -161,6 +128,62 @@ export default function Footer() {
                 Creative Digital Marketing & Software Engineering
               </span>
             </Link>
+
+            {/* Official Social Media Channels (Icon Links with aria-labels) */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={isRtl ? "صفحه اینستاگرام آن‌ساپ" : "OnSupp Instagram Page"}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              </a>
+
+              <a
+                href={telegramSocialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={isRtl ? "کانال و پشتیبانی تلگرام آن‌ساپ" : "OnSupp Telegram Channel"}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 4L3 11l6 2 2 6 3-4 5 4 2-15z" />
+                  <path d="M9 13l8-6" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* ── Mobile-Only Primary Contact Strip (High Visibility Priority on Mobile) ── */}
+          <div className="block lg:hidden mb-10 p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm space-y-3.5">
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#8bb3a4]" />
+              <span>{isRtl ? "ارتباط مستقیم و پشتیبانی فوری" : "Direct & Fast Support"}</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <a
+                href={`tel:${mainPhone}`}
+                className="flex items-center justify-between px-4 py-3 rounded-xl bg-white text-[#17221E] font-bold text-xs sm:text-sm shadow-sm active:scale-98 transition-transform"
+              >
+                <span>{isRtl ? "شماره تماس اصلی:" : "Main Phone:"}</span>
+                <span className="font-mono dir-ltr">{isRtl ? toFaDigits(mainPhone) : mainPhone}</span>
+              </a>
+
+              <a
+                href={`tel:${instagramSupportPhone}`}
+                className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs sm:text-sm border border-white/20 active:scale-98 transition-all"
+              >
+                <span>{isRtl ? "پشتیبانی اینستاگرام:" : "Instagram Support:"}</span>
+                <span className="font-mono dir-ltr">{isRtl ? toFaDigits(instagramSupportPhone) : instagramSupportPhone}</span>
+              </a>
+            </div>
           </div>
 
           {/* ── Main 4-Column Grid ── */}
@@ -171,7 +194,7 @@ export default function Footer() {
                 {isRtl ? "دسترسی سریع" : "Quick Links"}
               </h3>
               <ul className="space-y-2.5">
-                {QUICK_LINKS.map((link) => (
+                {quickLinks.map((link) => (
                   <li key={link.href + link.nameEn}>
                     <Link
                       href={link.href}
@@ -185,29 +208,24 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 2: آدرس و نشانی دفتر مرکزی */}
+            {/* Column 2: آدرس و نشانی */}
             <div className="lg:col-span-3 space-y-4">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
-                {isRtl ? OFFICE_ADDRESS.titleFa : OFFICE_ADDRESS.titleEn}
+                {isRtl ? "آدرس و نشانی" : "Office Address"}
               </h3>
               <div className="space-y-3.5 text-xs sm:text-[13px] leading-relaxed">
                 <div className="space-y-1">
                   <span className="font-bold text-white block">
-                    {isRtl ? OFFICE_ADDRESS.labelFa : OFFICE_ADDRESS.labelEn}
+                    {isRtl ? "دفتر مرکزی:" : "Headquarters:"}
                   </span>
                   <p className="text-white/85 font-light leading-relaxed">
-                    {isRtl ? OFFICE_ADDRESS.streetFa : OFFICE_ADDRESS.streetEn}
-                  </p>
-                </div>
-                <div className="space-y-1 pt-0.5">
-                  <p className="text-white/70 font-light">
-                    {isRtl ? OFFICE_ADDRESS.cityFa : OFFICE_ADDRESS.cityEn}
+                    {address}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Column 3: ساعات کاری، تلفن و تلگرام */}
+            {/* Column 3: ساعات کاری */}
             <div className="lg:col-span-3 space-y-4">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
                 {isRtl ? "ساعات کاری و ارتباط" : "Hours & Contact"}
@@ -215,110 +233,26 @@ export default function Footer() {
               <div className="space-y-3 text-xs sm:text-[13px] leading-relaxed">
                 <div className="space-y-1">
                   <span className="font-bold text-white block">
-                    {isRtl ? CONTACT_DETAILS.hoursTitleFa : CONTACT_DETAILS.hoursTitleEn}
+                    {isRtl ? "ساعات کاری:" : "Working Hours:"}
                   </span>
                   <p className="text-white/85 font-light">
-                    {isRtl ? CONTACT_DETAILS.hoursFa : CONTACT_DETAILS.hoursEn}
+                    {workingHours}
                   </p>
-                </div>
-
-                {/* جلوی تلفن خالی باشد طبق درخواست کاربر */}
-                <div className="flex items-center gap-2 pt-0.5">
-                  <span className="font-bold text-white">
-                    {isRtl ? CONTACT_DETAILS.phoneLabelFa : CONTACT_DETAILS.phoneLabelEn}
-                  </span>
-                  <span className="text-white/60"></span>
-                </div>
-
-                {/* تلگرام onsupp_web */}
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-white">
-                    {isRtl ? CONTACT_DETAILS.telegramLabelFa : CONTACT_DETAILS.telegramLabelEn}
-                  </span>
-                  <a
-                    href={CONTACT_DETAILS.telegramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/95 hover:text-white underline underline-offset-4 dir-ltr font-mono text-xs transition-colors"
-                  >
-                    @{CONTACT_DETAILS.telegramHandle}
-                  </a>
-                </div>
-              </div>
-
-              {/* آیکون‌های گرد ارتباطی مطابق رفرنس فوتر */}
-              <div className="pt-2 flex items-center gap-2.5">
-                {/* Telegram */}
-                <a
-                  href={CONTACT_DETAILS.telegramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Telegram: onsupp_web"
-                  title="تلگرام: onsupp_web"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m22 2-7 20-4-9-9-4Z" />
-                    <path d="M22 2 11 13" />
-                  </svg>
-                </a>
-
-                {/* Instagram */}
-                <a
-                  href={CONTACT_DETAILS.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram: onsupp_web"
-                  title="اینستاگرام آن‌ساپ"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                  </svg>
-                </a>
-
-                {/* Email */}
-                <a
-                  href={`mailto:${CONTACT_DETAILS.emailValue}`}
-                  aria-label="Email: info@onsupp.ir"
-                  title="ایمیل رسمی آن‌ساپ"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center justify-center text-white transition-all duration-200"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="20" height="16" x="2" y="4" rx="2" />
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                </a>
-
-                {/* Phone Handset Icon */}
-                <div
-                  aria-label="Phone"
-                  title="تلفن"
-                  className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/70"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
                 </div>
               </div>
             </div>
 
-            {/* Column 4 (Far Left in RTL): زیبایی جاودانه / بیانیه برند + دو دکمه اکشن */}
+            {/* Column 4 (Far Left in RTL): اسلوگان / بیانیه برند + دو دکمه اکشن */}
             <div className="lg:col-span-4 space-y-4">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
-                {isRtl ? "زیبایی جاودانه" : "Timeless Impact"}
+                {isRtl ? "همراه شما در مسیر رشد و توسعه دیجیتال" : "Empowering Your Digital Growth & Development"}
               </h3>
               <p className="text-xs sm:text-[13px] text-white/90 leading-relaxed font-light">
-                {isRtl
-                  ? "ما باور داریم تمایز و درخشش در فضای دیجیتال یک اتفاق تصادفی نیست، بلکه انتخابی آگاهانه و استراتژیک است. با تلفیق هنر، فناوری و دانش داده‌محور، اصالت و هویت برند شما را به بالاترین سطح ممکن ارتقا می‌دهیم."
-                  : "We believe true distinction in the digital sphere is never accidental, but a conscious strategic choice. By harmonizing creative art, engineering, and data-driven insight, we elevate your brand to unprecedented heights."}
+                {brandDescription}
               </p>
 
-              {/* Stacked Action Buttons */}
-              <div className="pt-2 flex flex-col gap-2.5 max-w-[280px]">
-                {/* Button 1: Solid Crisp White Button with Deep Green Text (High Contrast 8.4:1) */}
+              {/* Stacked Action Buttons (Centered on mobile, left/aligned on desktop) */}
+              <div className="pt-2 flex flex-col gap-2.5 w-full max-w-[280px] mx-auto md:mx-0">
                 <Link
                   href="/#contact"
                   onClick={handleConsultationClick}
@@ -327,9 +261,8 @@ export default function Footer() {
                   <span>{isRtl ? "رزرو وقت مشاوره" : "Book Consultation"}</span>
                 </Link>
 
-                {/* Button 2: Outlined Ghost Button with White Border */}
                 <a
-                  href="https://maps.google.com/?q=عظیمیه+میدان+کوهنورد+گلستان+۲۱"
+                  href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center py-2.5 px-5 rounded-md font-medium text-xs sm:text-[13px] tracking-wide text-white bg-white/[0.08] hover:bg-white/[0.18] border border-white/25 hover:border-white/50 active:scale-[0.98] transition-all duration-200 text-center cursor-pointer"
@@ -340,12 +273,56 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ── Bottom Bar: Horizontal Line & Centered Copyright ── */}
+          {/* ── Values Section: نمایش شماره‌های تماس در دسکتاپ به‌صورت افقی و هماهنگ ── */}
+          <div className="py-6 sm:py-8 border-b border-white/12 w-full">
+            <div className="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-center justify-center lg:justify-between gap-4 lg:gap-8 w-full text-xs sm:text-[13px]">
+              {/* شماره تماس */}
+              <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                <span className="font-bold text-white">
+                  {isRtl ? "شماره تماس اصلی:" : "Phone:"}
+                </span>
+                <a
+                  href={`tel:${mainPhone}`}
+                  className="text-white/90 hover:text-white dir-ltr font-mono text-xs transition-colors"
+                >
+                  {isRtl ? toFaDigits(mainPhone) : mainPhone}
+                </a>
+              </div>
+
+              {/* پشتیبانی اینستاگرام */}
+              <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                <span className="font-bold text-white">
+                  {isRtl ? "پشتیبانی اینستاگرام:" : "Instagram Support:"}
+                </span>
+                <a
+                  href={`tel:${instagramSupportPhone}`}
+                  className="text-white/90 hover:text-white dir-ltr font-mono text-xs transition-colors"
+                >
+                  {isRtl ? toFaDigits(instagramSupportPhone) : instagramSupportPhone}
+                </a>
+              </div>
+
+              {/* پشتیبانی وبسایت (در صورت تعریف شماره در آینده فعال می‌شود) */}
+              {websiteSupportPhone ? (
+                <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                  <span className="font-bold text-white">
+                    {isRtl ? "پشتیبانی وبسایت:" : "Website Support:"}
+                  </span>
+                  <a
+                    href={`tel:${websiteSupportPhone}`}
+                    className="text-white/90 hover:text-white dir-ltr font-mono text-xs transition-colors"
+                  >
+                    {isRtl ? toFaDigits(websiteSupportPhone) : websiteSupportPhone}
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* ── Bottom Bar: Copyright ── */}
           <div className="pt-6 sm:pt-8 flex items-center justify-center text-center">
             <p className="text-[11px] sm:text-xs text-white/65 tracking-wider">
-              {isRtl
-                ? `© ۲۰۲۵ تمام حقوق برای Onsupp محفوظ است | آژانس دیجیتال مارکتینگ و مهندسی نرم‌افزار آن‌ساپ`
-                : `© 2025 OnSupp. All Rights Reserved | Digital Marketing & Software Engineering Agency`}
+              {copyrightText}
             </p>
           </div>
         </div>

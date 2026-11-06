@@ -49,6 +49,9 @@ export default function MediaPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingAltId, setEditingAltId] = useState<number | null>(null);
+  const [editingAltText, setEditingAltText] = useState("");
+  const [savingAltId, setSavingAltId] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -279,6 +282,34 @@ export default function MediaPage() {
     };
 
     xhr.send(formData);
+  };
+
+  const handleStartEditAlt = (item: MediaItem) => {
+    setEditingAltId(item.id);
+    setEditingAltText(item.alt || "");
+  };
+
+  const handleSaveAlt = async (id: number) => {
+    setSavingAltId(id);
+    try {
+      const res = await adminFetch(`/api/v1/media/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alt: editingAltText }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setItems((prev) => prev.map((m) => (m.id === id ? { ...m, alt: updated.alt } : m)));
+        setEditingAltId(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "خطا در بروزرسانی متن جایگزین");
+      }
+    } catch {
+      alert("خطای ارتباط با سرور هنگام ذخیره Alt");
+    } finally {
+      setSavingAltId(null);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -537,7 +568,7 @@ export default function MediaPage() {
                 className={`w-full sm:w-auto px-6 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
                   isUploading || queue.filter((q) => q.status !== "success").length === 0
                     ? "opacity-50 cursor-not-allowed bg-raised border border-foreground/10 text-foreground/40"
-                    : "bg-lime text-ink hover:opacity-90 active:scale-95 shadow-[0_0_20px_rgba(178,248,0,0.25)]"
+                    : "bg-lime text-ink hover:opacity-90 active:scale-95"
                 }`}
               >
                 {isUploading ? (
@@ -665,13 +696,57 @@ export default function MediaPage() {
                 </div>
 
                 {/* Caption / Alt info */}
-                <div className="p-3 bg-panel/90 border-t border-foreground/5 space-y-1">
-                  <p className="text-xs font-semibold text-foreground truncate" title={item.alt}>
-                    {item.alt || item.filename}
-                  </p>
-                  <p className="text-[10px] text-foreground/40 font-sans truncate" title={item.url}>
-                    {item.filename}
-                  </p>
+                <div className="p-3 bg-panel/90 border-t border-foreground/5 space-y-2">
+                  {editingAltId === item.id ? (
+                    <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={editingAltText}
+                        onChange={(e) => setEditingAltText(e.target.value)}
+                        placeholder="متن جایگزین (Alt)..."
+                        autoFocus
+                        className="w-full text-xs bg-raised border border-mint/40 rounded-lg px-2 py-1 text-foreground focus:outline-none"
+                      />
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setEditingAltId(null)}
+                          className="px-2 py-0.5 text-[10px] rounded text-foreground/60 hover:text-foreground"
+                        >
+                          انصراف
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveAlt(item.id)}
+                          disabled={savingAltId === item.id}
+                          className="px-2.5 py-0.5 text-[10px] rounded bg-mint text-ink font-bold hover:opacity-90 disabled:opacity-50"
+                        >
+                          {savingAltId === item.id ? "..." : "ذخیره"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-xs font-semibold text-foreground truncate" title={item.alt}>
+                          {item.alt ? `Alt: ${item.alt}` : <span className="italic text-foreground/40">بدون Alt</span>}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditAlt(item)}
+                          className="p-1 rounded hover:bg-raised text-foreground/40 hover:text-mint transition-colors shrink-0"
+                          title="ویرایش متن Alt"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-foreground/40 font-sans truncate" title={item.url}>
+                        {item.filename}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

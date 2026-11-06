@@ -1,3 +1,5 @@
+import type { ServiceData } from "@/lib/publicApi";
+
 export type ServiceCategoryKey =
   | "social-identity"
   | "studio-production"
@@ -31,11 +33,11 @@ export interface ServiceRelatedPathway {
 }
 
 export interface ServiceDetailItem {
-  id: ServiceCategoryKey;
+  id: string;
   index: number;
   numStrFa: string;
   numStrEn: string;
-  iconType: "social" | "studio" | "motion" | "web" | "seo" | "crm" | "software";
+  iconType: "social" | "studio" | "motion" | "web" | "seo" | "crm" | "software" | string;
   tagFa: string;
   tagEn: string;
   titleFa: string;
@@ -58,6 +60,7 @@ export interface ServiceDetailItem {
   ctaLabelEn: string;
   badgeAccentFa?: string;
   badgeAccentEn?: string;
+  isFromDatabase?: boolean;
 }
 
 export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
@@ -580,3 +583,197 @@ export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
     badgeAccentEn: "Enterprise Systems",
   },
 ];
+
+function toPersianDigits(n: number | string): string {
+  const farsiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  return String(n).replace(/[0-9]/g, (w) => farsiDigits[+w]);
+}
+
+/**
+ * Merges published database services from the CMS API with presentation metadata.
+ * Ensures:
+ * 1. Database content strictly takes precedence over fallback text.
+ * 2. Visual layout styles, icons, and compositions are preserved seamlessly.
+ * 3. Graceful fallback occurs if the API fails or returns no published records.
+ * 4. Fallback vs. live CMS status is clearly distinguished via isFromDatabase and isLiveCMS.
+ */
+export function mergeServicesWithDatabase(dbServices: ServiceData[] | null | undefined): {
+  services: ServiceDetailItem[];
+  isLiveCMS: boolean;
+} {
+  const published = Array.isArray(dbServices)
+    ? dbServices.filter((s) => s.isPublished !== false && s.status !== "DRAFT")
+    : [];
+
+  if (published.length === 0) {
+    // Graceful fallback to static presentation metadata when API is unreachable or empty
+    return {
+      services: DETAILED_SERVICES_DATA.map((item) => ({ ...item, isFromDatabase: false })),
+      isLiveCMS: false,
+    };
+  }
+
+  const CANONICAL_IDS = [
+    "social-identity",
+    "studio-production",
+    "animation-motion",
+    "web-development",
+    "technical-seo",
+    "crm-automation",
+    "custom-software",
+  ];
+
+  // Map canonical services with DB overrides taking precedence
+  const mergedCanonical: ServiceDetailItem[] = DETAILED_SERVICES_DATA.map((fallback) => {
+    const match = published.find(
+      (s) =>
+        (s.slug && s.slug.trim().toLowerCase() === fallback.id.toLowerCase()) ||
+        (s.slug && s.slug.trim().toLowerCase() === fallback.id.replace(/-/g, "_").toLowerCase())
+    );
+
+    if (!match) {
+      return { ...fallback, isFromDatabase: false };
+    }
+
+    // Subservices mapping from database
+    let mappedSubservices = fallback.subservices;
+    if (match.subservices && Array.isArray(match.subservices) && match.subservices.length > 0) {
+      mappedSubservices = match.subservices.map((sub: any) => ({
+        nameFa: sub.nameFa || sub.titleFa || "",
+        nameEn: sub.nameEn || sub.titleEn || "",
+        descFa: sub.descFa || sub.descriptionFa || "",
+        descEn: sub.descEn || sub.descriptionEn || "",
+        deliverablesFa: Array.isArray(sub.deliverablesFa) ? sub.deliverablesFa : [],
+        deliverablesEn: Array.isArray(sub.deliverablesEn) ? sub.deliverablesEn : [],
+      }));
+    }
+
+    // Metrics mapping from database
+    let mappedMetrics = fallback.metrics;
+    if (match.metrics && Array.isArray(match.metrics) && match.metrics.length > 0) {
+      mappedMetrics = match.metrics.map((m: any) => ({
+        valueFa: m.valueFa || "",
+        valueEn: m.valueEn || "",
+        labelFa: m.labelFa || "",
+        labelEn: m.labelEn || "",
+      }));
+    } else if (match.kpiMetrics && Array.isArray(match.kpiMetrics) && match.kpiMetrics.length > 0) {
+      mappedMetrics = match.kpiMetrics.map((m: any) => ({
+        valueFa: m.valueFa || "",
+        valueEn: m.valueEn || "",
+        labelFa: m.labelFa || "",
+        labelEn: m.labelEn || "",
+      }));
+    }
+
+    return {
+      id: fallback.id,
+      index: fallback.index,
+      numStrFa: fallback.numStrFa,
+      numStrEn: fallback.numStrEn,
+      iconType: (match.iconType as any) || fallback.iconType,
+      tagFa: match.tagFa || fallback.tagFa,
+      tagEn: match.tagEn || fallback.tagEn,
+      titleFa: match.title || fallback.titleFa,
+      titleEn: match.titleEn || fallback.titleEn,
+      headlineFa: match.headlineFa || fallback.headlineFa,
+      headlineEn: match.headlineEn || fallback.headlineEn,
+      descriptionFa: match.subtitle || match.detailedNarrativeFa || fallback.descriptionFa,
+      descriptionEn: match.subtitleEn || match.detailedNarrativeEn || fallback.descriptionEn,
+      detailedNarrativeFa: match.detailedNarrativeFa || fallback.detailedNarrativeFa,
+      detailedNarrativeEn: match.detailedNarrativeEn || fallback.detailedNarrativeEn,
+      businessValueTitleFa: match.businessValueTitleFa || fallback.businessValueTitleFa,
+      businessValueTitleEn: match.businessValueTitleEn || fallback.businessValueTitleEn,
+      businessValueFa: match.businessValueFa || fallback.businessValueFa,
+      businessValueEn: match.businessValueEn || fallback.businessValueEn,
+      image: match.coverImage || match.imageUrl || fallback.image,
+      subservices: mappedSubservices,
+      metrics: mappedMetrics,
+      relatedLinks:
+        Array.isArray(match.relatedLinks) && match.relatedLinks.length > 0
+          ? match.relatedLinks
+          : fallback.relatedLinks,
+      ctaLabelFa: match.ctaLabelFa || fallback.ctaLabelFa,
+      ctaLabelEn: match.ctaLabelEn || fallback.ctaLabelEn,
+      badgeAccentFa: match.badgeAccentFa || fallback.badgeAccentFa,
+      badgeAccentEn: match.badgeAccentEn || fallback.badgeAccentEn,
+      isFromDatabase: true,
+    };
+  });
+
+  // Extra published DB services (e.g., custom services added through admin)
+  const extraDbServices = published.filter(
+    (s) => s.slug && !CANONICAL_IDS.includes(s.slug.trim().toLowerCase())
+  );
+
+  const mergedExtras: ServiceDetailItem[] = extraDbServices.map((s, idx) => {
+    const index = CANONICAL_IDS.length + idx + 1;
+    const numStrFa = toPersianDigits(index < 10 ? `0${index}` : `${index}`);
+    const numStrEn = index < 10 ? `0${index}` : `${index}`;
+
+    let subservices: SubserviceDetail[] = [];
+    if (s.subservices && Array.isArray(s.subservices)) {
+      subservices = s.subservices.map((sub: any) => ({
+        nameFa: sub.nameFa || sub.titleFa || "",
+        nameEn: sub.nameEn || sub.titleEn || "",
+        descFa: sub.descFa || sub.descriptionFa || "",
+        descEn: sub.descEn || sub.descriptionEn || "",
+        deliverablesFa: Array.isArray(sub.deliverablesFa) ? sub.deliverablesFa : [],
+        deliverablesEn: Array.isArray(sub.deliverablesEn) ? sub.deliverablesEn : [],
+      }));
+    }
+
+    let metrics: ServiceMetric[] = [
+      {
+        valueFa: "+۱۰۰٪",
+        valueEn: "+100%",
+        labelFa: "تضمین کیفیت خروجی",
+        labelEn: "Output Quality Assurance",
+      },
+    ];
+    if (s.metrics && Array.isArray(s.metrics) && s.metrics.length > 0) {
+      metrics = s.metrics.map((m: any) => ({
+        valueFa: m.valueFa || "",
+        valueEn: m.valueEn || "",
+        labelFa: m.labelFa || "",
+        labelEn: m.labelEn || "",
+      }));
+    }
+
+    return {
+      id: s.slug,
+      index,
+      numStrFa,
+      numStrEn,
+      iconType: (s.iconType as any) || "web",
+      tagFa: s.tagFa || "دپارتمان تخصصی",
+      tagEn: s.tagEn || "Specialized Department",
+      titleFa: s.title,
+      titleEn: s.titleEn || s.title,
+      headlineFa: s.headlineFa || s.subtitle || s.title,
+      headlineEn: s.headlineEn || s.subtitleEn || s.titleEn || s.title,
+      descriptionFa: s.subtitle || s.detailedNarrativeFa || s.headlineFa || "",
+      descriptionEn: s.subtitleEn || s.detailedNarrativeEn || s.headlineEn || "",
+      detailedNarrativeFa: s.detailedNarrativeFa || s.subtitle || "",
+      detailedNarrativeEn: s.detailedNarrativeEn || s.subtitleEn || "",
+      businessValueTitleFa: s.businessValueTitleFa || "ارزش استراتژیک برای سازمان",
+      businessValueTitleEn: s.businessValueTitleEn || "Strategic Business Value",
+      businessValueFa: s.businessValueFa || "",
+      businessValueEn: s.businessValueEn || "",
+      image: s.coverImage || s.imageUrl || "/images/services/web-development.webp",
+      subservices,
+      metrics,
+      relatedLinks: Array.isArray(s.relatedLinks) ? s.relatedLinks : [],
+      ctaLabelFa: s.ctaLabelFa || "درخواست مشاوره",
+      ctaLabelEn: s.ctaLabelEn || "Request Consultation",
+      badgeAccentFa: s.badgeAccentFa || undefined,
+      badgeAccentEn: s.badgeAccentEn || undefined,
+      isFromDatabase: true,
+    };
+  });
+
+  return {
+    services: [...mergedCanonical, ...mergedExtras],
+    isLiveCMS: true,
+  };
+}

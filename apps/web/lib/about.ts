@@ -234,6 +234,8 @@ export const ABOUT_PAGE_PLACEHOLDER: AboutPageContent = {
   },
 };
 
+import { BACKEND_URL } from "@/config/api";
+
 // ─── Data Access ────────────────────────────────────────────────────────────
 
 /** Published members, ordered by `position` (CMS display order). */
@@ -245,9 +247,22 @@ export function getVisibleMembers(members: TeamMember[]): TeamMember[] {
 
 /**
  * Single entry point for the About page content.
- * Future CMS integration: fetch from the backend here, validate the payload,
- * and fall back to `ABOUT_PAGE_PLACEHOLDER` on failure. UI stays unchanged.
+ * Fetches dynamic aggregated content from the backend (`/api/v1/about/page`)
+ * with fallback to `ABOUT_PAGE_PLACEHOLDER` if offline or error.
  */
 export async function getAboutPageContent(): Promise<AboutPageContent> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/about/page`, {
+      next: { tags: ["about", "team"] },
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return ABOUT_PAGE_PLACEHOLDER;
+    const data = await res.json();
+    if (data && data.hero && data.intro && data.ceo && data.team) {
+      return data as AboutPageContent;
+    }
+  } catch (error) {
+    // Graceful fallback to static placeholder structure
+  }
   return ABOUT_PAGE_PLACEHOLDER;
 }

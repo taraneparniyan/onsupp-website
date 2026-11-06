@@ -187,7 +187,7 @@ export default function About() {
     : DEFAULT_CONTENT.imageUrl;
 
   return (
-    <section id="about" className="w-full relative overflow-hidden pb-12 sm:pb-20 lg:pb-32 bg-background">
+    <section id="about" className="w-full relative overflow-hidden bg-background">
       {/* ─── Mobile Version (Reference Design - lg:hidden) ─── */}
       <div className="lg:hidden w-full px-4 sm:px-6 pt-4 pb-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : "ltr"}>
         {/* Top Eyebrow & Main Headline */}

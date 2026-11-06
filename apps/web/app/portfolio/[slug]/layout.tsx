@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getCaseStudyBySlug } from "@/lib/case-studies";
+import { getDynamicCaseStudyBySlug } from "@/lib/case-studies";
 import { SITE_URL } from "@/config/site";
 
 export async function generateMetadata({
@@ -8,7 +8,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const project = getCaseStudyBySlug(slug);
+  const project = await getDynamicCaseStudyBySlug(slug);
 
   if (!project) {
     return {

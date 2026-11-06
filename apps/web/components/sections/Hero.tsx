@@ -11,6 +11,7 @@ import { BACKEND_URL } from "@/config/api";
 export interface HeroSlideItem {
   id?: number | string;
   src: string;
+  mobileSrc?: string;
   altEn: string;
   altFa: string;
   titleFa: string;
@@ -180,7 +181,7 @@ export default function Hero() {
       aria-roledescription="carousel"
       className="relative w-full h-[85vh] sm:h-[90vh] lg:h-[100dvh] min-h-[560px] max-h-[1080px] overflow-hidden bg-[#38534A] dark:bg-[#17221E] select-none"
     >
-      {/* ─── Immersive Slideshow Imagery (Full bleed, object-cover) ─── */}
+      {/* ─── Immersive Slideshow Imagery (Dual Mobile/Desktop Architecture) ─── */}
       <div className="absolute inset-0 w-full h-full">
         {slides.map((slide, index) => {
           const isActive = index === safeCurrentIndex;
@@ -193,6 +194,7 @@ export default function Hero() {
                 isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
+              {/* Desktop / Default Image (or sole image if mobileSrc not explicitly set) */}
               <Image
                 src={slide.src}
                 alt={isRtl ? slide.altFa : slide.altEn}
@@ -200,23 +202,39 @@ export default function Hero() {
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 sizes="100vw"
-                className="object-cover object-center w-full h-full"
+                className={`object-cover object-center w-full h-full ${
+                  slide.mobileSrc ? "hidden sm:block" : "block"
+                }`}
                 quality={90}
               />
+
+              {/* Dedicated Mobile Image (Activated automatically when mobileSrc is configured) */}
+              {slide.mobileSrc && (
+                <Image
+                  src={slide.mobileSrc}
+                  alt={isRtl ? slide.altFa : slide.altEn}
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  sizes="100vw"
+                  className="block sm:hidden object-cover object-center w-full h-full"
+                  quality={90}
+                />
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* ─── Atmospheric Bottom Gradient Overlay ─── */}
+      {/* ─── Atmospheric Bottom Gradient Overlay (Upward Gradient for Perfect Legibility in Mobile & Desktop) ─── */}
       <div
         aria-hidden="true"
-        className="hero-bottom-scrim absolute inset-x-0 bottom-0 h-72 sm:h-88 lg:h-[440px] pointer-events-none z-20 transition-all duration-500 bg-gradient-to-t from-[#38534A] via-[#38534A]/75 via-35% to-transparent dark:from-[#17221E] dark:via-[#17221E]/82 dark:via-40% dark:to-transparent"
+        className="hero-bottom-scrim absolute inset-x-0 bottom-0 h-[68%] sm:h-88 lg:h-[440px] pointer-events-none z-20 transition-all duration-500 bg-gradient-to-t from-[#38534A] via-[#38534A]/85 via-50% to-transparent dark:from-[#17221E] dark:via-[#17221E]/90 dark:via-50% dark:to-transparent"
       />
 
-      {/* ─── Animated Text Overlay (Vertically Centered, Language-Responsive Alignment) ─── */}
+      {/* ─── Animated Text Overlay (Bottom-Aligned on Mobile, Vertically Centered on Desktop) ─── */}
       <div
-        className="absolute inset-0 z-30 pointer-events-none flex items-center"
+        className="absolute inset-0 z-30 pointer-events-none flex items-end sm:items-center pb-16 sm:pb-0"
         dir={isRtl ? "rtl" : "ltr"}
       >
         <div
@@ -370,7 +388,7 @@ export default function Hero() {
       {/* ─── Slide Progress Indicators (Only rendered when > 1 slide) ─── */}
       {slides.length > 1 && (
         <div
-          className={`absolute bottom-6 sm:bottom-8 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto ${
+          className={`absolute bottom-4 sm:bottom-8 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto ${
             isRtl ? "start-6 sm:start-12 lg:start-20" : "end-6 sm:end-12 lg:end-20"
           }`}
           aria-label={isRtl ? "ناوبری اسلایدهای هیرو" : "Hero slides navigation"}

@@ -784,8 +784,8 @@ export default function AdminArticlesPage() {
           </div>
 
           {/* Section 6: Advanced SEO Settings */}
-          <div className="space-y-6 p-6 rounded-lg bg-background border border-[#1b3d33]" dir={isFormEn ? "ltr" : "rtl"}>
-            <h2 className="text-base font-bold text-amber-400 pb-2 border-b border-[#1c4237] flex items-center gap-2">
+          <div className="space-y-6 p-6 rounded-xl bg-raised/40 border border-border" dir={isFormEn ? "ltr" : "rtl"}>
+            <h2 className="text-base font-bold text-mint pb-2 border-b border-border flex items-center gap-2">
               <span>🔍 ۶. تنظیمات سئو و متاتگ‌ها (SEO Meta & OpenGraph)</span>
             </h2>
 
@@ -887,9 +887,9 @@ export default function AdminArticlesPage() {
                 type="button"
                 id="btn-save-draft"
                 onClick={() => handleSaveWithStatus(false)}
-                className="px-5 py-3 rounded-lg bg-[#1c3a30] text-amber-300 font-bold text-xs border border-[#2c594a] hover:bg-[#254d3f] transition-all flex items-center gap-2"
+                className="px-5 py-3 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-500/30 hover:bg-amber-500/25 transition-all flex items-center gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 <span>ذخیره به عنوان پیش‌نویس</span>
@@ -901,7 +901,7 @@ export default function AdminArticlesPage() {
                   <button
                     type="button"
                     onClick={() => handleSaveWithStatus(false)}
-                    className="px-5 py-3 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-500/30 transition-all flex items-center gap-2"
+                    className="px-5 py-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-700 dark:text-amber-300 font-bold text-xs hover:bg-amber-500/25 transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <span>تبدیل به پیش‌نویس</span>
                   </button>
@@ -910,7 +910,7 @@ export default function AdminArticlesPage() {
                     type="button"
                     id="btn-save-article"
                     onClick={() => handleSaveWithStatus(true)}
-                    className="px-6 py-3.5 rounded-lg bg-lime text-ink shadow-[0_0_20px_rgba(183,255,0,0.3)] font-black text-xs border border-mint shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                    className="px-6 py-3.5 rounded-lg bg-lime text-ink font-black text-xs border border-primary/40 shadow-md hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <svg className="w-4 h-4 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -923,7 +923,7 @@ export default function AdminArticlesPage() {
                   type="button"
                   id="btn-save-article"
                   onClick={() => handleSaveWithStatus(true)}
-                  className="px-6 py-3.5 rounded-lg bg-lime text-ink shadow-[0_0_20px_rgba(183,255,0,0.3)] font-black text-xs border border-mint shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                  className="px-6 py-3.5 rounded-lg bg-lime text-ink font-black text-xs border border-primary/40 shadow-md hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <svg className="w-4 h-4 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
@@ -1129,7 +1129,7 @@ export default function AdminArticlesPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleOpenForm(art)}
-                      className="px-3 py-1.5 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-[#1f4236]"
+                      className="px-3 py-1.5 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-primary/15 cursor-pointer"
                     >
                       ویرایش
                     </button>

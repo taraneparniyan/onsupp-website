@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { EASE_PREMIUM, statStaggerContainer, statItemReveal } from "@/lib/motion";
+import { BACKEND_URL } from "@/config/api";
 
 // ─── Number Animation Helpers ──────────────────────────────────────────────────
 
@@ -117,6 +118,73 @@ function AnimatedNumber({
   return <span>{display}</span>;
 }
 
+// Icons matching Dr. Miresmaeili reference architecture & specific metric concepts
+const STAT_ICONS = [
+  // 1. پروژه‌های موفق (Briefcase / Completed Projects)
+  (
+    <svg key="projects" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
+  // 2. رضایت مشتریان (Star / Satisfaction)
+  (
+    <svg key="satisfaction" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  // 3. سال تجربه تخصصی (Clock / Experience & History)
+  (
+    <svg key="experience" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  // 4. خدمات تخصصی (Layers / Specialized Services)
+  (
+    <svg key="services" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  ),
+];
+
+const DEFAULT_METRICS = [
+  {
+    id: "projects",
+    valFa: "+۲۰۰",
+    valEn: "+200",
+    titleFa: "پروژه‌های موفق",
+    titleEn: "Successful Projects",
+    icon: STAT_ICONS[0],
+  },
+  {
+    id: "satisfaction",
+    valFa: "۴.۹ / ۵",
+    valEn: "4.9 / 5",
+    titleFa: "رضایت مشتریان",
+    titleEn: "Client Satisfaction",
+    icon: STAT_ICONS[1],
+  },
+  {
+    id: "experience",
+    valFa: "۸ سال",
+    valEn: "8 Years",
+    titleFa: "سال تجربه تخصصی",
+    titleEn: "Years of Specialized Rigor",
+    icon: STAT_ICONS[2],
+  },
+  {
+    id: "services",
+    valFa: "۷ حوزه",
+    valEn: "7 Disciplines",
+    titleFa: "خدمات تخصصی",
+    titleEn: "Specialized Services",
+    icon: STAT_ICONS[3],
+  },
+];
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StatsSatisfaction() {
@@ -126,106 +194,7 @@ export default function StatsSatisfaction() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.2 });
-
-  // 4 Verified Metrics inspired by Dr. Miresmaeili reference architecture
-  const metrics = [
-    {
-      id: "satisfaction",
-      valFa: "۴.۹ / ۵",
-      valEn: "4.9 / 5",
-      titleFa: "رضایت مراجعین و برندها",
-      titleEn: "Client Satisfaction Score",
-      icon: (
-        // Star Icon (⭐) - matching Dr. Miresmaeili reference
-        <svg
-          className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ),
-    },
-    {
-      id: "projects",
-      valFa: "+۲۰۰",
-      valEn: "+200",
-      titleFa: "پروژه موفق وب و برندینگ",
-      titleEn: "Completed Flagship Projects",
-      icon: (
-        // User Icon - matching Dr. Miresmaeili reference
-        <svg
-          className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-    },
-    {
-      id: "experience",
-      valFa: "۸ سال",
-      valEn: "8 Years",
-      titleFa: "سال سابقه و تجربه تخصصی",
-      titleEn: "Years of Specialized Rigor",
-      icon: (
-        // Clock Icon (🕒) - matching Dr. Miresmaeili reference
-        <svg
-          className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-      ),
-    },
-    {
-      id: "team",
-      valFa: "+۱۵",
-      valEn: "+15",
-      titleFa: "متخصص، طراح و استراتژیست",
-      titleEn: "Specialized Team & Experts",
-      icon: (
-        // Building / Studio Icon (🏢) - matching Dr. Miresmaeili reference
-        <svg
-          className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-          <line x1="9" y1="22" x2="9" y2="22.01" />
-          <line x1="15" y1="22" x2="15" y2="22.01" />
-          <line x1="8" y1="6" x2="8" y2="6.01" />
-          <line x1="16" y1="6" x2="16" y2="6.01" />
-          <line x1="8" y1="10" x2="8" y2="10.01" />
-          <line x1="16" y1="10" x2="16" y2="10.01" />
-          <line x1="8" y1="14" x2="8" y2="14.01" />
-          <line x1="16" y1="14" x2="16" y2="14.01" />
-          <line x1="8" y1="18" x2="8" y2="18.01" />
-          <line x1="16" y1="18" x2="16" y2="18.01" />
-        </svg>
-      ),
-    },
-  ];
+  const metrics = DEFAULT_METRICS;
 
   return (
     <section
@@ -284,7 +253,7 @@ export default function StatsSatisfaction() {
             >
               {isRtl ? (
                 <>
-                  ۸ سال تخصص و نوآوری؛{" "}
+                  ۸ سال تجربه تخصصی و نوآوری؛{" "}
                   <span className="text-[#4F0001] dark:text-[#D9757A]">
                     در خدمت تمایز و رشد برند شما
                   </span>

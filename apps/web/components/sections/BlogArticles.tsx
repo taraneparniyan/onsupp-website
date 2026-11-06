@@ -177,10 +177,8 @@ export default function BlogArticles() {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
-  const [articles, setArticles] = useState<Article[]>(() =>
-    IS_DEV ? DEV_PREVIEW_ARTICLES : []
-  );
-  const [loading, setLoading] = useState(!IS_DEV);
+  const [articles, setArticles] = useState<Article[]>(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
+  const [loading, setLoading] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
@@ -190,16 +188,12 @@ export default function BlogArticles() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setArticles(data.slice(0, 3));
-        } else if (IS_DEV) {
-          setArticles(DEV_PREVIEW_ARTICLES);
         } else {
-          setArticles([]);
+          setArticles(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
         }
       })
       .catch(() => {
-        if (IS_DEV) {
-          setArticles(DEV_PREVIEW_ARTICLES);
-        }
+        setArticles(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -251,19 +245,20 @@ export default function BlogArticles() {
 
                   <p className="mt-3 text-sm sm:text-base text-foreground/65 leading-relaxed max-w-2xl">
                     {isRtl
-                      ? "تازه‌ترین مقالات تخصصی، راهنماهای جامع بالینی، طراحی وب و استراتژی‌های رشد برند با نگارش کارشناسان ارشد آن‌ساپ"
-                      : "Explore authoritative articles, comprehensive clinical guides, web engineering, and brand growth strategies."}
+                      ? "تازه‌ترین مقالات تخصصی در حوزه سئو تکنیکال، طراحی وب‌سایت سازمانی و ویدیو مارکتینگ با نگارش کارشناسان ارشد آن‌ساپ"
+                      : "Explore authoritative articles, web engineering architecture, technical SEO, and brand media strategies."}
                   </p>
                 </div>
 
+                {/* Desktop "View All Articles" button (hidden on mobile, shown on lg+) */}
                 <motion.div
                   whileHover={prefersReducedMotion ? undefined : buttonHover}
                   whileTap={prefersReducedMotion ? undefined : tapFeedback}
-                  className="w-full sm:w-auto shrink-0"
+                  className="hidden lg:block shrink-0"
                 >
                   <Link
                     href="/blog"
-                    className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 transition-all duration-300 group cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 transition-all duration-300 group cursor-pointer"
                   >
                     <span>
                       {isRtl ? "مشاهده همه مقالات" : "View All Articles"}
@@ -450,6 +445,35 @@ export default function BlogArticles() {
                       </div>
                     </div>
                   )}
+
+                  {/* ── Mobile-Only "View All Articles" button placed below articles & slider ── */}
+                  <div className="mt-8 pt-2 flex justify-center w-full">
+                    <Link
+                      href="/blog"
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 active:scale-95 transition-all duration-300 group cursor-pointer text-center"
+                    >
+                      <span>
+                        {isRtl ? "مشاهده همه مقالات" : "View All Articles"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isRtl
+                            ? "rotate-180 group-hover:-translate-x-1"
+                            : "group-hover:translate-x-1"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.4"
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
               </>
             )}

@@ -59,14 +59,14 @@ const ROLE_LABELS: Record<RoleType, string> = {
 };
 
 const ROLE_BADGE_CLASSES: Record<RoleType, string> = {
-  SUPER_ADMIN: "bg-purple-950/70 text-purple-300 border-purple-500/40",
-  ADMIN: "bg-blue-950/70 text-blue-300 border-blue-500/40",
-  HR: "bg-amber-950/70 text-amber-300 border-amber-500/40",
-  CONTENT_SEO_MANAGER: "bg-emerald-950/70 text-emerald-300 border-emerald-500/40",
-  SUPPORT: "bg-cyan-950/70 text-cyan-300 border-cyan-500/40",
-  PROJECT_MANAGER: "bg-indigo-950/70 text-indigo-300 border-indigo-500/40",
-  EMPLOYEE: "bg-teal-950/70 text-teal-300 border-teal-500/40",
-  USER: "bg-gray-800 text-gray-300 border-gray-600",
+  SUPER_ADMIN: "bg-primary/15 text-primary border-primary/30",
+  ADMIN: "bg-primary/10 text-primary border-primary/25",
+  HR: "bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30",
+  CONTENT_SEO_MANAGER: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30",
+  SUPPORT: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/30",
+  PROJECT_MANAGER: "bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30",
+  EMPLOYEE: "bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30",
+  USER: "bg-raised text-muted border-border",
 };
 
 export default function AdminUsersPage() {
@@ -514,7 +514,7 @@ export default function AdminUsersPage() {
             <button
               type="submit"
               disabled={formSubmitting}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-[#070e0d] font-black text-xs shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-3 rounded-xl bg-lime text-ink font-black text-xs shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {formSubmitting ? (
                 <span>در حال ثبت...</span>
@@ -572,7 +572,7 @@ export default function AdminUsersPage() {
 
           <button
             onClick={() => handleOpenForm()}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-[#070e0d] font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            className="px-5 py-3 rounded-xl bg-lime text-ink font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
@@ -664,7 +664,7 @@ export default function AdminUsersPage() {
                       {/* Name & Contact */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-primary-hover text-[#070e0d] flex items-center justify-center text-xs font-black shadow-inner">
+                          <div className="w-9 h-9 rounded-xl bg-lime text-ink flex items-center justify-center text-xs font-black shadow-inner">
                             {u.name ? u.name.charAt(0) : "ک"}
                           </div>
                           <div>
@@ -751,7 +751,7 @@ export default function AdminUsersPage() {
                             className={`px-3 py-1.5 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold transition-all ${
                               hrRestricted
                                 ? "opacity-40 cursor-not-allowed"
-                                : "hover:bg-primary hover:text-[#070e0d]"
+                                : "hover:bg-lime hover:text-ink"
                             }`}
                           >
                             ویرایش

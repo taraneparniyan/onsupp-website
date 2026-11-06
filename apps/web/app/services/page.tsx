@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import ServicesPageView from "@/components/services/ServicesPageView";
+import { getServices } from "@/lib/publicApi";
 
 export const metadata: Metadata = {
   title: "خدمات تخصصی و دپارتمان‌های آن‌ساپ | OnSupp Core Services",
@@ -27,7 +28,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const dbServices = await getServices();
+
   return (
     <Suspense
       fallback={
@@ -36,7 +39,7 @@ export default function ServicesPage() {
         </div>
       }
     >
-      <ServicesPageView />
+      <ServicesPageView initialServices={dbServices} />
     </Suspense>
   );
 }
