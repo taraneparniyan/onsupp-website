@@ -96,6 +96,13 @@ app.use(
         return callback(null, true);
       }
 
+      // Allow local LAN IPs (192.168.x.x, 10.x.x.x, etc.) in development mode for cross-device testing
+      if (!isTestRunner && process.env.NODE_ENV !== 'production') {
+        if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)) {
+          return callback(null, true);
+        }
+      }
+
       // Disallow untrusted origins by omitting Access-Control-Allow-Origin header
       return callback(null, false);
     },

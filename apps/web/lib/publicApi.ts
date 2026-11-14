@@ -319,3 +319,27 @@ export async function getTestimonials(): Promise<TestimonialData[]> {
 export async function getContactContent(): Promise<ContactContentData | null> {
   return safeFetch<ContactContentData | null>("/api/v1/contact/content", ["contact", "homepage"], null);
 }
+
+export interface HeroSlideApiItem {
+  id?: number | string;
+  title?: string;
+  titleEn?: string;
+  subtitle?: string;
+  subtitleEn?: string;
+  ctaText?: string;
+  ctaTextEn?: string;
+  ctaLink?: string;
+  ctaText2?: string;
+  ctaText2En?: string;
+  ctaLink2?: string;
+  cta2Enabled?: boolean;
+  imageUrl?: string;
+  imageAlt?: string;
+  mobileImageUrl?: string;
+  position?: number;
+  isActive?: boolean;
+}
+
+export async function getHeroSlides(): Promise<HeroSlideApiItem[]> {
+  return safeFetch<HeroSlideApiItem[]>("/api/v1/hero", ["hero", "homepage"], []);
+}

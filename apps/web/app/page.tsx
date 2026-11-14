@@ -9,7 +9,7 @@ import ContactCTA from "@/components/sections/ContactCTA";
 import Testimonials from "@/components/sections/Testimonials";
 import BlogArticles from "@/components/sections/BlogArticles";
 import Footer from "@/components/layout/Footer";
-import { getHomepageSections, getServices, getSiteSettings } from "@/lib/publicApi";
+import { getHomepageSections, getServices, getSiteSettings, getHeroSlides } from "@/lib/publicApi";
 
 export const dynamic = "force-dynamic";
 
@@ -34,14 +34,15 @@ const SECTION_KEY_ALIASES: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  const [sections, settings, services] = await Promise.all([
+  const [sections, settings, services, heroSlidesRaw] = await Promise.all([
     getHomepageSections(),
     getSiteSettings(),
     getServices(),
+    getHeroSlides(),
   ]);
 
   const sectionComponents: Record<string, React.ReactNode> = {
-    hero: <Hero key="hero" />,
+    hero: <Hero key="hero" initialSlides={heroSlidesRaw} />,
     "clients-partners": <ClientsPartners key="clients-partners" />,
     "client-marquee": <ClientLogoMarquee key="client-marquee" />,
     services: <Services key="services" initialServices={services} />,
