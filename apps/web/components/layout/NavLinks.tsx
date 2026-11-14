@@ -16,6 +16,7 @@ const translations = {
     { name: "پلن‌ها و تعرفه‌ها", href: "/pricing" },
     { name: "مقالات", href: "/blog" },
     { name: "درباره ما", href: "/about" },
+    { name: "تماس با ما", href: "/contact" },
   ],
   en: [
     { name: "Home", href: "/" },
@@ -24,6 +25,7 @@ const translations = {
     { name: "Pricing", href: "/pricing" },
     { name: "Articles", href: "/blog" },
     { name: "About Us", href: "/about" },
+    { name: "Contact Us", href: "/contact" },
   ],
 };
 
@@ -433,7 +435,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick, isOver
                     className="absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50 w-[780px] xl:w-[840px] pointer-events-auto"
                     dir={isRtl ? "rtl" : "ltr"}
                   >
-                    <div className="relative rounded-3xl bg-panel/95 dark:bg-[#151d18]/95 backdrop-blur-2xl border border-white/25 dark:border-white/15 shadow-[0_24px_64px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] p-5 overflow-hidden">
+                    <div className="relative rounded-panel bg-panel/95 dark:bg-[#151d18]/95 backdrop-blur-2xl border border-white/25 dark:border-white/15 shadow-[0_24px_64px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] p-5 overflow-hidden">
                       {/* Top Accent Line */}
                       <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-mint/60 to-transparent" />
 
@@ -504,7 +506,7 @@ export default function NavLinks({ className, linkClassName, onLinkClick, isOver
                         <Link
                           href="/#contact"
                           onClick={(e) => handleLinkClick("/#contact", true, false, e)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background font-semibold hover:opacity-90 transition-all text-xs shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-control bg-foreground text-background font-semibold hover:opacity-90 transition-all text-xs shadow-sm"
                         >
                           <span>{isRtl ? "درخواست مشاوره اختصاصی" : "Request Consultation"}</span>
                         </Link>

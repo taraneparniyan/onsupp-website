@@ -316,7 +316,7 @@ export default function Testimonials({
   return (
     <section
       id="testimonials"
-      className="w-full relative overflow-hidden bg-[#1F1F1E] text-white border-y border-white/10 transition-colors duration-500"
+      className="section-viewport w-full relative overflow-hidden bg-[#1F1F1E] text-white border-y border-white/10 transition-colors duration-500"
       style={{ backgroundColor: "#1F1F1E" }}
     >
       <div dir={isRtl ? "rtl" : "ltr"} className="w-full">
@@ -345,7 +345,7 @@ export default function Testimonials({
                     )}
                   </div>
 
-                  <h2 className="mt-4 sm:mt-5 font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.2] tracking-tight text-white">
+                  <h2 className="mt-4 sm:mt-5 font-display text-3xl sm:text-4xl lg:text-5xl lg:whitespace-nowrap font-bold leading-[1.2] tracking-tight text-white">
                     {isRtl ? (
                       <>
                         دیدگاه <span className="text-[#8BB3A4]">مشتریان ما</span>

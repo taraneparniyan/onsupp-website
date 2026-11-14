@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import type { AboutPageContent } from "@/lib/about";
 import { EASE_PREMIUM } from "@/lib/motion";
@@ -68,8 +69,25 @@ export default function AboutHero({ hero, isRtl }: Props) {
           style={{ y: textY }}
         >
           <div className="mx-auto w-full max-w-[1400px] px-6 sm:px-10 lg:px-16 pb-10 sm:pb-14 lg:pb-20">
+            {/* ── Breadcrumb Navigation ── */}
+            <motion.nav
+              aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: EASE_PREMIUM, delay: 0.5 }}
+              className="flex items-center gap-2 text-xs font-mono text-foreground/60 mb-4 sm:mb-5 select-none"
+            >
+              <Link href="/" className="hover:text-foreground transition-colors">
+                {isRtl ? "خانه" : "Home"}
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-foreground/90 font-medium">
+                {isRtl ? "درباره ما" : "About Us"}
+              </span>
+            </motion.nav>
+
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
-              <div className="max-w-4xl">
+              <div className="max-w-4xl lg:max-w-none">
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -86,22 +104,20 @@ export default function AboutHero({ hero, isRtl }: Props) {
                   delay={0.8}
                   stagger={0.07}
                   text={isRtl ? hero.titleFa : hero.titleEn}
-                  className="mt-4 sm:mt-5 font-display font-bold text-foreground text-[2.1rem] leading-[1.25] sm:text-5xl lg:text-6xl xl:text-7xl lg:leading-[1.15] tracking-tight"
+                  className="mt-4 sm:mt-5 font-display font-bold text-foreground text-[2.1rem] leading-[1.25] sm:text-5xl lg:text-[46px] xl:text-[54px] lg:whitespace-nowrap lg:leading-[1.15] tracking-tight"
                 />
               </div>
 
-              {(isRtl ? hero.captionFa : hero.captionEn) ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1, ease: EASE_PREMIUM, delay: 1.3 }}
-                  className="flex items-center gap-4 text-foreground/60 shrink-0"
-                >
-                  <span className={`${gendyClass} text-sm tracking-[0.2em]`}>(OS)</span>
-                  <span aria-hidden="true" className="h-px w-12 bg-foreground/25" />
-                  <span className="text-sm">{isRtl ? hero.captionFa : hero.captionEn}</span>
-                </motion.div>
-              ) : null}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, ease: EASE_PREMIUM, delay: 1.3 }}
+                className="flex items-center gap-4 text-foreground/60 shrink-0"
+              >
+                <span className={`${gendyClass} text-sm tracking-[0.2em]`}>(OS)</span>
+                <span aria-hidden="true" className="h-px w-12 bg-foreground/25" />
+                <span className="text-sm">{isRtl ? hero.captionFa : hero.captionEn}</span>
+              </motion.div>
             </div>
           </div>
         </motion.div>

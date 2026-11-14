@@ -8,7 +8,6 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   SHOWCASE_PROJECTS,
   getAllCaseStudies,
-  normalizeCaseStudy,
   type CaseStudyItem,
 } from "@/lib/case-studies";
 import { scrollToSection } from "@/lib/scroll";
@@ -61,22 +60,59 @@ export default function CaseStudiesArchivePage() {
             const match = SHOWCASE_PROJECTS.find(
               (p) => p.slug === item.slug || p.titleFa === item.titleFa || p.id === item.slug
             );
-            const normalized = normalizeCaseStudy(item, idx);
             if (match) {
               return {
                 ...match,
-                ...normalized,
-                servicesFa: (Array.isArray(item.servicesFa) && item.servicesFa.length > 0) ? item.servicesFa : match.servicesFa,
-                servicesEn: (Array.isArray(item.servicesEn) && item.servicesEn.length > 0) ? item.servicesEn : match.servicesEn,
-                metricsFa: (Array.isArray(item.metricsFa) && item.metricsFa.length > 0) ? item.metricsFa : match.metricsFa,
-                metricsEn: (Array.isArray(item.metricsEn) && item.metricsEn.length > 0) ? item.metricsEn : match.metricsEn,
-                colorGradient: item.colorGradient || match.colorGradient,
-                accentColor: item.accentColor || match.accentColor,
-                glowColor: item.glowColor || match.glowColor,
-                previewType: item.previewType || match.previewType,
+                titleFa: item.titleFa || match.titleFa,
+                titleEn: item.titleEn || match.titleEn,
+                client: item.client || match.client,
+                clientEn: item.clientEn || match.clientEn,
+                taglineFa: item.taglineFa || match.taglineFa,
+                taglineEn: item.taglineEn || match.taglineEn,
+                categoryFa: item.categoryFa || match.categoryFa,
+                categoryEn: item.categoryEn || match.categoryEn,
+                image: item.imageUrl || match.image,
+                secondaryImage: item.secondaryImage || match.secondaryImage,
+                liveUrl: item.liveUrl || match.liveUrl,
+                position: item.position ?? match.position ?? idx,
+                featured: item.featured ?? match.featured,
+                year: item.year || match.year,
               };
             }
-            return normalized;
+
+            const previewType: "mobile" | "web" | "platform" =
+              item.projectType === "app"
+                ? "mobile"
+                : item.projectType === "instagram"
+                ? "platform"
+                : "web";
+
+            return {
+              id: item.slug || `project-${item.id}`,
+              slug: item.slug || `project-${item.id}`,
+              client: item.client || item.titleFa || "مشتری سازمانی",
+              clientEn: item.clientEn || item.titleEn || "Enterprise Client",
+              titleFa: item.titleFa || "",
+              titleEn: item.titleEn || "",
+              taglineFa: item.taglineFa || item.descriptionFa || "",
+              taglineEn: item.taglineEn || item.descriptionEn || "",
+              categoryFa: item.categoryFa || "دیجیتال",
+              categoryEn: item.categoryEn || "Digital",
+              servicesFa: [item.categoryFa || "توسعه محصول"],
+              servicesEn: [item.categoryEn || "Product Development"],
+              metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
+              metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
+              colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
+              accentColor: "#38bdf8",
+              glowColor: "rgba(56, 189, 248, 0.15)",
+              previewType,
+              image: item.imageUrl || "/case_study_1.jpg",
+              secondaryImage: item.secondaryImage || undefined,
+              liveUrl: item.liveUrl || "#",
+              featured: item.featured !== false,
+              position: item.position ?? idx,
+              year: item.year || "۲۰۲۵",
+            };
           });
 
           setProjects(getAllCaseStudies(merged));
@@ -132,7 +168,51 @@ export default function CaseStudiesArchivePage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans" dir={isRtl ? "rtl" : "ltr"}>
       <Header />
 
-      <main className="flex-1 pt-24 sm:pt-32 pb-20 sm:pb-24">
+      <main className="flex-1 pb-20 sm:pb-28">
+        {/* ── Hero Section ── */}
+        <section className="relative w-full pt-28 sm:pt-36 pb-12 sm:pb-16 overflow-hidden border-b border-black/[0.06] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111416] mb-10 transition-colors">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Breadcrumb Navigation */}
+            <nav
+              aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+              className="flex items-center gap-2 text-xs font-mono text-foreground/50 mb-6 select-none"
+            >
+              <Link href="/" className="hover:text-foreground transition-colors">
+                {isRtl ? "خانه" : "Home"}
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-foreground/90 font-medium">
+                {isRtl ? "مطالعات موردی و پروژه‌ها" : "Case Studies"}
+              </span>
+            </nav>
+
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase">
+                <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+                <span>{isRtl ? "آرشیو مطالعات موردی و نتایج • CASE STUDIES" : "ARCHIVE & VERIFIED OUTCOMES"}</span>
+              </div>
+
+              <h1
+                className={`text-2xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight leading-[1.25] ${
+                  isRtl
+                    ? "font-[family-name:var(--font-vazirmatn)]"
+                    : "font-[family-name:var(--font-gendy)]"
+                }`}
+              >
+                {isRtl
+                  ? "بررسی مستند چالش‌ها، راهکارها و نتایج عددی پروژه‌ها"
+                  : "In-Depth Architectural Case Studies & Measurable Impact"}
+              </h1>
+
+              <p className="text-sm sm:text-base md:text-lg text-foreground/75 leading-relaxed font-normal">
+                {isRtl
+                  ? "مستندات واقعی از فرآیند حل مسئله، مهندسی زیرساخت و رشد پایدار برندهای پیشرو در همکاری با تیم متخصصان آن‌ساپ."
+                  : "Real-world engineering documentation, strategic problem-solving, and sustainable growth metrics achieved in partnership with OnSupp."}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ── Filters & Search Bar ────────────────────────────────────── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-panel/70 border border-foreground/10 backdrop-blur-md">

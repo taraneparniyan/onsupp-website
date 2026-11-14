@@ -27,14 +27,14 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_BADGE_CLASSES: Record<string, string> = {
-  SUPER_ADMIN: "bg-purple-950/70 text-purple-300 border-purple-500/40",
-  ADMIN: "bg-blue-950/70 text-blue-300 border-blue-500/40",
-  HR: "bg-amber-950/70 text-amber-300 border-amber-500/40",
-  CONTENT_SEO_MANAGER: "bg-emerald-950/70 text-emerald-300 border-emerald-500/40",
-  SUPPORT: "bg-cyan-950/70 text-cyan-300 border-cyan-500/40",
-  PROJECT_MANAGER: "bg-indigo-950/70 text-indigo-300 border-indigo-500/40",
-  EMPLOYEE: "bg-teal-950/70 text-teal-300 border-teal-500/40",
-  USER: "bg-gray-800 text-gray-300 border-gray-600",
+  SUPER_ADMIN: "bg-primary/15 text-mint border-primary/35",
+  ADMIN: "bg-primary/10 text-mint border-primary/25",
+  HR: "bg-burgundy/10 text-burgundy border-burgundy/25",
+  CONTENT_SEO_MANAGER: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+  SUPPORT: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  PROJECT_MANAGER: "bg-primary/10 text-mint border-primary/25",
+  EMPLOYEE: "bg-raised text-muted border-border",
+  USER: "bg-raised text-muted border-border",
 };
 
 export default function ProfilePage() {
@@ -172,7 +172,7 @@ export default function ProfilePage() {
       {/* Header Banner */}
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-panel via-panel to-background border border-foreground/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-primary-hover text-[#070e0d] flex items-center justify-center text-2xl font-black shadow-lg shadow-[#3f6b59]/20">
+          <div className="w-16 h-16 rounded-2xl bg-lime text-ink flex items-center justify-center text-2xl font-black shadow-md border border-primary/30">
             {profile.name ? profile.name.charAt(0) : "پ"}
           </div>
           <div>
@@ -333,7 +333,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-[#070e0d] font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-3.5 rounded-xl bg-lime text-ink font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {saving ? (
               <span>در حال ذخیره...</span>

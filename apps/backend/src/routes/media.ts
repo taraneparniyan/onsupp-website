@@ -271,6 +271,33 @@ router.get('/', async (_req, res) => {
   }
 });
 
+// PUT /api/v1/media/:id (Super Admin, Admin, Content Manager - update alt text)
+router.put('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'شناسه نامعتبر' });
+    }
+
+    const existing = await prisma.media.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'رسانه یافت نشد' });
+    }
+
+    const alt = typeof req.body.alt === 'string' ? req.body.alt.trim() : '';
+
+    const updated = await prisma.media.update({
+      where: { id },
+      data: { alt },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[media] update alt error:', error);
+    res.status(500).json({ error: 'بروزرسانی متن جایگزین ناموفق بود' });
+  }
+});
+
 // DELETE /api/v1/media/:id (Super Admin, Admin, Content Manager)
 router.delete('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {

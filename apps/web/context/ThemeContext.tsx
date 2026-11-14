@@ -52,7 +52,8 @@ function applyThemeToDOM(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Start with default dark or whatever data-theme is already on <html> from the blocking inline script
+  // Deterministic initial state so SSR HTML and the first client hydration pass match.
+  // Stored/system theme preference is resolved immediately post-hydration in useEffect.
   const [theme, setThemeState] = useState<Theme>("dark");
   const [preference, setPreferenceState] = useState<ThemePreference>("system");
   const [isReady, setIsReady] = useState(false);

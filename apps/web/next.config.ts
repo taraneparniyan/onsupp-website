@@ -8,11 +8,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },
@@ -21,6 +18,10 @@ const nextConfig: NextConfig = {
       {
         source: "/api/v1/:path*",
         destination: `${BACKEND_URL}/api/v1/:path*`,
+      },
+      {
+        source: "/api/:path*",
+        destination: `${BACKEND_URL}/api/:path*`,
       },
       {
         source: "/uploads/:path*",

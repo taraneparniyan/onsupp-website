@@ -7,7 +7,7 @@ import { useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { scrollToSection } from "@/lib/scroll";
-import { BACKEND_URL } from "@/config/api";
+import type { ServiceData } from "@/lib/publicApi";
 
 const CLONE_COUNT = 7;
 const TRANSITION_DURATION_MS = 550;
@@ -31,42 +31,9 @@ export interface ServiceItem {
   objectPosition?: string;
 }
 
-const SERVICES_DATA: ServiceItem[] = [
+export const SERVICES_DATA: ServiceItem[] = [
   {
     id: 1,
-    slug: "social-identity",
-    href: "/services?category=social-identity",
-    tagFa: "فضای مجازی و هویت",
-    tagEn: "Social & Identity",
-    titleFa: "مدیریت و هویت‌سازی فضای مجازی",
-    titleEn: "Social Media & Brand Identity",
-    image: "/images/services/social-identity.webp",
-    objectPosition: "center center",
-  },
-  {
-    id: 2,
-    slug: "studio-production",
-    href: "/services?category=studio-production",
-    tagFa: "استودیو و تیزر",
-    tagEn: "Studio & Film",
-    titleFa: "تصویربرداری و استودیو",
-    titleEn: "Studio Production & Videography",
-    image: "/images/services/studio-production.webp",
-    objectPosition: "center center",
-  },
-  {
-    id: 3,
-    slug: "animation-motion",
-    href: "/services?category=animation-motion",
-    tagFa: "انیمیشن و VFX",
-    tagEn: "Dynamic Motion",
-    titleFa: "انیمیشن و موشن گرافیک",
-    titleEn: "Animation & Motion Graphics",
-    image: "/images/services/animation-motion.webp",
-    objectPosition: "center center",
-  },
-  {
-    id: 4,
     slug: "web-development",
     href: "/services?category=web-development",
     tagFa: "تکنولوژی و وب",
@@ -77,7 +44,7 @@ const SERVICES_DATA: ServiceItem[] = [
     objectPosition: "center center",
   },
   {
-    id: 5,
+    id: 2,
     slug: "technical-seo",
     href: "/services?category=technical-seo",
     tagFa: "سئو و رشد ارگانیک",
@@ -85,6 +52,39 @@ const SERVICES_DATA: ServiceItem[] = [
     titleFa: "سئو تکنیکال و رشد ارگانیک",
     titleEn: "Technical SEO & Organic Growth",
     image: "/images/services/technical-seo.webp",
+    objectPosition: "center center",
+  },
+  {
+    id: 3,
+    slug: "social-identity",
+    href: "/services?category=social-identity",
+    tagFa: "فضای مجازی و هویت",
+    tagEn: "Social & Identity",
+    titleFa: "مدیریت اینستاگرام و هویت فضای مجازی",
+    titleEn: "Instagram Marketing & Brand Identity",
+    image: "/images/services/social-identity.webp",
+    objectPosition: "center center",
+  },
+  {
+    id: 4,
+    slug: "studio-production",
+    href: "/services?category=studio-production",
+    tagFa: "استودیو و تیزر",
+    tagEn: "Studio & Film",
+    titleFa: "فیلم‌برداری و تولیدات استودیو",
+    titleEn: "Studio Production & Videography",
+    image: "/images/services/studio-production.webp",
+    objectPosition: "center center",
+  },
+  {
+    id: 5,
+    slug: "animation-motion",
+    href: "/services?category=animation-motion",
+    tagFa: "انیمیشن و VFX",
+    tagEn: "Dynamic Motion",
+    titleFa: "انیمیشن و موشن گرافیک",
+    titleEn: "Animation & Motion Graphics",
+    image: "/images/services/animation-motion.webp",
     objectPosition: "center center",
   },
   {
@@ -135,7 +135,7 @@ function RectangularServiceCard({
             e.preventDefault();
           }
         }}
-        className="relative flex flex-col justify-end h-[255px] sm:h-[270px] lg:h-[285px] xl:h-[295px] rounded-2xl sm:rounded-[22px] overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_45px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1.5 cursor-pointer block"
+        className="relative flex flex-col justify-end h-[270px] sm:h-[300px] lg:h-[360px] xl:h-[390px] rounded-card sm:rounded-card-lg overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_16px_45px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1.5 cursor-pointer block"
       >
         {/* Full-bleed background 3D image (80% completely clear and unobstructed) */}
         <Image
@@ -151,15 +151,15 @@ function RectangularServiceCard({
         {/* ── Gray Gradient covering approximately 20% of the rectangle ── */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[28%] sm:h-[24%] lg:h-[21%] bg-gradient-to-t from-[#1A1D20]/95 via-[#2A2E32]/70 via-50% to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] sm:h-[26%] lg:h-[23%] bg-gradient-to-t from-[#111315]/95 via-[#1A1D20]/80 via-50% to-transparent group-hover:from-black group-hover:via-[#111315]/92 transition-all duration-300"
         />
 
-        {/* Card Content within the 20% gray gradient zone */}
+        {/* Card Content within the gradient zone */}
         <div className="relative z-10 p-4 sm:p-5 flex items-end justify-between gap-3 w-full">
           <div className="min-w-0 flex-1">
             {/* Category Tag */}
             <span
-              className={`block text-[10px] sm:text-[11px] font-semibold text-white/75 uppercase mb-1 tracking-wider ${
+              className={`block text-[10px] sm:text-[11px] font-semibold text-white/75 group-hover:text-white/95 uppercase mb-1 tracking-wider transition-colors duration-200 ${
                 isRtl
                   ? "font-[family-name:var(--font-vazirmatn)]"
                   : "font-[family-name:var(--font-gendy)]"
@@ -170,7 +170,7 @@ function RectangularServiceCard({
 
             {/* Service Title */}
             <h3
-              className={`text-base sm:text-lg lg:text-[19px] font-bold text-white leading-snug tracking-tight drop-shadow-md group-hover:text-mint transition-colors line-clamp-2 ${
+              className={`text-base sm:text-lg lg:text-[19px] font-bold text-white leading-snug tracking-tight drop-shadow-md group-hover:text-[#8AB3A0] transition-colors duration-200 line-clamp-2 ${
                 isRtl
                   ? "font-[family-name:var(--font-vazirmatn)]"
                   : "font-[family-name:var(--font-gendy)]"
@@ -181,7 +181,7 @@ function RectangularServiceCard({
           </div>
 
           {/* Minimalist Circular Arrow Button (Bottom-left in RTL) */}
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white shadow-md transition-all duration-300 group-hover:bg-white group-hover:text-black group-hover:scale-105">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-control border border-white/20 bg-black/40 backdrop-blur-md text-white shadow-md transition-all duration-300 group-hover:bg-[#8AB3A0] group-hover:text-[#17221E] group-hover:border-[#8AB3A0] group-hover:scale-105">
             <svg
               className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${
                 isRtl
@@ -212,49 +212,53 @@ function RectangularServiceCard({
 
 // ─── Main Services Component ─────────────────────────────────────────────────
 
-export default function Services({ initialServices }: { initialServices?: any[] }) {
+export interface ServicesProps {
+  initialServices?: ServiceData[] | null;
+}
+
+export default function Services({ initialServices }: ServicesProps = {}) {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
-  const [servicesList, setServicesList] = useState<ServiceItem[]>(() => {
-    if (Array.isArray(initialServices) && initialServices.length > 0) {
-      return initialServices.map((s: any, idx: number) => ({
-        id: s.id ?? idx + 1,
-        slug: s.slug || `service-${s.id}`,
-        href: `/services?category=${s.slug || s.id}`,
-        tagFa: s.tagFa || s.title || "خدمات",
-        tagEn: s.tagEn || s.titleEn || "Services",
-        titleFa: s.title || "",
-        titleEn: s.titleEn || "",
-        image: s.imageUrl || "/images/services/web-development.webp",
-        objectPosition: "center center",
-      }));
-    }
-    return SERVICES_DATA;
-  });
+  // Merge CMS records with static presentation items by matching on slug
+  const servicesList: ServiceItem[] = useMemo(() => {
+    const published = Array.isArray(initialServices)
+      ? initialServices.filter((s) => s.isPublished !== false && s.status !== "DRAFT")
+      : [];
 
-  useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/services`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: ServiceItem[] = data.map((s: any, idx: number) => ({
-            id: s.id ?? idx + 1,
-            slug: s.slug || `service-${s.id}`,
-            href: `/services?category=${s.slug || s.id}`,
-            tagFa: s.tagFa || s.title || "خدمات",
-            tagEn: s.tagEn || s.titleEn || "Services",
-            titleFa: s.title || "",
-            titleEn: s.titleEn || "",
-            image: s.imageUrl || "/images/services/web-development.webp",
-            objectPosition: "center center",
-          }));
-          setServicesList(mapped);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (published.length === 0) {
+      return SERVICES_DATA;
+    }
+
+    return SERVICES_DATA.map((fallback) => {
+      const match = published.find(
+        (s) =>
+          (s.slug && s.slug.trim().toLowerCase() === fallback.slug.toLowerCase()) ||
+          (s.slug && s.slug.trim().toLowerCase() === fallback.slug.replace(/-/g, "_").toLowerCase())
+      );
+
+      if (!match) {
+        return fallback;
+      }
+
+      const validImage =
+        (typeof match.coverImage === "string" && match.coverImage.trim() !== "")
+          ? match.coverImage
+          : (typeof match.imageUrl === "string" && match.imageUrl.trim() !== "")
+          ? match.imageUrl
+          : fallback.image;
+
+      return {
+        ...fallback,
+        titleFa: (match.title && match.title.trim() !== "") ? match.title : fallback.titleFa,
+        titleEn: (match.titleEn && match.titleEn.trim() !== "") ? match.titleEn : fallback.titleEn,
+        tagFa: (match.tagFa && match.tagFa.trim() !== "") ? match.tagFa : fallback.tagFa,
+        tagEn: (match.tagEn && match.tagEn.trim() !== "") ? match.tagEn : fallback.tagEn,
+        image: validImage,
+      };
+    });
+  }, [initialServices]);
 
   const totalServices = servicesList.length;
 
@@ -267,7 +271,7 @@ export default function Services({ initialServices }: { initialServices?: any[] 
       ...servicesList.map((s, i) => ({ ...s, trackKey: `real-${i}-${s.id}` })),
       ...clonesAfter.map((s, i) => ({ ...s, trackKey: `clone-end-${i}-${s.id}` })),
     ];
-  }, []);
+  }, [servicesList]);
 
   const [trackIndex, setTrackIndex] = useState(CLONE_COUNT);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -509,7 +513,7 @@ export default function Services({ initialServices }: { initialServices?: any[] 
     <section
       id="services"
       aria-label={isRtl ? "خدمات تخصصی آن‌ساپ" : "OnSupp Core Capabilities"}
-      className="relative w-full py-20 sm:py-24 lg:py-28 overflow-hidden bg-[#160B0E] dark:bg-[#12080B] text-white border-y border-white/[0.08] transition-colors duration-500"
+      className="section-viewport relative w-full py-20 sm:py-24 lg:py-28 overflow-hidden bg-[#160B0E] dark:bg-[#12080B] text-white border-y border-white/[0.08] transition-colors duration-500"
       dir={isRtl ? "rtl" : "ltr"}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -527,7 +531,7 @@ export default function Services({ initialServices }: { initialServices?: any[] 
 
               {/* Headline (Clean without any star character) */}
               <h2
-                className={`text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-white ${
+                className={`text-2xl sm:text-3xl md:text-4xl lg:text-[42px] lg:whitespace-nowrap font-bold tracking-tight text-white ${
                   isRtl
                     ? "font-[family-name:var(--font-vazirmatn)]"
                     : "font-[family-name:var(--font-gendy)]"
@@ -567,7 +571,7 @@ export default function Services({ initialServices }: { initialServices?: any[] 
                   type="button"
                   onClick={prevSlide}
                   aria-label={isRtl ? "خدمت قبلی" : "Previous service"}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-control border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
                 >
                   <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -578,7 +582,7 @@ export default function Services({ initialServices }: { initialServices?: any[] 
                   type="button"
                   onClick={nextSlide}
                   aria-label={isRtl ? "خدمت بعدی" : "Next service"}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-control border border-white/20 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 transition-all active:scale-95 cursor-pointer"
                 >
                   <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

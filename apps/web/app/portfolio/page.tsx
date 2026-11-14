@@ -1,19 +1,28 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { fetchCaseStudies } from "@/lib/case-studies";
+import { getDynamicCaseStudies } from "@/lib/case-studies";
 import PortfolioPageView from "@/components/portfolio/PortfolioPageView";
-import { getPageSeo } from "@/lib/seo";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return getPageSeo("/portfolio", {
-    title: "نمونه‌کارها و پروژه‌های شاخص | OnSupp Portfolio",
+export const metadata: Metadata = {
+  title: "نمونه‌کارها و پروژه‌های شاخص | OnSupp Portfolio",
+  description:
+    "ویترین پروژه‌های منتخب، طراحی وب‌سایت‌های سازمانی، هویت بصری برند، مهندسی نرم‌افزار مقیاس‌پذیر و تولیدات سینمایی استودیو آن‌ساپ برای کسب‌وکارهای پیشرو.",
+  openGraph: {
+    title: "نمونه‌کارها و پروژه‌های شاخص آن‌ساپ | OnSupp Portfolio Showcase",
     description:
-      "ویترین پروژه‌های منتخب، طراحی وب‌سایت‌های سازمانی، هویت بصری برند، مهندسی نرم‌افزار مقیاس‌پذیر و تولیدات سینمایی استودیو آن‌ساپ برای کسب‌وکارهای پیشرو.",
-  });
-}
+      "روایت بصری پروژه‌ها، مهندسی ایده‌ها تا خلق تمایز پایدار با طراحی سیستم‌محور و کدنویسی بدون مصالحه.",
+    url: "https://onsupp.ir/portfolio",
+    siteName: "OnSupp Digital Agency",
+    locale: "fa_IR",
+    type: "website",
+  },
+  alternates: {
+    canonical: "/portfolio",
+  },
+};
 
 export default async function PortfolioPage() {
-  const allProjects = await fetchCaseStudies();
+  const allProjects = await getDynamicCaseStudies();
 
   return (
     <Suspense

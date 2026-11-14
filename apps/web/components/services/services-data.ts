@@ -1,9 +1,11 @@
+import type { ServiceData } from "@/lib/publicApi";
+
 export type ServiceCategoryKey =
+  | "web-development"
+  | "technical-seo"
   | "social-identity"
   | "studio-production"
   | "animation-motion"
-  | "web-development"
-  | "technical-seo"
   | "crm-automation"
   | "custom-software";
 
@@ -31,11 +33,11 @@ export interface ServiceRelatedPathway {
 }
 
 export interface ServiceDetailItem {
-  id: ServiceCategoryKey;
+  id: string;
   index: number;
   numStrFa: string;
   numStrEn: string;
-  iconType: "social" | "studio" | "motion" | "web" | "seo" | "crm" | "software";
+  iconType: "web" | "seo" | "social" | "studio" | "motion" | "crm" | "software" | string;
   tagFa: string;
   tagEn: string;
   titleFa: string;
@@ -58,239 +60,18 @@ export interface ServiceDetailItem {
   ctaLabelEn: string;
   badgeAccentFa?: string;
   badgeAccentEn?: string;
+  isFromDatabase?: boolean;
 }
 
 export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
   {
-    id: "social-identity",
+    id: "web-development",
     index: 1,
     numStrFa: "۰۱",
     numStrEn: "01",
-    iconType: "social",
-    tagFa: "فضای مجازی و هویت",
-    tagEn: "Social & Identity",
-    titleFa: "مدیریت و هویت‌سازی فضای مجازی",
-    titleEn: "Social Media & Brand Identity",
-    headlineFa: "خلق هویتی یکپارچه و تمایزی ماندگار در ذهن مخاطب",
-    headlineEn: "Architecting Cohesive Visual Identity & High-Engagement Brand Presence",
-    descriptionFa:
-      "طراحی هویت بصری منسجم، تدوین استراتژی برندینگ و مدیریت تعاملات شبکه‌های اجتماعی برای ارتقای تمایز و ماندگاری برند در ذهن مخاطب.",
-    descriptionEn:
-      "Cohesive visual identity, brand strategy design, and active social media management to maximize brand recall and organic audience engagement.",
-    detailedNarrativeFa:
-      "در بازار پرتراکم امروز، شبکه‌های اجتماعی نخستین و پیوسته‌ترین نقطه تماس مخاطب با برند شما هستند. دپارتمان فضای مجازی آن‌ساپ با تکیه بر تحلیل رفتار مخاطبان هدف و استانداردهای طراحی برندینگ، زبان بصری و روایی اختصاصی کسب‌وکار شما را تدوین می‌کند؛ رویکردی که صرفاً به ارسال پست خلاصه نمی‌شود، بلکه پایه‌گذار اعتماد عمیق و هویت متمایز برند در اکوسیستم دیجیتال است.",
-    detailedNarrativeEn:
-      "In crowded modern markets, digital channels serve as the primary brand touchpoint. OnSupp architects bespoke visual guidelines, audience-centric content cadences, and authoritative tone of voice that convert casual viewers into long-term brand advocates.",
-    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
-    businessValueTitleEn: "Strategic Business Value",
-    businessValueFa:
-      "کاهش محسوس هزینه جذب مشتری (CAC) از طریق رشد تعامل ارگانیک، تثبیت هویت بصری یکدست در تمامی کانال‌ها و افزایش ضریب ماندگاری پیام برند در حافظه مخاطبان تصمیم‌گیرنده.",
-    businessValueEn:
-      "Significantly lowers Customer Acquisition Cost (CAC) through compounded organic engagement while instilling enduring premium authority across all customer touchpoints.",
-    image: "/images/services/social-identity.webp",
-    subservices: [
-      {
-        nameFa: "طراحی برند و مدیریت استراتژی",
-        nameEn: "Brand Design & Strategy Management",
-        descFa:
-          "تدوین دفترچه راهنمای هویت بصری (Brand Book)، تعیین لحن پیام، تدوین پرسونای مخاطب و تقویم محتوایی مبتنی بر اهداف فروش و آگاهی‌بخشی.",
-        descEn:
-          "Comprehensive brand guidelines, tone of voice formulation, persona targeting, and objective-driven editorial calendars.",
-        deliverablesFa: ["کتابچه هویت بصری (Brand Book)", "استراتژی لحن و روایت", "تقویم محتوایی ماهانه"],
-        deliverablesEn: ["Complete Brand Style Guide", "Voice & Messaging Framework", "Monthly Content Calendar"],
-      },
-      {
-        nameFa: "طراحی محتوای گرافیکی و سینمایی پویا",
-        nameEn: "Dynamic Graphic & Cinematic Content",
-        descFa:
-          "تولید اسلایدهای تعاملی، پوسترهای مفهومی، استوری‌های موشن‌دار و گرافیک‌های اختصاصی با بالاترین استانداردهای بصری و کپی‌رایتینگ متقاعدکننده.",
-        descEn:
-          "Interactive multi-slide carousels, conceptual graphic layouts, motion stories, and persuasive copywriting designed for maximum retention.",
-        deliverablesFa: ["پست‌های کاروسل تحلیلی", "طراحی هویت استوری‌ها", "کپی‌رایتینگ تخصصی"],
-        deliverablesEn: ["High-Impact Carousel Decks", "Motion Story Templates", "Strategic Copywriting"],
-      },
-      {
-        nameFa: "مدیریت و کنترل صفحه مجازی",
-        nameEn: "Social Page Management & Monitoring",
-        descFa:
-          "مدیریت تعاملات و دایرکت‌ها، مانیتورینگ الگوریتم‌ها، نظارت بر سلامت اکانت و ارائه گزارش‌های دقیق رشد، نرخ تعامل و تحلیل رفتار مخاطبان.",
-        descEn:
-          "Community moderation, algorithmic optimization, account health auditing, and monthly analytical growth reports.",
-        deliverablesFa: ["مدیریت منظم تعاملات", "آنالیز هفتگی و ماهانه", "بهینه‌سازی الگوریتمی"],
-        deliverablesEn: ["Active Community Moderation", "KPI & Engagement Reporting", "Algorithmic Growth Calibration"],
-      },
-    ],
-    metrics: [
-      { valueFa: "+۱۴۰٪", valueEn: "+140%", labelFa: "میانگین رشد نرخ تعامل ارگانیک", labelEn: "Average Organic Engagement Lift" },
-      { valueFa: "۳.۲x", valueEn: "3.2x", labelFa: "افزایش ماندگاری بصری برند", labelEn: "Brand Recall Multiplier" },
-      { valueFa: "۱۰۰٪", valueEn: "100%", labelFa: "هماهنگی با استانداردهای هویت بصری", labelEn: "Brand Guideline Cohesion" },
-    ],
-    relatedLinks: [
-      { titleFa: "مشاهده نمونه‌های برندینگ", titleEn: "Branding Portfolio", href: "/portfolio?category=instagram", type: "portfolio" },
-      { titleFa: "استودیو و تولید ویدیو", titleEn: "Studio Production", href: "#studio-production", type: "service" },
-      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "#animation-motion", type: "service" },
-    ],
-    ctaLabelFa: "درخواست مشاوره هویت برند",
-    ctaLabelEn: "Request Brand Identity Consultation",
-    badgeAccentFa: "هویت و شبکه‌های اجتماعی",
-    badgeAccentEn: "Social & Identity",
-  },
-  {
-    id: "studio-production",
-    index: 2,
-    numStrFa: "۰۲",
-    numStrEn: "02",
-    iconType: "studio",
-    tagFa: "استودیو و تیزر",
-    tagEn: "Studio & Film",
-    titleFa: "تصویربرداری و استودیو",
-    titleEn: "Studio Production & Videography",
-    headlineFa: "روایت سینمایی داستان برند با تجهیزات فوق‌حرفه‌ای",
-    headlineEn: "Cinematic Visual Storytelling Powered by Cinema-Grade Technology",
-    descriptionFa:
-      "تولید تیزرهای تبلیغاتی، مستندهای صنعتی، استودیو پادکست و محتوای تعاملی با تجهیزات حرفه‌ای سینمایی و بالاترین استاندارد نورپردازی و صدا.",
-    descriptionEn:
-      "Cinematic commercial films, industrial documentaries, podcast recording, and interactive multimedia engineered with professional cinema-grade gear.",
-    detailedNarrativeFa:
-      "یک قاب تصویربرداری حرفه‌ای قادر است در چند ثانیه حسی از اعتبار و کیفیت را منتقل کند که هزاران واژه از بیان آن ناتوانند. در استودیو آن‌ساپ، با بهره‌گیری از دوربین‌های سینمایی، سیستم‌های پیشرفته نورپردازی و اتاق‌های مجهز ضبط صدا و پادکست، ایده و ارزش‌های سازمان شما را به محتوایی فاخر و تأثیرگذار برای کمپین‌های تجاری و رسانه‌ای بدل می‌کنیم.",
-    detailedNarrativeEn:
-      "A single cinematic shot communicates credibility and prestige that thousands of words cannot match. OnSupp leverages cinema-grade cameras, broadcast lighting grids, and acoustic studio spaces to transform your enterprise vision into captivating commercial assets.",
-    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
-    businessValueTitleEn: "Strategic Business Value",
-    businessValueFa:
-      "افزایش چشمگیر نرخ تبدیل در تبلیغات ویدیویی، تثبیت اعتبار رسمی سازمان در نگاه مشتریان سازمانی (B2B) و تولید دارایی‌های ویدیویی با ماندگاری طولانی برای تمامی کمپین‌ها.",
-    businessValueEn:
-      "Drastically increases conversion rates across video marketing funnels, secures B2B enterprise trust, and produces evergreen visual brand collateral.",
-    image: "/images/services/studio-production.webp",
-    subservices: [
-      {
-        nameFa: "تصویربرداری صنعتی و تبلیغاتی",
-        nameEn: "Industrial & Commercial Cinematography",
-        descFa:
-          "ساخت تیزرهای تلویزیونی و دیجیتال، فیلم‌برداری از خطوط تولید کارخانجات، پروژه‌های معماری و معرفی محصولات در لوکیشن اختصاصی یا کارفرما.",
-        descEn:
-          "Broadcast commercials, high-end industrial plant documentaries, architectural features, and product cinematography on location or in-studio.",
-        deliverablesFa: ["تیزر تجاری سینمایی", "مستند صنعتی و خط تولید", "عکاسی صنعتی اختصاصی"],
-        deliverablesEn: ["Commercial Broadcast Spots", "Industrial Facility Documentaries", "Studio Product Photography"],
-      },
-      {
-        nameFa: "ساخت پادکست و محتوای بلند تعاملی",
-        nameEn: "Podcasts & Long-Form Interactive Media",
-        descFa:
-          "تجهیز و هدایت استودیو پادکست، تصویربرداری چنددوربینه، ضبط صدای کالیبره‌شده، مصاحبه‌های سازمانی و تولید قسمت‌های پادکست تصویری (Vodcast).",
-        descEn:
-          "Multi-camera podcast engineering, acoustic sound capture, corporate talk shows, and vodcast series ready for multi-channel syndication.",
-        deliverablesFa: ["ویدیوپادکست با کیفیت 4K", "میکسینگ و مسترینگ صدا", "کات‌های ویروسی شبکه‌های اجتماعی"],
-        deliverablesEn: ["4K Multi-Cam Vodcast Episodes", "Acoustic Audio Mastering", "Short-Form Social Clips"],
-      },
-      {
-        nameFa: "تدوین و پست‌تولید",
-        nameEn: "Editing & Post-Production",
-        descFa:
-          "تدوین ریتمیک، اصلاح رنگ سینمایی (Color Grading)، طراحی باند صوتی و جلوه‌های صوتی سه‌بعدی برای خلق نهایت گیرایی و کیفیت حسی در بیننده.",
-        descEn:
-          "Rhythmic narrative editing, cinema color grading (DaVinci Resolve), custom sound design, and audio post-mastering.",
-        deliverablesFa: ["اصلاح رنگ حرفه‌ای (Log/LUT)", "طراحی و مهندسی صدا", "نسخه‌های عمودی و افقی متناسب کانال‌ها"],
-        deliverablesEn: ["Pro Color Grading (Log/LUT)", "Custom Foley & Sound Design", "Multi-Platform Export Formats"],
-      },
-    ],
-    metrics: [
-      { valueFa: "4K 10-Bit", valueEn: "4K 10-Bit", labelFa: "استاندارد تصویربرداری سینمایی", labelEn: "Cinema Capture Standard" },
-      { valueFa: "+۶۵٪", valueEn: "+65%", labelFa: "افزایش نرخ تماشای کامل ویدیوها", labelEn: "Average Watch Time Retention" },
-      { valueFa: "۱۰۰٪", valueEn: "100%", labelFa: "تجهیزات مدرن نور و صدای استودیویی", labelEn: "Broadcast Acoustic Fidelity" },
-    ],
-    relatedLinks: [
-      { titleFa: "مشاهده نمونه‌های ویدیویی", titleEn: "Video Portfolio", href: "/portfolio?category=video", type: "portfolio" },
-      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "#animation-motion", type: "service" },
-      { titleFa: "مدیریت و هویت بصری", titleEn: "Social Identity", href: "#social-identity", type: "service" },
-    ],
-    ctaLabelFa: "هماهنگی استودیو و تولید ویدیو",
-    ctaLabelEn: "Schedule Studio Production Consultation",
-    badgeAccentFa: "استودیو و تولید سینمایی",
-    badgeAccentEn: "Cinema Production",
-  },
-  {
-    id: "animation-motion",
-    index: 3,
-    numStrFa: "۰۳",
-    numStrEn: "03",
-    iconType: "motion",
-    tagFa: "انیمیشن و موشن",
-    tagEn: "Motion & VFX",
-    titleFa: "انیمیشن و موشن گرافیک",
-    titleEn: "Animation & Motion Graphics",
-    headlineFa: "تفهیم جذاب و سریع پیچیده‌ترین مفاهیم با هنر حرکت",
-    headlineEn: "Simplifying Complex Ideas into Captivating Kinetic Narratives",
-    descriptionFa:
-      "خلق انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های بصری سینمایی (VFX) و موشن‌گرافیک‌های تعاملی برای تفهیم سریع، خلاقانه و اثرگذار پیام کسب‌وکار.",
-    descriptionEn:
-      "2D & 3D animation, cutting-edge cinematic VFX, and interactive motion graphics designed to transform complex concepts into captivating visual stories.",
-    detailedNarrativeFa:
-      "مفاهیم پیچیده تجاری، مکانیزم‌های عملکردی محصولات مدرن و فناوری‌های نوین زمانی به موفقیت دست می‌یابند که مخاطب بتواند در چند ثانیه ارزش محوری آن‌ها را درک کند. تیم انیمیشن و موشن‌گرافیک آن‌ساپ با تلفیق هنر کارگردانی هنری، فیزیک سه‌بعدی و جلوه‌های ویژه بصری، مفاهیم انتزاعی را به داستان‌هایی پرکشش، آموزنده و انگیزشی تبدیل می‌کند.",
-    detailedNarrativeEn:
-      "Complex technologies and abstract services only convert when prospects grasp their core value within seconds. OnSupp blends art direction, 3D physics, and kinetic animation to distill sophisticated concepts into visual narratives that command engagement.",
-    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
-    businessValueTitleEn: "Strategic Business Value",
-    businessValueFa:
-      "افزایش درک محصول در جلسات B2B، کاهش نرخ خروج کاربران در صفحات فرود و ارتقای شگرف جذابیت ارائه‌ها و تیزرهای معرفی خدمات به سرمایه‌گذاران.",
-    businessValueEn:
-      "Accelerates product comprehension in enterprise B2B sales cycles, drastically reduces landing page bounce rates, and delivers investor-ready visual clarity.",
-    image: "/images/services/animation-motion.webp",
-    subservices: [
-      {
-        nameFa: "انیمیشن دوبعدی و سه‌بعدی",
-        nameEn: "2D & 3D Animation",
-        descFa:
-          "طراحی کاراکتر، مدلسازی سه‌بعدی محصولات، انیمیت روان و فضاسازی‌های داستانی متناسب با شخصیت برند برای کمپین‌ها و پلتفرم‌های تعاملی.",
-        descEn:
-          "Custom character design, realistic 3D product modeling, organic rigging, and bespoke environments crafted to mirror your brand persona.",
-        deliverablesFa: ["مدلسازی ۳D با رندر فوتورئال", "انیمیشن دو بعدی داستانی", "شبیه‌سازی مکانیزم محصول"],
-        deliverablesEn: ["Photorealistic 3D Modeling", "Character & Narrative 2D", "Product Mechanical Simulation"],
-      },
-      {
-        nameFa: "جلوه‌های ویژه سینمایی",
-        nameEn: "Cinematic Visual Effects (VFX)",
-        descFa:
-          "تلفیق ویدیوهای رئال با عناصر سه‌بعدی کامپیوتری، شبیه‌سازی ذرات، نورپردازی دینامیک و کامپوزیت سینمایی برای تولید آگهی‌های متمایز و فراتر از واقعیت.",
-        descEn:
-          "Seamless CGI live-action integration, particle simulations, dynamic lighting, and cinematic compositing for hyper-realistic visual ads.",
-        deliverablesFa: ["کامپوزیت CGI و رئال", "شبیه‌سازی فیزیک ذرات و سیالات", "رتوش و اصلاح دیجیتال صحنه"],
-        deliverablesEn: ["Live-Action CGI Compositing", "Fluid & Particle Simulation", "Digital Scene Augmentation"],
-      },
-      {
-        nameFa: "موشن گرافیک صنعتی، آموزشی و تعاملی",
-        nameEn: "Industrial, Educational & Interactive Motion",
-        descFa:
-          "خلق ویدیوهای توضیح‌دهنده (Explainer Videos)، موشن‌گرافیک‌های معرفی نرم‌افزار، گزارش‌های آماری پویا و گرافیک‌های رابط کاربری تعاملی.",
-        descEn:
-          "Dynamic product explainers, SaaS interface walkthroughs, kinetic data visualizations, and interactive UI micro-animations.",
-        deliverablesFa: ["ویدیو توضیح‌دهنده محصول (Explainer)", "موشن‌گرافیک دیتامحور و آماری", "انیمیشن‌های رابط کاربری UI Motion"],
-        deliverablesEn: ["SaaS Explainer Videos", "Data & Metric Visualizations", "UI Micro-Interactions & Lottie"],
-      },
-    ],
-    metrics: [
-      { valueFa: "۳ برابر", valueEn: "3x", labelFa: "افزایش یادآوری پیام در مقایسه با متن", labelEn: "Message Recall vs Plain Text" },
-      { valueFa: "+۸۰٪", valueEn: "+80%", labelFa: "بهبود نرخ تبدیل صفحات فرود", labelEn: "Landing Page Conversion Uplift" },
-      { valueFa: "60 FPS", valueEn: "60 FPS", labelFa: "روانی و استانداردهای کیفی انیمیت", labelEn: "Ultra-Fluid Kinetic Animation" },
-    ],
-    relatedLinks: [
-      { titleFa: "مشاهده نمونه‌های انیمیشن", titleEn: "Animation Portfolio", href: "/portfolio?category=animation", type: "portfolio" },
-      { titleFa: "طراحی سایت و موشن وب", titleEn: "Web Engineering", href: "#web-development", type: "service" },
-      { titleFa: "استودیو و تیزر صنعتی", titleEn: "Studio Production", href: "#studio-production", type: "service" },
-    ],
-    ctaLabelFa: "درخواست مشاوره پروژه موشن",
-    ctaLabelEn: "Request Motion & VFX Consultation",
-    badgeAccentFa: "موشن گرافیک و انیمیشن",
-    badgeAccentEn: "Motion & Animation",
-  },
-  {
-    id: "web-development",
-    index: 4,
-    numStrFa: "۰۴",
-    numStrEn: "04",
     iconType: "web",
-    tagFa: "تکنولوژی و وب",
-    tagEn: "Web Engineering",
+    tagFa: "طراحی وب",
+    tagEn: "Web Design",
     titleFa: "طراحی سایت و وب‌اپلیکیشن",
     titleEn: "Custom Web Design & Apps",
     headlineFa: "مهندسی رابط‌های کاربری لوکس با بالاترین استانداردهای سرعت و مقیاس",
@@ -359,12 +140,12 @@ export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
   },
   {
     id: "technical-seo",
-    index: 5,
-    numStrFa: "۰۵",
-    numStrEn: "05",
+    index: 2,
+    numStrFa: "۰۲",
+    numStrEn: "02",
     iconType: "seo",
-    tagFa: "سئو و رشد ارگانیک",
-    tagEn: "SEO Growth",
+    tagFa: "سئو",
+    tagEn: "SEO",
     titleFa: "سئو تکنیکال و رشد ارگانیک",
     titleEn: "Technical SEO & Organic Growth",
     headlineFa: "تسلط بر موتورهای جستجو با تکیه بر معماری داده و اعتبار ساختاری",
@@ -432,13 +213,235 @@ export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
     badgeAccentEn: "Technical SEO",
   },
   {
+    id: "social-identity",
+    index: 3,
+    numStrFa: "۰۳",
+    numStrEn: "03",
+    iconType: "social",
+    tagFa: "اینستاگرام",
+    tagEn: "Instagram Marketing",
+    titleFa: "مدیریت اینستاگرام و هویت فضای مجازی",
+    titleEn: "Instagram Marketing & Brand Identity",
+    headlineFa: "خلق هویتی یکپارچه و تمایزی ماندگار در ذهن مخاطب",
+    headlineEn: "Architecting Cohesive Visual Identity & High-Engagement Brand Presence",
+    descriptionFa:
+      "طراحی هویت بصری منسجم، تدوین استراتژی برندینگ و مدیریت تعاملات شبکه‌های اجتماعی برای ارتقای تمایز و ماندگاری برند در ذهن مخاطب.",
+    descriptionEn:
+      "Cohesive visual identity, brand strategy design, and active social media management to maximize brand recall and organic audience engagement.",
+    detailedNarrativeFa:
+      "در بازار پرتراکم امروز، شبکه‌های اجتماعی نخستین و پیوسته‌ترین نقطه تماس مخاطب با برند شما هستند. دپارتمان فضای مجازی آن‌ساپ با تکیه بر تحلیل رفتار مخاطبان هدف و استانداردهای طراحی برندینگ، زبان بصری و روایی اختصاصی کسب‌وکار شما را تدوین می‌کند؛ رویکردی که صرفاً به ارسال پست خلاصه نمی‌شود، بلکه پایه‌گذار اعتماد عمیق و هویت متمایز برند در اکوسیستم دیجیتال است.",
+    detailedNarrativeEn:
+      "In crowded modern markets, digital channels serve as the primary brand touchpoint. OnSupp architects bespoke visual guidelines, audience-centric content cadences, and authoritative tone of voice that convert casual viewers into long-term brand advocates.",
+    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
+    businessValueTitleEn: "Strategic Business Value",
+    businessValueFa:
+      "کاهش محسوس هزینه جذب مشتری (CAC) از طریق رشد تعامل ارگانیک، تثبیت هویت بصری یکدست در تمامی کانال‌ها و افزایش ضریب ماندگاری پیام برند در حافظه مخاطبان تصمیم‌گیرنده.",
+    businessValueEn:
+      "Significantly lowers Customer Acquisition Cost (CAC) through compounded organic engagement while instilling enduring premium authority across all customer touchpoints.",
+    image: "/images/services/social-identity.webp",
+    subservices: [
+      {
+        nameFa: "طراحی برند و مدیریت استراتژی",
+        nameEn: "Brand Design & Strategy Management",
+        descFa:
+          "تدوین دفترچه راهنمای هویت بصری (Brand Book)، تعیین لحن پیام، تدوین پرسونای مخاطب و تقویم محتوایی مبتنی بر اهداف فروش و آگاهی‌بخشی.",
+        descEn:
+          "Comprehensive brand guidelines, tone of voice formulation, persona targeting, and objective-driven editorial calendars.",
+        deliverablesFa: ["کتابچه هویت بصری (Brand Book)", "استراتژی لحن و روایت", "تقویم محتوایی ماهانه"],
+        deliverablesEn: ["Complete Brand Style Guide", "Voice & Messaging Framework", "Monthly Content Calendar"],
+      },
+      {
+        nameFa: "طراحی محتوای گرافیکی و سینمایی پویا",
+        nameEn: "Dynamic Graphic & Cinematic Content",
+        descFa:
+          "تولید اسلایدهای تعاملی، پوسترهای مفهومی، استوری‌های موشن‌دار و گرافیک‌های اختصاصی با بالاترین استانداردهای بصری و کپی‌رایتینگ متقاعدکننده.",
+        descEn:
+          "Interactive multi-slide carousels, conceptual graphic layouts, motion stories, and persuasive copywriting designed for maximum retention.",
+        deliverablesFa: ["پست‌های کاروسل تحلیلی", "طراحی هویت استوری‌ها", "کپی‌رایتینگ تخصصی"],
+        deliverablesEn: ["High-Impact Carousel Decks", "Motion Story Templates", "Strategic Copywriting"],
+      },
+      {
+        nameFa: "مدیریت و کنترل صفحه مجازی",
+        nameEn: "Social Page Management & Monitoring",
+        descFa:
+          "مدیریت تعاملات و دایرکت‌ها، مانیتورینگ الگوریتم‌ها، نظارت بر سلامت اکانت و ارائه گزارش‌های دقیق رشد، نرخ تعامل و تحلیل رفتار مخاطبان.",
+        descEn:
+          "Community moderation, algorithmic optimization, account health auditing, and monthly analytical growth reports.",
+        deliverablesFa: ["مدیریت منظم تعاملات", "آنالیز هفتگی و ماهانه", "بهینه‌سازی الگوریتمی"],
+        deliverablesEn: ["Active Community Moderation", "KPI & Engagement Reporting", "Algorithmic Growth Calibration"],
+      },
+    ],
+    metrics: [
+      { valueFa: "+۱۴۰٪", valueEn: "+140%", labelFa: "میانگین رشد نرخ تعامل ارگانیک", labelEn: "Average Organic Engagement Lift" },
+      { valueFa: "۳.۲x", valueEn: "3.2x", labelFa: "افزایش ماندگاری بصری برند", labelEn: "Brand Recall Multiplier" },
+      { valueFa: "۱۰۰٪", valueEn: "100%", labelFa: "هماهنگی با استانداردهای هویت بصری", labelEn: "Brand Guideline Cohesion" },
+    ],
+    relatedLinks: [
+      { titleFa: "مشاهده نمونه‌های برندینگ", titleEn: "Branding Portfolio", href: "/portfolio?category=instagram", type: "portfolio" },
+      { titleFa: "استودیو و تولید ویدیو", titleEn: "Studio Production", href: "#studio-production", type: "service" },
+      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "#animation-motion", type: "service" },
+    ],
+    ctaLabelFa: "درخواست مشاوره هویت برند",
+    ctaLabelEn: "Request Brand Identity Consultation",
+    badgeAccentFa: "هویت و شبکه‌های اجتماعی",
+    badgeAccentEn: "Social & Identity",
+  },
+  {
+    id: "studio-production",
+    index: 4,
+    numStrFa: "۰۴",
+    numStrEn: "04",
+    iconType: "studio",
+    tagFa: "فیلم‌برداری",
+    tagEn: "Videography",
+    titleFa: "فیلم‌برداری و تولیدات استودیو",
+    titleEn: "Studio Production & Videography",
+    headlineFa: "روایت سینمایی داستان برند با تجهیزات فوق‌حرفه‌ای",
+    headlineEn: "Cinematic Visual Storytelling Powered by Cinema-Grade Technology",
+    descriptionFa:
+      "تولید تیزرهای تبلیغاتی، مستندهای صنعتی، استودیو پادکست و محتوای تعاملی با تجهیزات حرفه‌ای سینمایی و بالاترین استاندارد نورپردازی و صدا.",
+    descriptionEn:
+      "Cinematic commercial films, industrial documentaries, podcast recording, and interactive multimedia engineered with professional cinema-grade gear.",
+    detailedNarrativeFa:
+      "یک قاب تصویربرداری حرفه‌ای قادر است در چند ثانیه حسی از اعتبار و کیفیت را منتقل کند که هزاران واژه از بیان آن ناتوانند. در استودیو آن‌ساپ، با بهره‌گیری از دوربین‌های سینمایی، سیستم‌های پیشرفته نورپردازی و اتاق‌های مجهز ضبط صدا و پادکست، ایده و ارزش‌های سازمان شما را به محتوایی فاخر و تأثیرگذار برای کمپین‌های تجاری و رسانه‌ای بدل می‌کنیم.",
+    detailedNarrativeEn:
+      "A single cinematic shot communicates credibility and prestige that thousands of words cannot match. OnSupp leverages cinema-grade cameras, broadcast lighting grids, and acoustic studio spaces to transform your enterprise vision into captivating commercial assets.",
+    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
+    businessValueTitleEn: "Strategic Business Value",
+    businessValueFa:
+      "افزایش چشمگیر نرخ تبدیل در تبلیغات ویدیویی، تثبیت اعتبار رسمی سازمان در نگاه مشتریان سازمانی (B2B) و تولید دارایی‌های ویدیویی با ماندگاری طولانی برای تمامی کمپین‌ها.",
+    businessValueEn:
+      "Drastically increases conversion rates across video marketing funnels, secures B2B enterprise trust, and produces evergreen visual brand collateral.",
+    image: "/images/services/studio-production.webp",
+    subservices: [
+      {
+        nameFa: "تصویربرداری صنعتی و تبلیغاتی",
+        nameEn: "Industrial & Commercial Cinematography",
+        descFa:
+          "ساخت تیزرهای تلویزیونی و دیجیتال، فیلم‌برداری از خطوط تولید کارخانجات، پروژه‌های معماری و معرفی محصولات در لوکیشن اختصاصی یا کارفرما.",
+        descEn:
+          "Broadcast commercials, high-end industrial plant documentaries, architectural features, and product cinematography on location or in-studio.",
+        deliverablesFa: ["تیزر تجاری سینمایی", "مستند صنعتی و خط تولید", "عکاسی صنعتی اختصاصی"],
+        deliverablesEn: ["Commercial Broadcast Spots", "Industrial Facility Documentaries", "Studio Product Photography"],
+      },
+      {
+        nameFa: "ساخت پادکست و محتوای بلند تعاملی",
+        nameEn: "Podcasts & Long-Form Interactive Media",
+        descFa:
+          "تجهیز و هدایت استودیو پادکست، تصویربرداری چنددوربینه، ضبط صدای کالیبره‌شده، مصاحبه‌های سازمانی و تولید قسمت‌های پادکست تصویری (Vodcast).",
+        descEn:
+          "Multi-camera podcast engineering, acoustic sound capture, corporate talk shows, and vodcast series ready for multi-channel syndication.",
+        deliverablesFa: ["ویدیوپادکست با کیفیت 4K", "میکسینگ و مسترینگ صدا", "کات‌های ویروسی شبکه‌های اجتماعی"],
+        deliverablesEn: ["4K Multi-Cam Vodcast Episodes", "Acoustic Audio Mastering", "Short-Form Social Clips"],
+      },
+      {
+        nameFa: "تدوین و پست‌تولید",
+        nameEn: "Editing & Post-Production",
+        descFa:
+          "تدوین ریتمیک، اصلاح رنگ سینمایی (Color Grading)، طراحی باند صوتی و جلوه‌های صوتی سه‌بعدی برای خلق نهایت گیرایی و کیفیت حسی در بیننده.",
+        descEn:
+          "Rhythmic narrative editing, cinema color grading (DaVinci Resolve), custom sound design, and audio post-mastering.",
+        deliverablesFa: ["اصلاح رنگ حرفه‌ای (Log/LUT)", "طراحی و مهندسی صدا", "نسخه‌های عمودی و افقی متناسب کانال‌ها"],
+        deliverablesEn: ["Pro Color Grading (Log/LUT)", "Custom Foley & Sound Design", "Multi-Platform Export Formats"],
+      },
+    ],
+    metrics: [
+      { valueFa: "4K 10-Bit", valueEn: "4K 10-Bit", labelFa: "استاندارد تصویربرداری سینمایی", labelEn: "Cinema Capture Standard" },
+      { valueFa: "+۶۵٪", valueEn: "+65%", labelFa: "افزایش نرخ تماشای کامل ویدیوها", labelEn: "Average Watch Time Retention" },
+      { valueFa: "۱۰۰٪", valueEn: "100%", labelFa: "تجهیزات مدرن نور و صدای استودیویی", labelEn: "Broadcast Acoustic Fidelity" },
+    ],
+    relatedLinks: [
+      { titleFa: "مشاهده نمونه‌های ویدیویی", titleEn: "Video Portfolio", href: "/portfolio?category=video", type: "portfolio" },
+      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "#animation-motion", type: "service" },
+      { titleFa: "مدیریت و هویت بصری", titleEn: "Social Identity", href: "#social-identity", type: "service" },
+    ],
+    ctaLabelFa: "هماهنگی استودیو و تولید ویدیو",
+    ctaLabelEn: "Schedule Studio Production Consultation",
+    badgeAccentFa: "استودیو و تولید سینمایی",
+    badgeAccentEn: "Cinema Production",
+  },
+  {
+    id: "animation-motion",
+    index: 5,
+    numStrFa: "۰۵",
+    numStrEn: "05",
+    iconType: "motion",
+    tagFa: "انیمیشن",
+    tagEn: "Animation",
+    titleFa: "انیمیشن و موشن گرافیک",
+    titleEn: "Animation & Motion Graphics",
+    headlineFa: "تفهیم جذاب و سریع پیچیده‌ترین مفاهیم با هنر حرکت",
+    headlineEn: "Simplifying Complex Ideas into Captivating Kinetic Narratives",
+    descriptionFa:
+      "خلق انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های بصری سینمایی (VFX) و موشن‌گرافیک‌های تعاملی برای تفهیم سریع، خلاقانه و اثرگذار پیام کسب‌وکار.",
+    descriptionEn:
+      "2D & 3D animation, cutting-edge cinematic VFX, and interactive motion graphics designed to transform complex concepts into captivating visual stories.",
+    detailedNarrativeFa:
+      "مفاهیم پیچیده تجاری، مکانیزم‌های عملکردی محصولات مدرن و فناوری‌های نوین زمانی به موفقیت دست می‌یابند که مخاطب بتواند در چند ثانیه ارزش محوری آن‌ها را درک کند. تیم انیمیشن و موشن‌گرافیک آن‌ساپ با تلفیق هنر کارگردانی هنری، فیزیک سه‌بعدی و جلوه‌های ویژه بصری، مفاهیم انتزاعی را به داستان‌هایی پرکشش، آموزنده و انگیزشی تبدیل می‌کند.",
+    detailedNarrativeEn:
+      "Complex technologies and abstract services only convert when prospects grasp their core value within seconds. OnSupp blends art direction, 3D physics, and kinetic animation to distill sophisticated concepts into visual narratives that command engagement.",
+    businessValueTitleFa: "ارزش استراتژیک برای کسب‌وکار شما",
+    businessValueTitleEn: "Strategic Business Value",
+    businessValueFa:
+      "افزایش درک محصول در جلسات B2B، کاهش نرخ خروج کاربران در صفحات فرود و ارتقای شگرف جذابیت ارائه‌ها و تیزرهای معرفی خدمات به سرمایه‌گذاران.",
+    businessValueEn:
+      "Accelerates product comprehension in enterprise B2B sales cycles, drastically reduces landing page bounce rates, and delivers investor-ready visual clarity.",
+    image: "/images/services/animation-motion.webp",
+    subservices: [
+      {
+        nameFa: "انیمیشن دوبعدی و سه‌بعدی",
+        nameEn: "2D & 3D Animation",
+        descFa:
+          "طراحی کاراکتر، مدلسازی سه‌بعدی محصولات، انیمیت روان و فضاسازی‌های داستانی متناسب با شخصیت برند برای کمپین‌ها و پلتفرم‌های تعاملی.",
+        descEn:
+          "Custom character design, realistic 3D product modeling, organic rigging, and bespoke environments crafted to mirror your brand persona.",
+        deliverablesFa: ["مدلسازی ۳D با رندر فوتورئال", "انیمیشن دو بعدی داستانی", "شبیه‌سازی مکانیزم محصول"],
+        deliverablesEn: ["Photorealistic 3D Modeling", "Character & Narrative 2D", "Product Mechanical Simulation"],
+      },
+      {
+        nameFa: "جلوه‌های ویژه سینمایی",
+        nameEn: "Cinematic Visual Effects (VFX)",
+        descFa:
+          "تلفیق ویدیوهای رئال با عناصر سه‌بعدی کامپیوتری، شبیه‌سازی ذرات، نورپردازی دینامیک و کامپوزیت سینمایی برای تولید آگهی‌های متمایز و فراتر از واقعیت.",
+        descEn:
+          "Seamless CGI live-action integration, particle simulations, dynamic lighting, and cinematic compositing for hyper-realistic visual ads.",
+        deliverablesFa: ["کامپوزیت CGI و رئال", "شبیه‌سازی فیزیک ذرات و سیالات", "رتوش و اصلاح دیجیتال صحنه"],
+        deliverablesEn: ["Live-Action CGI Compositing", "Fluid & Particle Simulation", "Digital Scene Augmentation"],
+      },
+      {
+        nameFa: "موشن گرافیک صنعتی، آموزشی و تعاملی",
+        nameEn: "Industrial, Educational & Interactive Motion",
+        descFa:
+          "خلق ویدیوهای توضیح‌دهنده (Explainer Videos)، موشن‌گرافیک‌های معرفی نرم‌افزار، گزارش‌های آماری پویا و گرافیک‌های رابط کاربری تعاملی.",
+        descEn:
+          "Dynamic product explainers, SaaS interface walkthroughs, kinetic data visualizations, and interactive UI micro-animations.",
+        deliverablesFa: ["ویدیو توضیح‌دهنده محصول (Explainer)", "موشن‌گرافیک دیتامحور و آماری", "انیمیشن‌های رابط کاربری UI Motion"],
+        deliverablesEn: ["SaaS Explainer Videos", "Data & Metric Visualizations", "UI Micro-Interactions & Lottie"],
+      },
+    ],
+    metrics: [
+      { valueFa: "۳ برابر", valueEn: "3x", labelFa: "افزایش یادآوری پیام در مقایسه با متن", labelEn: "Message Recall vs Plain Text" },
+      { valueFa: "+۸۰٪", valueEn: "+80%", labelFa: "بهبود نرخ تبدیل صفحات فرود", labelEn: "Landing Page Conversion Uplift" },
+      { valueFa: "60 FPS", valueEn: "60 FPS", labelFa: "روانی و استانداردهای کیفی انیمیت", labelEn: "Ultra-Fluid Kinetic Animation" },
+    ],
+    relatedLinks: [
+      { titleFa: "مشاهده نمونه‌های انیمیشن", titleEn: "Animation Portfolio", href: "/portfolio?category=animation", type: "portfolio" },
+      { titleFa: "طراحی سایت و موشن وب", titleEn: "Web Engineering", href: "#web-development", type: "service" },
+      { titleFa: "استودیو و تیزر صنعتی", titleEn: "Studio Production", href: "#studio-production", type: "service" },
+    ],
+    ctaLabelFa: "درخواست مشاوره پروژه موشن",
+    ctaLabelEn: "Request Motion & VFX Consultation",
+    badgeAccentFa: "موشن گرافیک و انیمیشن",
+    badgeAccentEn: "Motion & Animation",
+  },
+  {
     id: "crm-automation",
     index: 6,
     numStrFa: "۰۶",
     numStrEn: "06",
     iconType: "crm",
-    tagFa: "اتوماسیون و فروش",
-    tagEn: "CRM & Systems",
+    tagFa: "CRM",
+    tagEn: "CRM",
     titleFa: "استقرار CRM و اتوماسیون فروش",
     titleEn: "CRM Implementation & Automation",
     headlineFa: "تسریع فرآیندهای فروش و شفافیت کامل چرخه‌های مشتریان",
@@ -511,8 +514,8 @@ export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
     numStrFa: "۰۷",
     numStrEn: "07",
     iconType: "software",
-    tagFa: "برنامه‌نویسی و سامانه",
-    tagEn: "Custom Software",
+    tagFa: "برنامه‌نویسی",
+    tagEn: "Programming",
     titleFa: "برنامه‌نویسی و سامانه‌های اختصاصی",
     titleEn: "Custom Software & Web Systems",
     headlineFa: "توسعه سامانه‌های تحت وب مقیاس‌پذیر و زیرساخت‌های پایدار سازمانی",
@@ -580,3 +583,149 @@ export const DETAILED_SERVICES_DATA: ServiceDetailItem[] = [
     badgeAccentEn: "Enterprise Systems",
   },
 ];
+
+const SLUG_ALIASES: Record<string, string> = {
+  "web-design": "web-development",
+  "web_design": "web-development",
+  "web-development": "web-development",
+  "web_development": "web-development",
+  "website": "web-development",
+  "seo-optimization": "technical-seo",
+  "seo_optimization": "technical-seo",
+  "seo": "technical-seo",
+  "technical-seo": "technical-seo",
+  "social-media": "social-identity",
+  "social_media": "social-identity",
+  "social-identity": "social-identity",
+  "instagram": "social-identity",
+  "studio-production": "studio-production",
+  "videography": "studio-production",
+  "video-production": "studio-production",
+  "motion-design": "animation-motion",
+  "motion_design": "animation-motion",
+  "animation-motion": "animation-motion",
+  "animation": "animation-motion",
+  "crm": "crm-automation",
+  "crm-automation": "crm-automation",
+  "custom-software": "custom-software",
+  "programming": "custom-software",
+  "software-development": "custom-software",
+};
+
+/**
+ * Merges published database services from the CMS API with presentation metadata.
+ * Ensures:
+ * 1. Database content strictly takes precedence over fallback text.
+ * 2. Visual layout styles, icons, and compositions are preserved seamlessly.
+ * 3. Graceful fallback occurs if the API fails or returns no published records.
+ * 4. Fallback vs. live CMS status is clearly distinguished via isFromDatabase and isLiveCMS.
+ * 5. Exactly the 7 approved core services are returned in canonical order.
+ */
+export function mergeServicesWithDatabase(dbServices: ServiceData[] | null | undefined): {
+  services: ServiceDetailItem[];
+  isLiveCMS: boolean;
+} {
+  const published = Array.isArray(dbServices)
+    ? dbServices.filter((s) => s.isPublished !== false && s.status !== "DRAFT" && s.status !== "ARCHIVED")
+    : [];
+
+  if (published.length === 0) {
+    // Graceful fallback to static presentation metadata when API is unreachable or empty
+    return {
+      services: DETAILED_SERVICES_DATA.map((item) => ({ ...item, isFromDatabase: false })),
+      isLiveCMS: false,
+    };
+  }
+
+  let hasAnyDbMatch = false;
+
+  // Map canonical services with DB overrides strictly taking precedence
+  const mergedCanonical: ServiceDetailItem[] = DETAILED_SERVICES_DATA.map((fallback) => {
+    const match = published.find((s) => {
+      if (!s.slug) return false;
+      const clean = s.slug.trim().toLowerCase();
+      const mapped = SLUG_ALIASES[clean] || clean;
+      return (
+        mapped === fallback.id ||
+        clean === fallback.id.toLowerCase() ||
+        clean === fallback.id.replace(/-/g, "_").toLowerCase()
+      );
+    });
+
+    if (!match) {
+      return { ...fallback, isFromDatabase: false };
+    }
+
+    hasAnyDbMatch = true;
+
+    // Subservices mapping from database
+    let mappedSubservices = fallback.subservices;
+    if (match.subservices && Array.isArray(match.subservices) && match.subservices.length > 0) {
+      mappedSubservices = match.subservices.map((sub: any) => ({
+        nameFa: sub.nameFa || sub.titleFa || "",
+        nameEn: sub.nameEn || sub.titleEn || "",
+        descFa: sub.descFa || sub.descriptionFa || "",
+        descEn: sub.descEn || sub.descriptionEn || "",
+        deliverablesFa: Array.isArray(sub.deliverablesFa) ? sub.deliverablesFa : [],
+        deliverablesEn: Array.isArray(sub.deliverablesEn) ? sub.deliverablesEn : [],
+      }));
+    }
+
+    // Metrics mapping from database
+    let mappedMetrics = fallback.metrics;
+    if (match.metrics && Array.isArray(match.metrics) && match.metrics.length > 0) {
+      mappedMetrics = match.metrics.map((m: any) => ({
+        valueFa: m.valueFa || "",
+        valueEn: m.valueEn || "",
+        labelFa: m.labelFa || "",
+        labelEn: m.labelEn || "",
+      }));
+    } else if (match.kpiMetrics && Array.isArray(match.kpiMetrics) && match.kpiMetrics.length > 0) {
+      mappedMetrics = match.kpiMetrics.map((m: any) => ({
+        valueFa: m.valueFa || "",
+        valueEn: m.valueEn || "",
+        labelFa: m.labelFa || "",
+        labelEn: m.labelEn || "",
+      }));
+    }
+
+    return {
+      id: fallback.id,
+      index: fallback.index,
+      numStrFa: fallback.numStrFa,
+      numStrEn: fallback.numStrEn,
+      iconType: (match.iconType as any) || fallback.iconType,
+      tagFa: match.tagFa || fallback.tagFa,
+      tagEn: match.tagEn || fallback.tagEn,
+      titleFa: match.title || fallback.titleFa,
+      titleEn: match.titleEn || fallback.titleEn,
+      headlineFa: match.headlineFa || fallback.headlineFa,
+      headlineEn: match.headlineEn || fallback.headlineEn,
+      descriptionFa: match.subtitle || match.detailedNarrativeFa || fallback.descriptionFa,
+      descriptionEn: match.subtitleEn || match.detailedNarrativeEn || fallback.descriptionEn,
+      detailedNarrativeFa: match.detailedNarrativeFa || fallback.detailedNarrativeFa,
+      detailedNarrativeEn: match.detailedNarrativeEn || fallback.detailedNarrativeEn,
+      businessValueTitleFa: match.businessValueTitleFa || fallback.businessValueTitleFa,
+      businessValueTitleEn: match.businessValueTitleEn || fallback.businessValueTitleEn,
+      businessValueFa: match.businessValueFa || fallback.businessValueFa,
+      businessValueEn: match.businessValueEn || fallback.businessValueEn,
+      image: match.coverImage || match.imageUrl || fallback.image,
+      subservices: mappedSubservices,
+      metrics: mappedMetrics,
+      relatedLinks:
+        Array.isArray(match.relatedLinks) && match.relatedLinks.length > 0
+          ? match.relatedLinks
+          : fallback.relatedLinks,
+      ctaLabelFa: match.ctaLabelFa || fallback.ctaLabelFa,
+      ctaLabelEn: match.ctaLabelEn || fallback.ctaLabelEn,
+      badgeAccentFa: match.badgeAccentFa || fallback.badgeAccentFa,
+      badgeAccentEn: match.badgeAccentEn || fallback.badgeAccentEn,
+      isFromDatabase: true,
+    };
+  });
+
+  return {
+    services: mergedCanonical,
+    isLiveCMS: hasAnyDbMatch,
+  };
+}

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { login, State } from "@/lib/actions/auth";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function AdminLoginPage() {
   const [state, formAction, isPending] = useActionState<State, FormData>(
@@ -12,27 +13,101 @@ export default function AdminLoginPage() {
   );
 
   const [showPassword, setShowPassword] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
+  const { theme, setTheme, isReady } = useTheme();
+  const isLightTheme = isReady && theme === "light";
+  const isDarkTheme = isReady && theme === "dark";
+
+  const activeError = clientError || state?.error;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    setClientError(null);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const email = (formData.get("email") as string || "").trim();
+    const password = (formData.get("password") as string || "").trim();
+
+    if (!email) {
+      e.preventDefault();
+      setClientError("لطفاً ایمیل کاربری را وارد کنید.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      e.preventDefault();
+      setClientError("فرمت ایمیل نامعتبر است. نمونه: admin@onsupp.ir");
+      return;
+    }
+
+    if (!password) {
+      e.preventDefault();
+      setClientError("لطفاً کلمه عبور را وارد کنید.");
+      return;
+    }
+  };
 
   return (
     <main
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background px-4 py-8 font-sans selection:bg-[#3f6b59]/30 selection:text-white"
+      className="admin-shell relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background px-4 py-8 font-sans selection:bg-primary/25 selection:text-foreground"
       dir="rtl"
     >
-      {/* Ambient background glow matching OnSupp design system */}
-      <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-40 blur-3xl"
-        aria-hidden="true"
-      >
-        <div className="h-[450px] w-[450px] rounded-full bg-gradient-to-tr from-[#3f6b59]/25 via-[#25473d]/20 to-transparent" />
+      {/* Top-Left Accessible Segmented Theme Switcher */}
+      <div className="absolute top-6 left-6 z-20">
+        <div
+          role="group"
+          aria-label="انتخاب تم"
+          className="inline-flex items-center p-1 rounded-2xl bg-panel border border-border shadow-sm"
+        >
+          <button
+            type="button"
+            onClick={() => setTheme("light")}
+            aria-pressed={isLightTheme}
+            title="حالت روشن (Light Mode)"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              isLightTheme
+                ? "bg-lime text-ink shadow-xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>روشن</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme("dark")}
+            aria-pressed={isDarkTheme}
+            title="حالت تاریک (Dark Mode)"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              isDarkTheme
+                ? "bg-lime text-ink shadow-xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <span>تاریک</span>
+          </button>
+        </div>
       </div>
 
-      {/* Neumorphic Login Card Frame */}
-      <div className="relative z-10 w-full max-w-[420px] rounded-[32px] border border-white/[0.08] bg-[#191c1e] p-8 sm:p-10 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.12),inset_0_-1px_1px_0_rgba(0,0,0,0.5)]">
+      {/* Ambient background glow matching OnSupp design system */}
+      <div
+        className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-35 blur-3xl"
+        aria-hidden="true"
+      >
+        <div className="h-[450px] w-[450px] rounded-full bg-gradient-to-tr from-[#38534a]/25 via-[#38534a]/15 to-transparent" />
+      </div>
+
+      {/* Login Card Frame */}
+      <div className="relative z-10 w-full max-w-[420px] rounded-[32px] border border-border bg-panel p-8 sm:p-10 shadow-2xl">
         
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center">
           {/* Official OnSupp Brand Icon Container */}
-          <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#212629] to-[#15181a] shadow-[0_10px_20px_-5px_rgba(0,0,0,0.6),inset_0_1px_1.5px_0_rgba(255,255,255,0.15)] p-3">
+          <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/30 bg-[#38534a] shadow-md p-3">
             <Image
               src="/images/logo/logo-light.webp"
               alt="OnSupp"
@@ -44,22 +119,22 @@ export default function AdminLoginPage() {
           </div>
 
           {/* Typography Hierarchy */}
-          <h1 className="text-2xl font-black tracking-wide text-white sm:text-3xl">
+          <h1 className="text-2xl font-black tracking-wide text-foreground sm:text-3xl">
             ورود به پنل مدیریت
           </h1>
-          <p className="mt-2 text-xs text-mint/70 sm:text-sm">
+          <p className="mt-2 text-xs text-muted sm:text-sm">
             برای مدیریت محتوای وب‌سایت OnSupp، وارد حساب شوید
           </p>
         </div>
 
         {/* Error Alert Message */}
-        {state?.error && (
+        {activeError && (
           <div
             role="alert"
-            className="mt-6 flex items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-300 shadow-sm"
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-burgundy/30 bg-burgundy/10 px-4 py-3 text-xs text-burgundy shadow-xs"
           >
             <svg
-              className="h-4 w-4 shrink-0 text-rose-400"
+              className="h-4 w-4 shrink-0 text-burgundy"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,23 +147,28 @@ export default function AdminLoginPage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <span>{state.error}</span>
+            <span>{activeError}</span>
           </div>
         )}
 
         {/* Form Container */}
-        <form action={formAction} className="mt-8 space-y-5">
-          {/* Email Recessed Pill Input */}
+        <form
+          action={formAction}
+          onSubmit={handleSubmit}
+          noValidate
+          className="mt-8 space-y-5"
+        >
+          {/* Email Pill Input */}
           <div className="space-y-1.5">
             <label
               htmlFor="email"
-              className="block pr-2 text-xs font-medium text-mint/90"
+              className="block pr-2 text-xs font-semibold text-foreground"
             >
               ایمیل کاربری
             </label>
-            <div className="group relative flex h-[52px] w-full items-center rounded-full border border-white/[0.06] bg-[#121416] px-5 shadow-[inset_2px_3px_6px_rgba(0,0,0,0.65),inset_-1px_-1px_3px_rgba(255,255,255,0.04),0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-200 focus-within:border-[#3f6b59] focus-within:ring-2 focus-within:ring-[#3f6b59]/25">
+            <div className="group relative flex h-[52px] w-full items-center rounded-full border border-border bg-raised px-5 transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <svg
-                className="h-5 w-5 shrink-0 text-mint/40 transition-colors group-focus-within:text-mint"
+                className="h-5 w-5 shrink-0 text-muted transition-colors group-focus-within:text-mint"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -109,22 +189,25 @@ export default function AdminLoginPage() {
                 required
                 dir="ltr"
                 placeholder="admin@onsupp.ir"
-                className="h-full w-full bg-transparent px-3 text-left text-sm text-white placeholder-mint/35 outline-none selection:bg-[#3f6b59]/40"
+                onChange={() => {
+                  if (clientError) setClientError(null);
+                }}
+                className="h-full w-full bg-transparent px-3 text-left text-sm text-foreground placeholder-muted/60 outline-none"
               />
             </div>
           </div>
 
-          {/* Password Recessed Pill Input */}
+          {/* Password Pill Input */}
           <div className="space-y-1.5">
             <label
               htmlFor="password"
-              className="block pr-2 text-xs font-medium text-mint/90"
+              className="block pr-2 text-xs font-semibold text-foreground"
             >
               کلمه عبور
             </label>
-            <div className="group relative flex h-[52px] w-full items-center rounded-full border border-white/[0.06] bg-[#121416] px-5 shadow-[inset_2px_3px_6px_rgba(0,0,0,0.65),inset_-1px_-1px_3px_rgba(255,255,255,0.04),0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-200 focus-within:border-[#3f6b59] focus-within:ring-2 focus-within:ring-[#3f6b59]/25">
+            <div className="group relative flex h-[52px] w-full items-center rounded-full border border-border bg-raised px-5 transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <svg
-                className="h-5 w-5 shrink-0 text-mint/40 transition-colors group-focus-within:text-mint"
+                className="h-5 w-5 shrink-0 text-muted transition-colors group-focus-within:text-mint"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -145,12 +228,15 @@ export default function AdminLoginPage() {
                 required
                 dir="ltr"
                 placeholder="••••••••"
-                className="h-full w-full bg-transparent px-3 text-left text-sm text-white placeholder-mint/35 outline-none selection:bg-[#3f6b59]/40"
+                onChange={() => {
+                  if (clientError) setClientError(null);
+                }}
+                className="h-full w-full bg-transparent px-3 text-left text-sm text-foreground placeholder-muted/60 outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="shrink-0 p-1 text-mint/40 transition-colors hover:text-mint focus:outline-none focus:ring-1 focus:ring-mint/50 rounded-full"
+                className="shrink-0 p-1 text-muted transition-colors hover:text-mint focus:outline-none focus:ring-1 focus:ring-primary/50 rounded-full cursor-pointer"
                 aria-label={showPassword ? "مخفی کردن کلمه عبور" : "نمایش کلمه عبور"}
                 tabIndex={0}
               >
@@ -195,17 +281,20 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Raised Convex Pill Submit Button */}
+          {/* Primary Brand Submit Button */}
           <div className="pt-2">
             <button
               type="submit"
+              id="admin-login-submit-btn"
               disabled={isPending}
-              className="group relative flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-[#8ab3a0]/30 bg-gradient-to-r from-[#3f6b59] to-[#4e826d] font-bold text-white shadow-[0_12px_24px_-6px_rgba(63,107,89,0.5),0_4px_8px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:from-[#477a66] hover:to-[#57947c] hover:shadow-[0_16px_28px_-6px_rgba(63,107,89,0.65),0_6px_10px_rgba(0,0,0,0.4)] active:translate-y-0.5 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 cursor-pointer"
+              aria-disabled={isPending}
+              aria-label="ورود به پنل"
+              className="group relative flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-lime text-ink font-bold shadow-lg border border-primary/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-hover hover:text-white active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 cursor-pointer"
             >
               {isPending ? (
                 <>
                   <svg
-                    className="h-5 w-5 animate-spin text-white"
+                    className="h-5 w-5 animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -251,10 +340,10 @@ export default function AdminLoginPage() {
         </form>
 
         {/* Card Footer: Back to main site link & security note */}
-        <div className="mt-8 border-t border-white/[0.06] pt-6 text-center">
+        <div className="mt-8 border-t border-border pt-6 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-mint/70 transition-colors hover:text-white"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-mint transition-colors hover:text-foreground"
           >
             <svg
               className="h-4 w-4"
@@ -272,7 +361,7 @@ export default function AdminLoginPage() {
             </svg>
             <span>بازگشت به وب‌سایت اصلی OnSupp</span>
           </Link>
-          <p className="mt-3 text-[11px] text-mint/40">
+          <p className="mt-3 text-[11px] text-muted">
             سامانه امنیتی احراز هویت متمرکز OnSupp • نسخه ۲.۰
           </p>
         </div>

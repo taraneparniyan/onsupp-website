@@ -21,90 +21,6 @@ export type ServiceCategory = {
 
 export const SERVICES_MENU_ITEMS: ServiceCategory[] = [
   {
-    id: "social-identity",
-    tagFa: "فضای مجازی",
-    tagEn: "Social & Identity",
-    titleFa: "مدیریت و هویت‌سازی فضای مجازی",
-    titleEn: "Social Media & Brand Identity",
-    href: "/services?category=social-identity",
-    descriptionFa:
-      "طراحی هویت بصری منسجم، تدوین استراتژی برندینگ و مدیریت تعاملات شبکه‌های اجتماعی برای ارتقای تمایز و ماندگاری برند در ذهن مخاطب.",
-    descriptionEn:
-      "Cohesive visual identity, brand strategy design, and active social media management to maximize brand recall and organic audience engagement.",
-    subservicesFa: [
-      "طراحی برند و مدیریت استراتژی",
-      "طراحی محتوای گرافیکی و سینمایی پویا",
-      "مدیریت و کنترل صفحه مجازی",
-    ],
-    subservicesEn: [
-      "Brand Design & Strategy Management",
-      "Dynamic Graphic & Cinematic Content",
-      "Social Page Management & Monitoring",
-    ],
-    relatedLinks: [
-      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "/services?category=animation-motion" },
-      { titleFa: "تصویربرداری و استودیو", titleEn: "Studio Production", href: "/services?category=studio-production" },
-      { titleFa: "نمونه‌کارهای برندینگ", titleEn: "Branding Portfolio", href: "/#portfolio" },
-    ],
-    iconType: "social",
-  },
-  {
-    id: "studio-production",
-    tagFa: "تصویربرداری",
-    tagEn: "Studio & Video",
-    titleFa: "تصویربرداری و استودیو",
-    titleEn: "Studio Production & Videography",
-    href: "/services?category=studio-production",
-    descriptionFa:
-      "تولید تیزرهای تبلیغاتی، مستندهای صنعتی، استودیو پادکست و محتوای تعاملی با تجهیزات حرفه‌ای سینمایی و بالاترین استاندارد نورپردازی و صدا.",
-    descriptionEn:
-      "Cinematic commercial films, industrial documentaries, podcast recording, and interactive multimedia engineered with professional cinema-grade gear.",
-    subservicesFa: [
-      "تصویربرداری صنعتی و تبلیغاتی",
-      "ساخت پادکست و محتوای بلند تعاملی",
-      "تدوین و پست‌تولید",
-    ],
-    subservicesEn: [
-      "Industrial & Commercial Cinematography",
-      "Podcasts & Long-Form Interactive Media",
-      "Editing & Post-Production",
-    ],
-    relatedLinks: [
-      { titleFa: "مدیریت هویت مجازی", titleEn: "Social Identity", href: "/services?category=social-identity" },
-      { titleFa: "جلوه‌های ویژه و انیمیشن", titleEn: "Visual Effects", href: "/services?category=animation-motion" },
-      { titleFa: "آرشیو پروژه‌های ویدیویی", titleEn: "Video Portfolio", href: "/#portfolio" },
-    ],
-    iconType: "studio",
-  },
-  {
-    id: "animation-motion",
-    tagFa: "انیمیشن",
-    tagEn: "Animation & Motion",
-    titleFa: "انیمیشن و موشن گرافیک",
-    titleEn: "Animation & Motion Graphics",
-    href: "/services?category=animation-motion",
-    descriptionFa:
-      "خلق انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های بصری سینمایی (VFX) و موشن‌گرافیک‌های تعاملی برای تفهیم سریع، خلاقانه و اثرگذار پیام کسب‌وکار.",
-    descriptionEn:
-      "2D & 3D animation, cutting-edge cinematic VFX, and interactive motion graphics designed to transform complex concepts into captivating visual stories.",
-    subservicesFa: [
-      "انیمیشن دوبعدی و سه‌بعدی",
-      "جلوه‌های ویژه سینمایی",
-      "موشن گرافیک صنعتی، آموزشی و تعاملی",
-    ],
-    subservicesEn: [
-      "2D & 3D Animation",
-      "Cinematic Visual Effects (VFX)",
-      "Industrial, Educational & Interactive Motion",
-    ],
-    relatedLinks: [
-      { titleFa: "استودیو و تصویربرداری", titleEn: "Studio Production", href: "/services?category=studio-production" },
-      { titleFa: "طراحی وب و موشن اینترفیس", titleEn: "Web & UI Motion", href: "/services?category=web-development" },
-      { titleFa: "مشاهده نمونه‌های موشن", titleEn: "Motion Portfolio", href: "/#portfolio" },
-    ],
-    iconType: "motion",
-  },
-  {
     id: "web-development",
     tagFa: "وب‌سایت",
     tagEn: "Web Design",
@@ -159,6 +75,90 @@ export const SERVICES_MENU_ITEMS: ServiceCategory[] = [
       { titleFa: "درخواست مشاوره سئو", titleEn: "SEO Consultation", href: "/#contact" },
     ],
     iconType: "seo",
+  },
+  {
+    id: "social-identity",
+    tagFa: "اینستاگرام",
+    tagEn: "Instagram & Social",
+    titleFa: "مدیریت اینستاگرام و هویت فضای مجازی",
+    titleEn: "Instagram Marketing & Brand Identity",
+    href: "/services?category=social-identity",
+    descriptionFa:
+      "طراحی هویت بصری منسجم، تدوین استراتژی برندینگ و مدیریت تعاملات شبکه‌های اجتماعی برای ارتقای تمایز و ماندگاری برند در ذهن مخاطب.",
+    descriptionEn:
+      "Cohesive visual identity, brand strategy design, and active social media management to maximize brand recall and organic audience engagement.",
+    subservicesFa: [
+      "طراحی برند و مدیریت استراتژی",
+      "طراحی محتوای گرافیکی و سینمایی پویا",
+      "مدیریت و کنترل صفحه مجازی",
+    ],
+    subservicesEn: [
+      "Brand Design & Strategy Management",
+      "Dynamic Graphic & Cinematic Content",
+      "Social Page Management & Monitoring",
+    ],
+    relatedLinks: [
+      { titleFa: "انیمیشن و موشن گرافیک", titleEn: "Animation & Motion", href: "/services?category=animation-motion" },
+      { titleFa: "تصویربرداری و استودیو", titleEn: "Studio Production", href: "/services?category=studio-production" },
+      { titleFa: "نمونه‌کارهای برندینگ", titleEn: "Branding Portfolio", href: "/#portfolio" },
+    ],
+    iconType: "social",
+  },
+  {
+    id: "studio-production",
+    tagFa: "فیلم‌برداری",
+    tagEn: "Videography",
+    titleFa: "فیلم‌برداری و تولیدات استودیو",
+    titleEn: "Studio Production & Videography",
+    href: "/services?category=studio-production",
+    descriptionFa:
+      "تولید تیزرهای تبلیغاتی، مستندهای صنعتی، استودیو پادکست و محتوای تعاملی با تجهیزات حرفه‌ای سینمایی و بالاترین استاندارد نورپردازی و صدا.",
+    descriptionEn:
+      "Cinematic commercial films, industrial documentaries, podcast recording, and interactive multimedia engineered with professional cinema-grade gear.",
+    subservicesFa: [
+      "تصویربرداری صنعتی و تبلیغاتی",
+      "ساخت پادکست و محتوای بلند تعاملی",
+      "تدوین و پست‌تولید",
+    ],
+    subservicesEn: [
+      "Industrial & Commercial Cinematography",
+      "Podcasts & Long-Form Interactive Media",
+      "Editing & Post-Production",
+    ],
+    relatedLinks: [
+      { titleFa: "مدیریت هویت مجازی", titleEn: "Social Identity", href: "/services?category=social-identity" },
+      { titleFa: "جلوه‌های ویژه و انیمیشن", titleEn: "Visual Effects", href: "/services?category=animation-motion" },
+      { titleFa: "آرشیو پروژه‌های ویدیویی", titleEn: "Video Portfolio", href: "/#portfolio" },
+    ],
+    iconType: "studio",
+  },
+  {
+    id: "animation-motion",
+    tagFa: "انیمیشن",
+    tagEn: "Animation & Motion",
+    titleFa: "انیمیشن و موشن گرافیک",
+    titleEn: "Animation & Motion Graphics",
+    href: "/services?category=animation-motion",
+    descriptionFa:
+      "خلق انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های بصری سینمایی (VFX) و موشن‌گرافیک‌های تعاملی برای تفهیم سریع، خلاقانه و اثرگذار پیام کسب‌وکار.",
+    descriptionEn:
+      "2D & 3D animation, cutting-edge cinematic VFX, and interactive motion graphics designed to transform complex concepts into captivating visual stories.",
+    subservicesFa: [
+      "انیمیشن دوبعدی و سه‌بعدی",
+      "جلوه‌های ویژه سینمایی",
+      "موشن گرافیک صنعتی، آموزشی و تعاملی",
+    ],
+    subservicesEn: [
+      "2D & 3D Animation",
+      "Cinematic Visual Effects (VFX)",
+      "Industrial, Educational & Interactive Motion",
+    ],
+    relatedLinks: [
+      { titleFa: "استودیو و تصویربرداری", titleEn: "Studio Production", href: "/services?category=studio-production" },
+      { titleFa: "طراحی وب و موشن اینترفیس", titleEn: "Web & UI Motion", href: "/services?category=web-development" },
+      { titleFa: "مشاهده نمونه‌های موشن", titleEn: "Motion Portfolio", href: "/#portfolio" },
+    ],
+    iconType: "motion",
   },
   {
     id: "crm-automation",

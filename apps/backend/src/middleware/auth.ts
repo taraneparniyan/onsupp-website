@@ -18,13 +18,26 @@ export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  'http://localhost:3003',
-  'http://127.0.0.1:3003',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-];
+const getAuthAllowedOrigins = (): string[] => {
+  const envOrigins = [
+    process.env.FRONTEND_URL,
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()) : []),
+  ].filter(Boolean) as string[];
+
+  const devList = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3003',
+    'http://127.0.0.1:3003',
+    'http://localhost:3004',
+    'http://127.0.0.1:3004',
+    'http://localhost:3005',
+    'http://127.0.0.1:3005',
+  ];
+  return Array.from(new Set([...devList, ...envOrigins]));
+};
+
+const allowedOrigins = getAuthAllowedOrigins();
 
 export const authenticate = async (
   req: AuthenticatedRequest,

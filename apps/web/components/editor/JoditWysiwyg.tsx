@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
@@ -18,6 +19,7 @@ type Props = {
   onChange: (newContent: string) => void;
   placeholder?: string;
   direction?: "rtl" | "ltr";
+  minHeight?: number;
   onOpenMediaPicker?: () => void;
 };
 
@@ -27,12 +29,14 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
     onChange,
     placeholder = "محتوای مقاله را اینجا بنویسید...",
     direction = "rtl",
+    minHeight = 480,
     onOpenMediaPicker,
   },
   ref
 ) {
   const editorRef = useRef<any>(null);
   const savedSelectionRef = useRef<any>(null);
+  const { theme } = useTheme();
 
   // Keep a stable ref to onOpenMediaPicker so config NEVER changes identity on re-render
   const onOpenMediaPickerRef = useRef(onOpenMediaPicker);
@@ -173,15 +177,14 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
     onChangeRef.current(newContent);
   };
 
-  // Config is completely stable: it only depends on placeholder and direction
-  // It NEVER recreates the editor instance during typing!
+  // Config adapts to theme, placeholder, and direction
   const config = useMemo(
     () => ({
       readonly: false,
       placeholder,
       direction,
-      theme: "dark",
-      minHeight: 480,
+      theme: theme === "dark" ? "dark" : "default",
+      minHeight,
       toolbarSticky: true,
       toolbarStickyOffset: 72,
       toolbarAdaptive: false,
@@ -209,6 +212,8 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
         "strikethrough",
         "|",
         "paragraph",
+        "ul",
+        "ol",
         "fontsize",
         "brush",
         "|",
@@ -225,13 +230,13 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
         "fullsize",
       ],
       style: {
-        background: "#121416",
-        color: "#e1e2e5",
-        borderColor: "rgba(225, 226, 229, 0.1)",
+        background: theme === "dark" ? "#1f1f1e" : "#ffffff",
+        color: theme === "dark" ? "#f8f9fa" : "#1f1f1e",
+        borderColor: theme === "dark" ? "rgba(248, 249, 250, 0.16)" : "rgba(31, 31, 30, 0.16)",
         fontFamily: "var(--font-vazirmatn), sans-serif",
       },
     }),
-    [placeholder, direction]
+    [placeholder, direction, theme, minHeight]
   );
 
   return (
@@ -241,7 +246,7 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
           <button
             type="button"
             onClick={handleOpenPicker}
-            className="px-4 py-2 rounded-xl bg-panel border border-foreground/15 text-mint hover:text-white hover:bg-primary/40 text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="px-4 py-2 rounded-xl bg-panel border border-border text-mint hover:text-foreground hover:bg-primary/15 text-xs font-bold transition-all flex items-center gap-2 shadow-xs active:scale-95 cursor-pointer"
           >
             <svg className="w-4 h-4 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -252,7 +257,7 @@ const JoditWysiwyg = forwardRef<JoditWysiwygHandle, Props>(function JoditWysiwyg
       )}
 
       {/* Sticky toolbar container with proper layering */}
-      <div className="rounded-2xl border border-foreground/10 bg-[#121416] shadow-sm relative [&_.jodit-toolbar__box]:sticky [&_.jodit-toolbar__box]:top-[72px] [&_.jodit-toolbar__box]:z-20 [&_.jodit-toolbar__box]:bg-[#191c1e] [&_.jodit-toolbar__box]:border-b [&_.jodit-toolbar__box]:border-foreground/10 [&_.jodit-container]:border-0 [&_.jodit-container]:bg-transparent">
+      <div className="rounded-2xl border border-border bg-panel shadow-xs relative [&_.jodit-toolbar__box]:sticky [&_.jodit-toolbar__box]:top-[72px] [&_.jodit-toolbar__box]:z-20 [&_.jodit-toolbar__box]:bg-raised [&_.jodit-toolbar__box]:border-b [&_.jodit-toolbar__box]:border-border [&_.jodit-container]:border-0 [&_.jodit-container]:bg-transparent">
         <JoditEditor
           ref={editorRef}
           value={editorValue}

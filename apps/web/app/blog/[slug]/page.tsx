@@ -245,6 +245,24 @@ export default function ArticleDetailPage() {
 
               {/* Inner 1600px max-width container */}
               <div className="w-full max-w-[1600px] mx-auto space-y-6 relative z-10">
+                {/* Breadcrumb Navigation */}
+                <nav
+                  aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+                  className="flex items-center gap-2 text-xs font-mono text-white/70 select-none mb-1"
+                >
+                  <a href="/" className="hover:text-white transition-colors">
+                    {isRtl ? "خانه" : "Home"}
+                  </a>
+                  <span className="opacity-40">/</span>
+                  <a href="/blog" className="hover:text-white transition-colors">
+                    {isRtl ? "دانشنامه و مقالات" : "Articles"}
+                  </a>
+                  <span className="opacity-40">/</span>
+                  <span className="text-white/90 font-medium truncate max-w-[200px] sm:max-w-md">
+                    {displayTitle}
+                  </span>
+                </nav>
+
                 {/* Navigation Back Link */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <a

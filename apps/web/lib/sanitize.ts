@@ -47,6 +47,59 @@ export function sanitizeArticleHtml(dirtyHtml?: string | null): string {
   });
 }
 
+const SAFE_STYLE_PROPS = new Set([
+  'text-align',
+  'direction',
+  'color',
+  'background-color',
+  'font-size',
+  'max-width',
+  'height',
+  'border-radius',
+  'margin',
+]);
+
+function filterSafeInlineStyle(styleValue: string): string {
+  return styleValue
+    .split(';')
+    .map((decl) => decl.trim())
+    .filter(Boolean)
+    .map((decl) => {
+      const colonIdx = decl.indexOf(':');
+      if (colonIdx <= 0) return '';
+      const prop = decl.slice(0, colonIdx).trim().toLowerCase();
+      const val = decl.slice(colonIdx + 1).trim();
+      if (!SAFE_STYLE_PROPS.has(prop)) return '';
+      if (/url\s*\(|expression\s*\(|javascript:|vbscript:/i.test(val)) return '';
+      return `${prop}: ${val}`;
+    })
+    .filter(Boolean)
+    .join('; ');
+}
+
+/**
+ * Sanitizes rich-text service HTML before rendering with dangerouslySetInnerHTML.
+ * Preserves safe typography, lists, links, alignment, and media while blocking XSS.
+ */
+export function sanitizeServiceHtml(dirtyHtml?: string | null): string {
+  if (!dirtyHtml || typeof dirtyHtml !== 'string') {
+    return '';
+  }
+
+  const clean = DOMPurify.sanitize(dirtyHtml, {
+    ALLOWED_TAGS: ALLOWED_ARTICLE_TAGS,
+    ALLOWED_ATTR: [...ALLOWED_ARTICLE_ATTRS, 'style'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    ALLOW_DATA_ATTR: false,
+    ADD_ATTR: ['target', 'rel'],
+  });
+
+  return clean.replace(/\sstyle="([^"]*)"/gi, (_match, rawStyle: string) => {
+    const safeStyle = filterSafeInlineStyle(rawStyle);
+    return safeStyle ? ` style="${safeStyle}"` : '';
+  });
+}
+
 /**
  * Safely serializes data into JSON for embedding inside <script type="application/ld+json">.
  * Replaces angle brackets with unicode escapes to prevent HTML parser breakout (</script> injection).

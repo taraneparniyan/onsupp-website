@@ -9,14 +9,18 @@
  * 4. Automatic session handling: redirects to /admin/login on 401 Unauthorized.
  */
 
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+export const BACKEND_URL = typeof window === "undefined" ? (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002") : "";
 
 export interface AdminFetchOptions extends RequestInit {
   skipAuthRedirect?: boolean;
 }
 
 export async function adminFetch(endpoint: string, options: AdminFetchOptions = {}): Promise<Response> {
-  const url = endpoint.startsWith("http") ? endpoint : `${BACKEND_URL}${endpoint}`;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : typeof window === "undefined"
+      ? `${BACKEND_URL}${endpoint}`
+      : endpoint;
 
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {

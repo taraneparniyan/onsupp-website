@@ -5,6 +5,11 @@ import {
   requireContentManager,
   AuthenticatedRequest,
 } from "../middleware/auth.js";
+import {
+  normalizeFocusKeyword,
+  normalizeSecondaryKeywords,
+  normalizeSeoConfig,
+} from "../utils/seoConfig.js";
 
 const router = Router();
 export const prisma = new PrismaClient();
@@ -58,6 +63,20 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res: Response) =
     const whereCondition: any = {};
     if (!isManager) {
       whereCondition.published = true;
+      // Filter out test and placeholder mock entries from public view
+      whereCondition.AND = [
+        {
+          NOT: [
+            { slug: { startsWith: "test" } },
+            { slug: { startsWith: "article-179" } },
+            { slug: "seo-technical-architecture-1793534887383" },
+            { titleFa: "تست" },
+            { titleFa: "New Article" },
+            { titleFa: "API Service Post" },
+            { titleFa: "" },
+          ],
+        },
+      ];
     }
     if (authorQuery) {
       whereCondition.author = {
@@ -71,7 +90,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res: Response) =
 
     const articles = await prisma.article.findMany({
       where: whereCondition,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       take: limit,
       include: articleIncludeRelations,
     });
@@ -98,6 +117,19 @@ router.get("/by-slug/:slug", authenticate, async (req: AuthenticatedRequest, res
       return res.status(404).json({ error: "Article not found" });
     }
 
+    if (!isManager && (
+      article.slug.startsWith("test") ||
+      article.slug.startsWith("article-179") ||
+      article.slug === "seo-technical-architecture-1793534887383" ||
+      article.titleFa === "تست" ||
+      article.titleFa === "New Article" ||
+      article.titleFa === "API Service Post" ||
+      !article.titleFa ||
+      article.titleFa.trim() === ""
+    )) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+
     res.json(formatArticle(article));
   } catch (error) {
     console.error("[Article by-slug Error]", error);
@@ -121,6 +153,19 @@ router.get("/:id", authenticate, async (req: AuthenticatedRequest, res: Response
 
     const isManager = canManageArticles(req.user?.role);
     if (!article.published && !isManager) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+
+    if (!isManager && (
+      article.slug.startsWith("test") ||
+      article.slug.startsWith("article-179") ||
+      article.slug === "seo-technical-architecture-1793534887383" ||
+      article.titleFa === "تست" ||
+      article.titleFa === "New Article" ||
+      article.titleFa === "API Service Post" ||
+      !article.titleFa ||
+      article.titleFa.trim() === ""
+    )) {
       return res.status(404).json({ error: "Article not found" });
     }
 
@@ -160,6 +205,10 @@ router.post("/", authenticate, requireContentManager, async (req: AuthenticatedR
       keywordsEn,
       canonicalUrl,
       ogImage,
+      focusKeyword,
+      secondaryKeywords,
+      isPillar,
+      seoConfig,
     } = req.body;
 
     const validatedLang = language === "en" ? "en" : "fa";
@@ -223,6 +272,10 @@ router.post("/", authenticate, requireContentManager, async (req: AuthenticatedR
         keywordsEn: keywordsEn || "",
         canonicalUrl: canonicalUrl || "",
         ogImage: ogImage || imageUrl || "",
+        focusKeyword: normalizeFocusKeyword(focusKeyword),
+        secondaryKeywords: normalizeSecondaryKeywords(secondaryKeywords),
+        isPillar: Boolean(isPillar),
+        seoConfig: normalizeSeoConfig(seoConfig, "BlogPosting"),
       },
     });
 
@@ -293,6 +346,10 @@ router.put("/:id", authenticate, requireContentManager, async (req: Authenticate
       keywordsEn,
       canonicalUrl,
       ogImage,
+      focusKeyword,
+      secondaryKeywords,
+      isPillar,
+      seoConfig,
     } = req.body;
 
     const validatedLang = language ? (language === "en" ? "en" : "fa") : currentArticle.language;
@@ -375,6 +432,14 @@ router.put("/:id", authenticate, requireContentManager, async (req: Authenticate
         ...(keywordsEn !== undefined && { keywordsEn }),
         ...(canonicalUrl !== undefined && { canonicalUrl }),
         ...(ogImage !== undefined && { ogImage }),
+        ...(focusKeyword !== undefined && { focusKeyword: normalizeFocusKeyword(focusKeyword) }),
+        ...(secondaryKeywords !== undefined && {
+          secondaryKeywords: normalizeSecondaryKeywords(secondaryKeywords),
+        }),
+        ...(isPillar !== undefined && { isPillar: Boolean(isPillar) }),
+        ...(seoConfig !== undefined && {
+          seoConfig: normalizeSeoConfig(seoConfig, "BlogPosting"),
+        }),
       },
     });
 

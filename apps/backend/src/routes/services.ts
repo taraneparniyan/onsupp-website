@@ -1,45 +1,170 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient, ContentStatus } from '@prisma/client';
-import { authenticate, requireAdmin, AuthenticatedRequest } from '../middleware/auth.js';
-import { logAudit } from '../services/auditService.js';
-import { triggerRevalidation } from '../services/revalidationService.js';
+import { PrismaClient, PublicationStatus } from '@prisma/client';
+import { authenticate, requireContentManager, AuthenticatedRequest } from '../middleware/auth.js';
+import { triggerRevalidation } from '../services/revalidateService.js';
+import {
+  normalizeFocusKeyword,
+  normalizeSecondaryKeywords,
+  normalizeSeoConfig,
+} from '../utils/seoConfig.js';
 
 const router = Router();
-
-function revalidateServices(slug?: string) {
-  triggerRevalidation({ path: "/services" }).catch(() => {});
-  triggerRevalidation({ path: "/" }).catch(() => {});
-  triggerRevalidation({ tag: "services" }).catch(() => {});
-  if (slug) {
-    triggerRevalidation({ path: `/services/${slug}` }).catch(() => {});
-  }
-}
 const prisma = new PrismaClient();
 
-function parseId(param: string | string[] | undefined): number {
-  const val = Array.isArray(param) ? param[0] : param;
-  return val ? parseInt(val, 10) : NaN;
+/**
+ * Triggers Next.js cache invalidation for service archive, homepage, and affected service detail slugs.
+ * Logs warnings safely without exposing credentials and never interrupts or fails the parent database transaction.
+ */
+async function revalidateServiceCache(slugs: string[]) {
+  const cleanSlugs = Array.from(new Set(slugs.map((s) => (s || '').trim()).filter(Boolean)));
+  const tags = ['services', 'homepage', ...cleanSlugs.map((s) => `service-${s}`)];
+  const paths = ['/services', '/', ...cleanSlugs.map((s) => `/services/${s}`)];
+
+  try {
+    const result = await triggerRevalidation({ tags, paths });
+    if (!result.success) {
+      console.warn('[services] Revalidation dispatch returned non-success:', result.message, result.error || '');
+    }
+  } catch (err: any) {
+    console.warn('[services] Revalidation dispatch warning (database mutation preserved):', err.message || err);
+  }
 }
 
-// GET /api/v1/services (Public — ordered published services)
+const SERVICE_FIELDS = [
+  'slug',
+  'title',
+  'titleEn',
+  'subtitle',
+  'subtitleEn',
+  'tagFa',
+  'tagEn',
+  'headlineFa',
+  'headlineEn',
+  'detailedNarrativeFa',
+  'detailedNarrativeEn',
+  'businessValueTitleFa',
+  'businessValueTitleEn',
+  'businessValueFa',
+  'businessValueEn',
+  'imageUrl',
+  'imageAlt',
+  'coverImage',
+  'gallery',
+  'iconType',
+  'badgeAccentFa',
+  'badgeAccentEn',
+  'ctaLabelFa',
+  'ctaLabelEn',
+  'subservices',
+  'deliverablesFa',
+  'deliverablesEn',
+  'metrics',
+  'relatedLinks',
+  'metaTitleFa',
+  'metaTitleEn',
+  'metaDescFa',
+  'metaDescEn',
+  'keywords',
+  'canonicalUrl',
+  'ogImage',
+  'focusKeyword',
+  'secondaryKeywords',
+  'isPillar',
+  'seoConfig',
+  'position',
+  'isPublished',
+  'status',
+] as const;
+
+const MAX_RICH_HTML_LENGTH = 200_000;
+
+/**
+ * Server-side HTML sanitization & validation for service rich-text fields.
+ * Strips executable/dangerous tags, inline event handlers, and unsafe URI schemes.
+ */
+function sanitizeServiceRichHtml(raw: unknown): { valid: boolean; value: string; error?: string } {
+  if (raw === null || raw === undefined) {
+    return { valid: true, value: '' };
+  }
+  const str = String(raw);
+  if (str.length > MAX_RICH_HTML_LENGTH) {
+    return {
+      valid: false,
+      value: '',
+      error: 'حجم محتوای متنی خدمت بیش از حد مجاز (۲۰۰ هزار کاراکتر) است',
+    };
+  }
+
+  const sanitized = str
+    // Remove dangerous container tags and their contents
+    .replace(/<\s*(script|style|iframe|object|embed|form|svg)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
+    // Remove standalone dangerous tags
+    .replace(/<\s*\/?\s*(script|style|iframe|object|embed|form|input|button|textarea|select|meta|link|base)\b[^>]*>/gi, '')
+    // Strip inline event handlers like onclick=..., onerror=...
+    .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    // Neutralize javascript: / vbscript: / data:text/html URIs in href/src
+    .replace(/(href|src)\s*=\s*(["'])\s*(?:javascript|vbscript|data\s*:\s*text\/html)[\s\S]*?\2/gi, '$1=$2#$2');
+
+  return { valid: true, value: sanitized };
+}
+
+function extractServiceData(body: any): { data?: Record<string, any>; error?: string } {
+  const data: Record<string, any> = {};
+  for (const key of SERVICE_FIELDS) {
+    if (body[key] !== undefined) {
+      if (key === 'imageUrl' || key === 'coverImage') {
+        data[key] = body[key] ? String(body[key]) : null;
+      } else if (key === 'imageAlt') {
+        data[key] = body[key] ? String(body[key]) : '';
+      } else if (key === 'detailedNarrativeFa' || key === 'detailedNarrativeEn') {
+        const res = sanitizeServiceRichHtml(body[key]);
+        if (!res.valid) {
+          return { error: res.error };
+        }
+        data[key] = res.value;
+      } else if (key === 'focusKeyword') {
+        data[key] = normalizeFocusKeyword(body[key]);
+      } else if (key === 'secondaryKeywords') {
+        data[key] = normalizeSecondaryKeywords(body[key]);
+      } else if (key === 'isPillar') {
+        data[key] = Boolean(body[key]);
+      } else if (key === 'seoConfig') {
+        data[key] = normalizeSeoConfig(body[key], 'Service');
+      } else {
+        data[key] = body[key];
+      }
+    }
+  }
+
+  // Auto-sync status and isPublished boolean
+  if (data.status) {
+    data.isPublished = data.status === PublicationStatus.PUBLISHED;
+  } else if (data.isPublished !== undefined) {
+    data.status = data.isPublished ? PublicationStatus.PUBLISHED : PublicationStatus.DRAFT;
+  }
+
+  return { data };
+}
+
+// GET /api/v1/services (Public — returns published services only)
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const services = await prisma.service.findMany({
       where: {
-        published: true,
-        status: ContentStatus.PUBLISHED,
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       orderBy: { position: 'asc' },
     });
     res.json(services);
   } catch (error) {
-    console.error('[services] list error:', error);
+    console.error('[services] public list error:', error);
     res.status(500).json({ error: 'دریافت خدمات ناموفق بود' });
   }
 });
 
-// GET /api/v1/services/admin (Admin only — all services including drafts)
-router.get('/admin', authenticate, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+// GET /api/v1/services/all (Admin — returns all services including drafts)
+router.get('/all', authenticate, requireContentManager, async (_req: AuthenticatedRequest, res: Response) => {
   try {
     const services = await prisma.service.findMany({
       orderBy: { position: 'asc' },
@@ -47,198 +172,88 @@ router.get('/admin', authenticate, requireAdmin, async (_req: AuthenticatedReque
     res.json(services);
   } catch (error) {
     console.error('[services] admin list error:', error);
-    res.status(500).json({ error: 'دریافت لیست کامل خدمات ناموفق بود' });
+    res.status(500).json({ error: 'دریافت لیست مدیریت خدمات ناموفق بود' });
   }
 });
 
-// PUT /api/v1/services/reorder (Admin only — batch reorder)
-router.put('/reorder', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+// GET /api/v1/services/:slugOrId (Public / Preview — single service lookup by slug or ID)
+router.get('/:slugOrId', authenticate, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { items } = req.body;
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ error: 'آرایه items الزامی است' });
+    const raw = String(req.params.slugOrId).trim();
+    const numericId = parseInt(raw, 10);
+
+    let service = null;
+    if (!Number.isNaN(numericId)) {
+      service = await prisma.service.findUnique({ where: { id: numericId } });
     }
-
-    await prisma.$transaction(
-      items.map((item: { id: number; position: number }) =>
-        prisma.service.update({
-          where: { id: Number(item.id) },
-          data: { position: Number(item.position) },
-        })
-      )
-    );
-
-    triggerRevalidation({ path: '/services' }).catch(() => {});
-    res.json({ message: 'ترتیب خدمات با موفقیت ذخیره شد' });
-  } catch (error) {
-    console.error('[services] reorder error:', error);
-    res.status(500).json({ error: 'خطا در تغییر ترتیب خدمات' });
-  }
-});
-
-// GET /api/v1/services/by-slug/:slug (Public or Admin)
-router.get('/by-slug/:slug', authenticate, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const slug = req.params.slug as string;
-    if (!slug) {
-      return res.status(400).json({ error: 'نامک (slug) نامعتبر است' });
+    if (!service) {
+      service = await prisma.service.findFirst({ where: { slug: raw } });
     }
-
-    const service = await prisma.service.findFirst({
-      where: { slug: slug.trim() },
-    });
 
     if (!service) {
       return res.status(404).json({ error: 'خدمت مورد نظر یافت نشد' });
     }
 
-    const isAdmin = req.user && ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
-    if (!isAdmin && (!service.published || service.status !== ContentStatus.PUBLISHED)) {
-      return res.status(404).json({ error: 'خدمت مورد نظر یافت نشد یا در دسترس نیست' });
-    }
-
-    res.json(service);
-  } catch (error) {
-    console.error('[services] by-slug error:', error);
-    res.status(500).json({ error: 'خطا در دریافت مشخصات خدمت' });
-  }
-});
-
-// GET /api/v1/services/:id (Public or Admin)
-router.get('/:id', authenticate, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ error: 'شناسه نامعتبر است' });
-    }
-
-    const service = await prisma.service.findUnique({ where: { id } });
-    if (!service) {
+    // Public vs. Draft isolation
+    const isManager = req.user && ['SUPER_ADMIN', 'ADMIN', 'CONTENT_SEO_MANAGER'].includes(req.user.role);
+    if ((!service.isPublished || service.status !== PublicationStatus.PUBLISHED) && !isManager) {
       return res.status(404).json({ error: 'خدمت مورد نظر یافت نشد' });
     }
 
-    const isAdmin = req.user && ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
-    if (!isAdmin && (!service.published || service.status !== ContentStatus.PUBLISHED)) {
-      return res.status(404).json({ error: 'خدمت مورد نظر یافت نشد یا در دسترس نیست' });
-    }
-
     res.json(service);
   } catch (error) {
-    console.error('[services] single error:', error);
-    res.status(500).json({ error: 'خطا در دریافت مشخصات خدمت' });
+    console.error('[services] single fetch error:', error);
+    res.status(500).json({ error: 'دریافت جزئیات خدمت ناموفق بود' });
   }
 });
 
 // POST /api/v1/services (Admin — create service)
-router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const {
-      title,
-      titleEn = '',
-      subtitle = '',
-      subtitleEn = '',
-      slug,
-      tagFa = '',
-      tagEn = '',
-      iconType = 'web',
-      headlineFa = '',
-      headlineEn = '',
-      descriptionFa = '',
-      descriptionEn = '',
-      detailedNarrativeFa = '',
-      detailedNarrativeEn = '',
-      businessValueTitleFa = '',
-      businessValueTitleEn = '',
-      businessValueFa = '',
-      businessValueEn = '',
-      imageUrl = null,
-      imageAlt = null,
-      coverImageUrl = null,
-      coverImageAlt = null,
-      gallery = [],
-      subservices = [],
-      deliverablesFa = [],
-      deliverablesEn = [],
-      metrics = [],
-      relatedLinks = [],
-      metaTitleFa = '',
-      metaTitleEn = '',
-      metaDescFa = '',
-      metaDescEn = '',
-      keywordsFa = '',
-      keywordsEn = '',
-      canonicalUrl = '',
-      ogImage = '',
-      position,
-      published = true,
-      status = 'PUBLISHED',
-    } = req.body;
+    const extracted = extractServiceData(req.body);
+    if (extracted.error || !extracted.data) {
+      return res.status(400).json({ error: extracted.error || 'اطلاعات خدمت نامعتبر است' });
+    }
+    const data = extracted.data;
 
-    if (!title) {
+    if (!data.title && !data.titleEn) {
       return res.status(400).json({ error: 'عنوان خدمت الزامی است' });
     }
 
-    if (imageUrl && !imageAlt) {
-      return res.status(400).json({ error: 'برای تصویر، متن جایگزین (Alt) الزامی است' });
+    if (!data.slug) {
+      data.slug = String(data.titleEn || data.title)
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+        .replace(/^-+|-+$/g, '') || `service-${Date.now()}`;
     }
 
-    const count = await prisma.service.count();
-    const finalPosition = typeof position === 'number' ? position : count;
-    const finalSlug = slug?.trim() || titleEn?.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || `service-${Date.now()}`;
+    // Check slug uniqueness
+    const conflict = await prisma.service.findFirst({ where: { slug: data.slug } });
+    if (conflict) {
+      data.slug = `${data.slug}-${Date.now()}`;
+    }
 
-    const service = await prisma.service.create({
-      data: {
-        title,
-        titleEn,
-        subtitle,
-        subtitleEn,
-        slug: finalSlug,
-        tagFa,
-        tagEn,
-        iconType,
-        headlineFa,
-        headlineEn,
-        descriptionFa,
-        descriptionEn,
-        detailedNarrativeFa,
-        detailedNarrativeEn,
-        businessValueTitleFa,
-        businessValueTitleEn,
-        businessValueFa,
-        businessValueEn,
-        imageUrl: imageUrl ? String(imageUrl) : null,
-        imageAlt: imageAlt ? String(imageAlt) : null,
-        coverImageUrl: coverImageUrl ? String(coverImageUrl) : null,
-        coverImageAlt: coverImageAlt ? String(coverImageAlt) : null,
-        gallery: Array.isArray(gallery) ? gallery : [],
-        subservices,
-        deliverablesFa: Array.isArray(deliverablesFa) ? deliverablesFa : [],
-        deliverablesEn: Array.isArray(deliverablesEn) ? deliverablesEn : [],
-        metrics,
-        relatedLinks,
-        metaTitleFa,
-        metaTitleEn,
-        metaDescFa,
-        metaDescEn,
-        keywordsFa,
-        keywordsEn,
-        canonicalUrl,
-        ogImage,
-        position: finalPosition,
-        published: Boolean(published),
-        status: status in ContentStatus ? (status as ContentStatus) : ContentStatus.PUBLISHED,
-      },
-    });
+    if (data.position === undefined) {
+      data.position = await prisma.service.count();
+    }
 
-    await logAudit({
-      userId: req.user?.id,
-      action: 'CREATE_SERVICE',
-      targetId: service.id,
-      details: `Created service: ${service.title} (${service.slug})`,
-      ipAddress: req.ip,
-    });
+    const service = await prisma.service.create({ data: data as any });
 
-    revalidateServices(service.slug);
+    // Audit Log
+    if (req.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'CREATE_SERVICE',
+          targetId: service.id,
+          details: `Created service "${service.title}" (${service.slug})`,
+          ipAddress: req.ip || null,
+        },
+      });
+    }
+
+    // Trigger on-demand cache revalidation for services archive, homepage and affected detail slug
+    await revalidateServiceCache([service.slug]);
 
     res.status(201).json(service);
   } catch (error) {
@@ -248,115 +263,57 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
 });
 
 // PUT /api/v1/services/:id (Admin — update service)
-router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const id = parseId(req.params.id);
+    const id = parseInt(req.params.id as string, 10);
     if (Number.isNaN(id)) {
-      return res.status(400).json({ error: 'شناسه نامعتبر' });
+      return res.status(400).json({ error: 'شناسه نامعتبر است' });
     }
 
-    const {
-      title,
-      titleEn,
-      subtitle,
-      subtitleEn,
-      slug,
-      tagFa,
-      tagEn,
-      iconType,
-      headlineFa,
-      headlineEn,
-      descriptionFa,
-      descriptionEn,
-      detailedNarrativeFa,
-      detailedNarrativeEn,
-      businessValueTitleFa,
-      businessValueTitleEn,
-      businessValueFa,
-      businessValueEn,
-      imageUrl,
-      imageAlt,
-      coverImageUrl,
-      coverImageAlt,
-      gallery,
-      subservices,
-      deliverablesFa,
-      deliverablesEn,
-      metrics,
-      relatedLinks,
-      metaTitleFa,
-      metaTitleEn,
-      metaDescFa,
-      metaDescEn,
-      keywordsFa,
-      keywordsEn,
-      canonicalUrl,
-      ogImage,
-      position,
-      published,
-      status,
-    } = req.body;
+    const extracted = extractServiceData(req.body);
+    if (extracted.error || !extracted.data) {
+      return res.status(400).json({ error: extracted.error || 'اطلاعات خدمت نامعتبر است' });
+    }
+    const data = extracted.data;
 
-    const data: Record<string, any> = {};
-    if (title !== undefined) data.title = title;
-    if (titleEn !== undefined) data.titleEn = titleEn;
-    if (subtitle !== undefined) data.subtitle = subtitle;
-    if (subtitleEn !== undefined) data.subtitleEn = subtitleEn;
-    if (slug !== undefined) data.slug = String(slug).trim();
-    if (tagFa !== undefined) data.tagFa = tagFa;
-    if (tagEn !== undefined) data.tagEn = tagEn;
-    if (iconType !== undefined) data.iconType = iconType;
-    if (headlineFa !== undefined) data.headlineFa = headlineFa;
-    if (headlineEn !== undefined) data.headlineEn = headlineEn;
-    if (descriptionFa !== undefined) data.descriptionFa = descriptionFa;
-    if (descriptionEn !== undefined) data.descriptionEn = descriptionEn;
-    if (detailedNarrativeFa !== undefined) data.detailedNarrativeFa = detailedNarrativeFa;
-    if (detailedNarrativeEn !== undefined) data.detailedNarrativeEn = detailedNarrativeEn;
-    if (businessValueTitleFa !== undefined) data.businessValueTitleFa = businessValueTitleFa;
-    if (businessValueTitleEn !== undefined) data.businessValueTitleEn = businessValueTitleEn;
-    if (businessValueFa !== undefined) data.businessValueFa = businessValueFa;
-    if (businessValueEn !== undefined) data.businessValueEn = businessValueEn;
-    if (imageUrl !== undefined) data.imageUrl = imageUrl ? String(imageUrl) : null;
-    if (imageAlt !== undefined) data.imageAlt = imageAlt ? String(imageAlt) : null;
-    if (coverImageUrl !== undefined) data.coverImageUrl = coverImageUrl ? String(coverImageUrl) : null;
-    if (coverImageAlt !== undefined) data.coverImageAlt = coverImageAlt ? String(coverImageAlt) : null;
-    if (gallery !== undefined) data.gallery = Array.isArray(gallery) ? gallery : [];
-    if (subservices !== undefined) data.subservices = subservices;
-    if (deliverablesFa !== undefined) data.deliverablesFa = Array.isArray(deliverablesFa) ? deliverablesFa : [];
-    if (deliverablesEn !== undefined) data.deliverablesEn = Array.isArray(deliverablesEn) ? deliverablesEn : [];
-    if (metrics !== undefined) data.metrics = metrics;
-    if (relatedLinks !== undefined) data.relatedLinks = relatedLinks;
-    if (metaTitleFa !== undefined) data.metaTitleFa = metaTitleFa;
-    if (metaTitleEn !== undefined) data.metaTitleEn = metaTitleEn;
-    if (metaDescFa !== undefined) data.metaDescFa = metaDescFa;
-    if (metaDescEn !== undefined) data.metaDescEn = metaDescEn;
-    if (keywordsFa !== undefined) data.keywordsFa = keywordsFa;
-    if (keywordsEn !== undefined) data.keywordsEn = keywordsEn;
-    if (canonicalUrl !== undefined) data.canonicalUrl = canonicalUrl;
-    if (ogImage !== undefined) data.ogImage = ogImage;
-    if (position !== undefined) data.position = Number(position);
-    if (published !== undefined) data.published = Boolean(published);
-    if (status !== undefined && status in ContentStatus) data.status = status as ContentStatus;
-
-    if (data.imageUrl && !data.imageAlt && req.body.imageAlt === undefined) {
-      // Validate only if updating imageUrl without alt
-      const existing = await prisma.service.findUnique({ where: { id } });
-      if (!existing?.imageAlt) {
-        return res.status(400).json({ error: 'برای تصویر، متن جایگزین (Alt) الزامی است' });
+    if (data.slug) {
+      const conflict = await prisma.service.findFirst({
+        where: { slug: data.slug, NOT: { id } },
+      });
+      if (conflict) {
+        return res.status(400).json({ error: 'این نامک (slug) قبلاً برای خدمت دیگری ثبت شده است' });
       }
     }
 
-    const service = await prisma.service.update({ where: { id }, data });
-
-    await logAudit({
-      userId: req.user?.id,
-      action: 'UPDATE_SERVICE',
-      targetId: id,
-      details: `Updated service: ${service.title}`,
-      ipAddress: req.ip,
+    const existing = await prisma.service.findUnique({
+      where: { id },
+      select: { id: true, slug: true },
     });
 
-    revalidateServices(service.slug);
+    const service = await prisma.service.update({
+      where: { id },
+      data: data as any,
+    });
+
+    // Audit Log
+    if (req.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'UPDATE_SERVICE',
+          targetId: service.id,
+          details: `Updated service "${service.title}"`,
+          ipAddress: req.ip || null,
+        },
+      });
+    }
+
+    // Trigger on-demand cache revalidation for services, new slug and previous slug if changed
+    const slugsToPurge = [service.slug];
+    if (existing?.slug && existing.slug !== service.slug) {
+      slugsToPurge.push(existing.slug);
+    }
+    await revalidateServiceCache(slugsToPurge);
 
     res.json(service);
   } catch (error) {
@@ -366,26 +323,38 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
 });
 
 // DELETE /api/v1/services/:id (Admin — delete service)
-router.delete('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', authenticate, requireContentManager, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const id = parseId(req.params.id);
+    const id = parseInt(req.params.id as string, 10);
     if (Number.isNaN(id)) {
-      return res.status(400).json({ error: 'شناسه نامعتبر' });
+      return res.status(400).json({ error: 'شناسه نامعتبر است' });
     }
 
-    const service = await prisma.service.delete({ where: { id } });
+    const existing = await prisma.service.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'خدمت مورد نظر یافت نشد' });
+    }
 
-    await logAudit({
-      userId: req.user?.id,
-      action: 'DELETE_SERVICE',
-      targetId: id,
-      details: `Deleted service: ${service.title}`,
-      ipAddress: req.ip,
-    });
+    const deletedSlug = existing.slug;
+    await prisma.service.delete({ where: { id } });
 
-    revalidateServices(service.slug);
+    // Audit Log
+    if (req.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'DELETE_SERVICE',
+          targetId: id,
+          details: `Deleted service "${existing.title}"`,
+          ipAddress: req.ip || null,
+        },
+      });
+    }
 
-    res.json({ message: 'حذف شد' });
+    // Trigger on-demand cache revalidation for services and deleted slug
+    await revalidateServiceCache(deletedSlug ? [deletedSlug] : []);
+
+    res.json({ message: 'خدمت با موفقیت حذف شد' });
   } catch (error) {
     console.error('[services] delete error:', error);
     res.status(500).json({ error: 'حذف خدمت ناموفق بود' });

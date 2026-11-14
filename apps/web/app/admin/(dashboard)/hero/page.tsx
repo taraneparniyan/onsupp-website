@@ -16,10 +16,39 @@ type SlideForm = {
   ctaText2: string;
   ctaText2En: string;
   ctaLink2: string;
+  cta2Enabled: boolean;
   imageUrl: string | null;
   imageAlt: string | null;
   position: number;
 };
+
+const INTERNAL_PAGE_OPTIONS = [
+  { label: "صفحه اصلی (/)", value: "/" },
+  { label: "خدمات تخصصی (/services)", value: "/services" },
+  { label: "نمونه‌کارها و گالری (/portfolio)", value: "/portfolio" },
+  { label: "کیس استادی‌ها (/case-studies)", value: "/case-studies" },
+  { label: "پلن‌ها و تعرفه‌ها (/pricing)", value: "/pricing" },
+  { label: "مقالات و وبلاگ (/blog)", value: "/blog" },
+  { label: "درباره ما (/about)", value: "/about" },
+  { label: "تماس با ما (/contact)", value: "/contact" },
+  { label: "فرم مشاوره صفحه اصلی (/#contact)", value: "/#contact" },
+  { label: "بخش مشاوره (#contact)", value: "#contact" },
+];
+
+function isExternalHref(url?: string | null): boolean {
+  return /^https?:\/\//i.test((url || "").trim());
+}
+
+function isValidExternalHref(url?: string | null): boolean {
+  const trimmed = (url || "").trim();
+  if (!trimmed || /\s/.test(trimmed)) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return (parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
 
 const EMPTY_SLIDE = (position: number): SlideForm => ({
   title: "",
@@ -28,10 +57,11 @@ const EMPTY_SLIDE = (position: number): SlideForm => ({
   subtitleEn: "",
   ctaText: "",
   ctaTextEn: "",
-  ctaLink: "#contact",
+  ctaLink: "/services",
   ctaText2: "",
   ctaText2En: "",
-  ctaLink2: "#contact",
+  ctaLink2: "/about",
+  cta2Enabled: true,
   imageUrl: null,
   imageAlt: null,
   position,
@@ -49,6 +79,7 @@ function toPayload(s: SlideForm) {
     ctaText2: s.ctaText2,
     ctaText2En: s.ctaText2En,
     ctaLink2: s.ctaLink2,
+    cta2Enabled: s.cta2Enabled,
     imageUrl: s.imageUrl,
     imageAlt: s.imageAlt,
     position: s.position,
@@ -71,13 +102,19 @@ export default function HeroAdminPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!Array.isArray(data)) return;
-        setItems(data.map((s) => ({ ...s, position: s.position ?? 0 })));
+        setItems(
+          data.map((s) => ({
+            ...s,
+            cta2Enabled: s.cta2Enabled !== false,
+            position: s.position ?? 0,
+          }))
+        );
       })
       .catch(() => notify("err", "خطا در دریافت اسلایدها"))
       .finally(() => setLoading(false));
   }, [notify]);
 
-  const update = (index: number, field: keyof SlideForm, value: string | null) => {
+  const update = (index: number, field: keyof SlideForm, value: string | boolean | null) => {
     setItems((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
   };
 
@@ -94,8 +131,13 @@ export default function HeroAdminPage() {
       notify("err", "عنوان اسلاید الزامی است");
       return;
     }
-    if (slide.imageUrl && !slide.imageAlt?.trim()) {
-      notify("err", "برای تصویر، متن جایگزین (Alt) الزامی است");
+
+    if (isExternalHref(slide.ctaLink) && !isValidExternalHref(slide.ctaLink)) {
+      notify("err", "آدرس لینک خارجی دکمه اول نامعتبر است (مثال: https://example.com)");
+      return;
+    }
+    if (slide.cta2Enabled && isExternalHref(slide.ctaLink2) && !isValidExternalHref(slide.ctaLink2)) {
+      notify("err", "آدرس لینک خارجی دکمه دوم نامعتبر است (مثال: https://example.com)");
       return;
     }
 
@@ -180,9 +222,9 @@ export default function HeroAdminPage() {
         <button
           type="button"
           onClick={addNew}
-          className="bg-gradient-to-r from-primary to-primary-hover text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg hover:shadow-[#3f6b59]/30 transition-all border border-primary/40 flex items-center gap-2"
+          className="bg-lime text-ink px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 flex items-center gap-2 cursor-pointer"
         >
-          <svg className="w-5 h-5 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
           افزودن اسلاید جدید
@@ -194,7 +236,7 @@ export default function HeroAdminPage() {
           className={`text-sm px-5 py-3.5 rounded-lg border ${
             message.type === "ok"
               ? "text-mint bg-panel border-primary/20"
-              : "text-rose-300 bg-[#2b1216] border-[#542129]"
+              : "text-burgundy bg-burgundy/10 border-burgundy/30"
           }`}
         >
           {message.text}
@@ -307,30 +349,208 @@ export default function HeroAdminPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">دکمه اول (FA)</label>
-                      <input
-                        value={slide.ctaText}
-                        onChange={(e) => update(index, "ctaText", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
+                  {/* CTA 1 Settings */}
+                  <div className="p-4 rounded-2xl bg-raised/50 border border-border space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-foreground">تنظیمات دکمه اول (CTA 1)</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-mint mb-1.5">متن دکمه اول (FA)</label>
+                        <input
+                          data-testid={`hero-cta1-text-${index}`}
+                          value={slide.ctaText}
+                          onChange={(e) => update(index, "ctaText", e.target.value)}
+                          placeholder="مشاهده خدمات"
+                          className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-mint mb-1.5">متن دکمه اول (EN)</label>
+                        <input
+                          dir="ltr"
+                          data-testid={`hero-cta1-text-en-${index}`}
+                          value={slide.ctaTextEn}
+                          onChange={(e) => update(index, "ctaTextEn", e.target.value)}
+                          placeholder="Explore Services"
+                          className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-mint mb-1.5">نوع لینک دکمه اول</label>
+                        <select
+                          data-testid={`hero-cta1-link-type-${index}`}
+                          value={isExternalHref(slide.ctaLink) ? "external" : "internal"}
+                          onChange={(e) => {
+                            if (e.target.value === "external") {
+                              if (!isExternalHref(slide.ctaLink)) update(index, "ctaLink", "https://");
+                            } else {
+                              if (isExternalHref(slide.ctaLink) || !slide.ctaLink.trim()) {
+                                update(index, "ctaLink", "/services");
+                              }
+                            }
+                          }}
+                          className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                        >
+                          <option value="internal">لینک داخلی سایت</option>
+                          <option value="external">لینک خارجی (URL)</option>
+                        </select>
+                      </div>
+                      {!isExternalHref(slide.ctaLink) ? (
+                        <div>
+                          <label className="block text-xs font-semibold text-mint mb-1.5">انتخاب صفحه داخلی</label>
+                          <select
+                            data-testid={`hero-cta1-internal-select-${index}`}
+                            value={
+                              INTERNAL_PAGE_OPTIONS.some((o) => o.value === slide.ctaLink)
+                                ? slide.ctaLink
+                                : "__custom__"
+                            }
+                            onChange={(e) => {
+                              if (e.target.value !== "__custom__") {
+                                update(index, "ctaLink", e.target.value);
+                              }
+                            }}
+                            className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                          >
+                            {INTERNAL_PAGE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                            <option value="__custom__">مسیر دلخواه داخلی</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="flex items-end">
+                          <span className="text-[11px] text-muted pb-2">
+                            لینک‌های خارجی در تب جدید باز می‌شوند.
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">دکمه اول (EN)</label>
+                      <label className="block text-xs font-semibold text-mint mb-1.5">آدرس مقصد دکمه اول</label>
                       <input
-                        value={slide.ctaTextEn}
-                        onChange={(e) => update(index, "ctaTextEn", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-mint mb-1.5">لینک دکمه اول</label>
-                      <input
+                        dir="ltr"
+                        data-testid={`hero-cta1-link-${index}`}
                         value={slide.ctaLink}
                         onChange={(e) => update(index, "ctaLink", e.target.value)}
-                        className="w-full bg-raised border border-foreground/10 text-white rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                        placeholder={isExternalHref(slide.ctaLink) ? "https://example.com" : "/services"}
+                        className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm font-mono focus:border-[#3f6b59] focus:outline-none"
                       />
+                    </div>
+                  </div>
+
+                  {/* CTA 2 Settings */}
+                  <div className="p-4 rounded-2xl bg-raised/50 border border-border space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-foreground">تنظیمات دکمه دوم (CTA 2)</span>
+                      <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          data-testid={`hero-cta2-enabled-${index}`}
+                          checked={slide.cta2Enabled}
+                          onChange={(e) => update(index, "cta2Enabled", e.target.checked)}
+                          className="h-4 w-4 rounded border-border accent-lime cursor-pointer"
+                        />
+                        <span className="text-xs font-semibold text-foreground">
+                          {slide.cta2Enabled ? "فعال (نمایش در سایت)" : "غیرفعال (مخفی در سایت)"}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className={`space-y-3 ${slide.cta2Enabled ? "" : "opacity-60"}`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-mint mb-1.5">متن دکمه دوم (FA)</label>
+                          <input
+                            data-testid={`hero-cta2-text-${index}`}
+                            value={slide.ctaText2}
+                            onChange={(e) => update(index, "ctaText2", e.target.value)}
+                            placeholder="درباره ما"
+                            className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-mint mb-1.5">متن دکمه دوم (EN)</label>
+                          <input
+                            dir="ltr"
+                            data-testid={`hero-cta2-text-en-${index}`}
+                            value={slide.ctaText2En}
+                            onChange={(e) => update(index, "ctaText2En", e.target.value)}
+                            placeholder="About Us"
+                            className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-mint mb-1.5">نوع لینک دکمه دوم</label>
+                          <select
+                            data-testid={`hero-cta2-link-type-${index}`}
+                            value={isExternalHref(slide.ctaLink2) ? "external" : "internal"}
+                            onChange={(e) => {
+                              if (e.target.value === "external") {
+                                if (!isExternalHref(slide.ctaLink2)) update(index, "ctaLink2", "https://");
+                              } else {
+                                if (isExternalHref(slide.ctaLink2) || !slide.ctaLink2.trim()) {
+                                  update(index, "ctaLink2", "/about");
+                                }
+                              }
+                            }}
+                            className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                          >
+                            <option value="internal">لینک داخلی سایت</option>
+                            <option value="external">لینک خارجی (URL)</option>
+                          </select>
+                        </div>
+                        {!isExternalHref(slide.ctaLink2) ? (
+                          <div>
+                            <label className="block text-xs font-semibold text-mint mb-1.5">انتخاب صفحه داخلی</label>
+                            <select
+                              data-testid={`hero-cta2-internal-select-${index}`}
+                              value={
+                                INTERNAL_PAGE_OPTIONS.some((o) => o.value === slide.ctaLink2)
+                                  ? slide.ctaLink2
+                                  : "__custom__"
+                              }
+                              onChange={(e) => {
+                                if (e.target.value !== "__custom__") {
+                                  update(index, "ctaLink2", e.target.value);
+                                }
+                              }}
+                              className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:border-[#3f6b59] focus:outline-none"
+                            >
+                              {INTERNAL_PAGE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                              <option value="__custom__">مسیر دلخواه داخلی</option>
+                            </select>
+                          </div>
+                        ) : (
+                          <div className="flex items-end">
+                            <span className="text-[11px] text-muted pb-2">
+                              لینک‌های خارجی در تب جدید باز می‌شوند.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-mint mb-1.5">آدرس مقصد دکمه دوم</label>
+                        <input
+                          dir="ltr"
+                          data-testid={`hero-cta2-link-${index}`}
+                          value={slide.ctaLink2}
+                          onChange={(e) => update(index, "ctaLink2", e.target.value)}
+                          placeholder={isExternalHref(slide.ctaLink2) ? "https://example.com" : "/about"}
+                          className="w-full bg-panel border border-border text-foreground rounded-xl px-3 py-2 text-sm font-mono focus:border-[#3f6b59] focus:outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -351,14 +571,21 @@ export default function HeroAdminPage() {
                     <button
                       type="button"
                       onClick={() => setPickerIdx(index)}
-                      className="bg-raised border border-primary/30 text-mint px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#255243] transition-all"
+                      className="bg-raised border border-primary/30 text-mint px-5 py-2 rounded-xl text-xs font-bold hover:bg-primary/15 transition-all cursor-pointer"
                     >
                       {previewSrc ? "تغییر تصویر" : "انتخاب از کتابخانه رسانه"}
                     </button>
                   </div>
-                  {slide.imageAlt && (
-                    <p className="text-xs text-mint bg-raised p-2 rounded-xl border border-[#1f3d33]">Alt: {slide.imageAlt}</p>
-                  )}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-foreground/70">متن جایگزین تصویر (Alt Text)</label>
+                    <input
+                      type="text"
+                      value={slide.imageAlt || ""}
+                      onChange={(e) => update(index, "imageAlt", e.target.value)}
+                      placeholder="متن جایگزین تصویر (برای تصاویر تزئینی خالی بگذارید)..."
+                      className="w-full bg-raised border border-foreground/15 text-xs text-foreground rounded-xl px-3 py-2 focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -367,7 +594,7 @@ export default function HeroAdminPage() {
                   type="button"
                   onClick={() => save(index)}
                   disabled={saving}
-                  className="bg-gradient-to-r from-primary to-primary-hover text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 disabled:opacity-50"
+                  className="bg-lime text-ink px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all border border-primary/40 disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? "در حال ذخیره..." : slide.id ? "ذخیره تغییرات اسلاید" : "ایجاد اسلاید"}
                 </button>

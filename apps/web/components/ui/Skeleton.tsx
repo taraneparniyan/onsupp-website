@@ -45,8 +45,8 @@ export function StatsCardSkeleton() {
  */
 export function AnalyticsChartSkeleton() {
   return (
-    <div className="bg-panel p-6 sm:p-7 rounded-2xl border border-white/10 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+    <div className="bg-panel p-6 sm:p-7 rounded-2xl border border-border space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="space-y-2">
           <Skeleton className="w-48 h-5" />
           <Skeleton className="w-64 h-3.5" />
@@ -63,7 +63,7 @@ export function AnalyticsChartSkeleton() {
         {[40, 65, 30, 85, 55, 90, 45, 75, 60, 95, 70, 80].map((heightPct, idx) => (
           <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
             <Skeleton
-              className="w-full rounded-t-lg bg-white/[0.08]"
+              className="w-full rounded-t-lg bg-foreground/[0.08]"
               style={{ height: `${heightPct}%` }}
             />
             <Skeleton className="w-6 h-2.5" />
@@ -71,9 +71,9 @@ export function AnalyticsChartSkeleton() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-border">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+          <div key={i} className="p-3 rounded-xl bg-raised border border-border space-y-2">
             <Skeleton className="w-20 h-3" />
             <Skeleton className="w-12 h-5" />
           </div>

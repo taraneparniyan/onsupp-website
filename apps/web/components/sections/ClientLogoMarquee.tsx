@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { BACKEND_URL } from "@/config/api";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { BACKEND_URL } from "@/config/api";
 
 export interface ClientLogo {
-  id: string | number;
-  filename?: string;
-  imageUrl?: string;
+  id: string;
+  filename: string;
   nameFa: string;
-  nameEn?: string;
-  websiteUrl?: string | null;
-  width?: number;
-  height?: number;
+  nameEn: string;
+  width: number;
+  height: number;
 }
 
 export const CLIENT_LOGOS: ClientLogo[] = [
@@ -101,21 +99,14 @@ export default function ClientLogoMarquee() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const mapped: ClientLogo[] = data.map((item: any) => {
-            let img = item.imageUrl || "";
-            if (img.startsWith("/images/clients/")) {
-              img = img.replace("/images/clients/", "/images/client-logos/");
-            }
-            return {
-              id: item.id,
-              imageUrl: img,
-              nameFa: item.nameFa || item.altFa || "",
-              nameEn: item.nameEn || item.altEn || item.nameFa || "",
-              websiteUrl: item.websiteUrl || null,
-              width: item.width || 180,
-              height: item.height || 60,
-            };
-          });
+          const mapped: ClientLogo[] = data.map((l: any) => ({
+            id: l.key || `logo-${l.id}`,
+            filename: l.logoUrl,
+            nameFa: l.nameFa,
+            nameEn: l.nameEn,
+            width: l.width || 300,
+            height: l.height || 120,
+          }));
           setLogos(mapped);
         }
       })
@@ -123,62 +114,67 @@ export default function ClientLogoMarquee() {
   }, []);
 
   const renderLogoItem = (logo: ClientLogo, key: string) => {
-    const rawSrc = logo.imageUrl
-      ? logo.imageUrl
-      : `/images/client-logos/${encodeURIComponent(logo.filename || "")}`;
-    const altText = (isRtl ? logo.nameFa : logo.nameEn) || logo.nameFa;
+    const normalizedPath = logo.filename.startsWith("/images/logos/")
+      ? logo.filename.replace("/images/logos/", "/images/client-logos/")
+      : logo.filename;
 
-    const imgElement = (
-      <img
-        src={rawSrc}
-        alt={altText}
-        loading="eager"
-        decoding="async"
-        className="h-9 sm:h-11 md:h-12 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[180px] object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_1px_8px_rgba(255,255,255,0.22)]"
-      />
-    );
+    // Resolve raster client logos to real white vector SVGs while preserving CMS source
+    const svgResolvedPath =
+      normalizedPath.startsWith("/images/client-logos/") && /\.(png|webp|jpe?g)$/i.test(normalizedPath)
+        ? normalizedPath
+            .replace("/images/client-logos/", "/images/client-logos-svg/")
+            .replace(/\.(png|webp|jpe?g)$/i, ".svg")
+        : !normalizedPath.includes("/") && /\.(png|webp|jpe?g)$/i.test(normalizedPath)
+        ? `/images/client-logos-svg/${normalizedPath.replace(/\.(png|webp|jpe?g)$/i, ".svg")}`
+        : normalizedPath;
+
+    const src = svgResolvedPath.startsWith("http")
+      ? svgResolvedPath
+      : svgResolvedPath.startsWith("/")
+      ? svgResolvedPath
+          .split("/")
+          .map((seg, i) => (i === 0 ? "" : encodeURIComponent(decodeURIComponent(seg))))
+          .join("/")
+      : svgResolvedPath.startsWith("uploads/")
+      ? `/${svgResolvedPath}`
+      : `/images/client-logos-svg/${encodeURIComponent(decodeURIComponent(svgResolvedPath))}`;
 
     return (
       <div
         key={key}
         className="shrink-0 flex items-center justify-center h-14 sm:h-16 md:h-18 px-2 sm:px-3 select-none transition-transform duration-300 hover:scale-105"
-        title={altText}
+        title={isRtl ? logo.nameFa : logo.nameEn}
       >
-        {logo.websiteUrl ? (
-          <a
-            href={logo.websiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center"
-          >
-            {imgElement}
-          </a>
-        ) : (
-          imgElement
-        )}
+        <img
+          src={src}
+          alt={isRtl ? logo.nameFa : logo.nameEn}
+          width={logo.width}
+          height={logo.height}
+          loading="eager"
+          decoding="async"
+          className="h-9 sm:h-11 md:h-12 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[180px] object-contain opacity-80 hover:opacity-100 transition-all brightness-0 dark:brightness-100 dark:invert-0"
+        />
       </div>
     );
   };
-
-  
 
   return (
     <section
       id="client-logos-marquee"
       aria-label={isRtl ? "برندهایی که به ما اعتماد کرده‌اند" : "Brands That Trust OnSupp"}
-      className="relative w-full py-10 sm:py-14 md:py-16 overflow-hidden bg-white dark:bg-[#151918] border-y border-foreground/[0.06] dark:border-white/[0.08] transition-colors duration-500"
+      className="relative w-full py-10 sm:py-14 md:py-16 overflow-hidden bg-white dark:bg-[#141716] text-[#1F1F1E] dark:text-white border-y border-black/[0.06] dark:border-white/10 transition-colors duration-500"
       dir={isRtl ? "rtl" : "ltr"}
     >
       {/* ── Section Header (Understated & Compact) ── */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-6 sm:mb-8">
         <ScrollReveal once>
           <div className="inline-flex items-center gap-3 mb-2 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase">
-            <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50" />
+            <span className="h-px w-10 bg-[#38534A]/40 dark:bg-[#8AB3A0]/50" />
             <span>{isRtl ? "مشتریان و همکاران" : "CLIENTS & PARTNERS"}</span>
           </div>
 
           <h2
-            className={`text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-foreground ${
+            className={`text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-[#1F1F1E] dark:text-white ${
               isRtl
                 ? "font-[family-name:var(--font-vazirmatn)]"
                 : "font-[family-name:var(--font-gendy)]"
@@ -197,13 +193,13 @@ export default function ClientLogoMarquee() {
         {/* Left edge blur / fade */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 md:w-40 bg-gradient-to-r from-white dark:from-[#151918] to-transparent z-10"
+          className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 md:w-40 bg-gradient-to-r from-white dark:from-[#141716] to-transparent z-10"
         />
 
         {/* Right edge blur / fade */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 md:w-40 bg-gradient-to-l from-white dark:from-[#151918] to-transparent z-10"
+          className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 md:w-40 bg-gradient-to-l from-white dark:from-[#141716] to-transparent z-10"
         />
 
         {/* 

@@ -25,6 +25,7 @@ type Submission = {
   name: string;
   phone: string;
   email?: string;
+  subject?: string;
   service: string;
   message?: string;
   read: boolean;
@@ -145,9 +146,9 @@ export default function AdminContactPage() {
         <div className="flex items-center gap-2 bg-raised p-1.5 rounded-lg border border-foreground/10">
           <button
             onClick={() => setActiveTab("submissions")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all relative ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all relative cursor-pointer ${
               activeTab === "submissions"
-                ? "bg-gradient-to-r from-primary to-primary-hover text-white border border-primary/40 shadow-md"
+                ? "bg-lime text-ink border border-primary/40 shadow-md"
                 : "text-mint hover:text-white"
             }`}
           >
@@ -161,9 +162,9 @@ export default function AdminContactPage() {
 
           <button
             onClick={() => setActiveTab("settings")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "settings"
-                ? "bg-gradient-to-r from-primary to-primary-hover text-white border border-primary/40 shadow-md"
+                ? "bg-lime text-ink border border-primary/40 shadow-md"
                 : "text-mint hover:text-white"
             }`}
           >
@@ -202,12 +203,12 @@ export default function AdminContactPage() {
                         setSelectedSubmission(sub);
                         if (!sub.read) handleToggleRead(sub);
                       }}
-                      className={`p-4 rounded-lg border transition-all cursor-pointer space-y-2 ${
+                      className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2 ${
                         isSelected
-                          ? "bg-[#142e26] border-mint/20 shadow-md"
+                          ? "bg-primary/15 border-primary/40 shadow-md"
                           : sub.read
-                          ? "bg-panel/60 border-[#1c3a30] opacity-80"
-                          : "bg-[#11261f] border-mint/20"
+                          ? "bg-raised/60 border-border opacity-85"
+                          : "bg-primary/10 border-primary/30"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -228,6 +229,10 @@ export default function AdminContactPage() {
                           {sub.service}
                         </span>
                       </div>
+
+                      {sub.subject && (
+                        <p className="text-xs font-semibold text-white/90 line-clamp-1">موضوع: {sub.subject}</p>
+                      )}
 
                       {sub.message && (
                         <p className="text-xs text-mint line-clamp-1">{sub.message}</p>
@@ -280,6 +285,15 @@ export default function AdminContactPage() {
                       </div>
                     )}
 
+                    {selectedSubmission.subject && (
+                      <div className="flex items-center justify-between pt-2 border-t border-foreground/10">
+                        <span className="text-xs text-mint">موضوع درخواست:</span>
+                        <span className="font-bold text-white text-xs">
+                          {selectedSubmission.subject}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between pt-2 border-t border-foreground/10">
                       <span className="text-xs text-mint">خدمت درخواستی:</span>
                       <span className="font-bold text-white px-2.5 py-1 rounded-lg bg-raised/50 text-xs">
@@ -305,7 +319,7 @@ export default function AdminContactPage() {
                   <div className="pt-2 flex items-center justify-between">
                     <button
                       onClick={() => handleToggleRead(selectedSubmission)}
-                      className="px-4 py-2 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-[#1f4236]"
+                      className="px-4 py-2 rounded-xl bg-raised border border-primary/25 text-mint text-xs font-bold hover:bg-primary/15 cursor-pointer"
                     >
                       {selectedSubmission.read ? "علامت‌گذاری به عنوان خوانده‌نشده" : "علامت‌گذاری به عنوان خوانده‌شده"}
                     </button>
@@ -498,7 +512,7 @@ export default function AdminContactPage() {
             <button
               type="submit"
               disabled={savingSettings}
-              className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-primary to-primary-hover text-white font-black text-sm border border-primary/40 shadow-md hover:scale-105 transition-all"
+              className="px-8 py-3.5 rounded-lg bg-lime text-ink font-black text-sm border border-primary/40 shadow-md hover:scale-105 transition-all cursor-pointer"
             >
               {savingSettings ? "در حال ذخیره‌سازی..." : "ذخیره تغییرات بخش تماس"}
             </button>

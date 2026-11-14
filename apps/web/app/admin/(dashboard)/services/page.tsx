@@ -1,682 +1,1151 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { adminFetch } from "@/lib/adminApi";
 import MediaPickerModal, { type MediaItem } from "@/components/admin/MediaPickerModal";
+import JoditWysiwyg, { type JoditWysiwygHandle } from "@/components/editor/JoditWysiwyg";
+import { adminFetch } from "@/lib/adminApi";
+import SeoPanel from "@/components/seo/SeoPanel";
+import {
+  createDefaultSeoConfig,
+  mergeSeoConfig,
+  type SeoConfig,
+  type SeoLang,
+  type SeoPanelValue,
+} from "@/lib/seo/types";
 
-export type AdminService = {
-  id: number;
+export interface ServiceItem {
+  id?: number;
+  slug: string;
   title: string;
   titleEn: string;
-  slug?: string | null;
-  iconType?: string | null;
-  headlineFa?: string | null;
-  headlineEn?: string | null;
   subtitle: string;
   subtitleEn: string;
-  descriptionFa?: string | null;
-  descriptionEn?: string | null;
-  detailedNarrativeFa?: string | null;
-  detailedNarrativeEn?: string | null;
-  businessValueTitleFa?: string | null;
-  businessValueFa?: string | null;
-  subservices?: Array<{ nameFa: string; nameEn?: string; descFa: string; descEn?: string }> | null;
-  metrics?: Array<{ valueFa: string; valueEn?: string; labelFa: string; labelEn?: string }> | null;
-  imageUrl: string | null;
-  imageAlt: string | null;
-  position: number;
-  published: boolean;
-  seoTitle?: string | null;
-  seoDescription?: string | null;
-};
-
-interface ServiceFormData {
-  title: string;
-  titleEn: string;
-  slug: string;
-  iconType: string;
+  tagFa: string;
+  tagEn: string;
   headlineFa: string;
   headlineEn: string;
-  subtitle: string;
-  subtitleEn: string;
-  descriptionFa: string;
-  descriptionEn: string;
   detailedNarrativeFa: string;
+  detailedNarrativeEn: string;
   businessValueTitleFa: string;
+  businessValueTitleEn: string;
   businessValueFa: string;
-  subservices: Array<{ nameFa: string; descFa: string }>;
-  metrics: Array<{ valueFa: string; labelFa: string }>;
-  imageUrl: string;
-  imageAlt: string;
+  businessValueEn: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  coverImage: string | null;
+  badgeAccentFa: string;
+  badgeAccentEn: string;
+  ctaLabelFa: string;
+  ctaLabelEn: string;
+  subservices: Array<{ nameFa: string; nameEn?: string; descFa?: string }>;
+  deliverablesFa: string[];
+  deliverablesEn: string[];
+  metrics: Array<{ valueFa: string; labelFa: string; descFa?: string }>;
+  metaTitleFa: string;
+  metaTitleEn?: string;
+  metaDescFa: string;
+  metaDescEn?: string;
+  keywords: string;
+  canonicalUrl?: string;
+  ogImage?: string;
+  focusKeyword?: string;
+  secondaryKeywords?: string[];
+  isPillar?: boolean;
+  seoConfig?: SeoConfig;
   position: number;
-  published: boolean;
-  seoTitle: string;
-  seoDescription: string;
+  isPublished: boolean;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
 }
 
-const EMPTY_FORM: ServiceFormData = {
+const EMPTY_SERVICE: ServiceItem = {
+  slug: "",
   title: "",
   titleEn: "",
-  slug: "",
-  iconType: "web",
-  headlineFa: "",
-  headlineEn: "",
   subtitle: "",
   subtitleEn: "",
-  descriptionFa: "",
-  descriptionEn: "",
+  tagFa: "خدمات دیجیتال",
+  tagEn: "Digital Services",
+  headlineFa: "",
+  headlineEn: "",
   detailedNarrativeFa: "",
+  detailedNarrativeEn: "",
   businessValueTitleFa: "ارزش تجاری و مزیت رقابتی",
+  businessValueTitleEn: "Business Value & ROI",
   businessValueFa: "",
-  subservices: [],
-  metrics: [],
-  imageUrl: "",
+  businessValueEn: "",
+  imageUrl: null,
   imageAlt: "",
+  coverImage: null,
+  badgeAccentFa: "راهکار سازمانی",
+  badgeAccentEn: "Enterprise Solution",
+  ctaLabelFa: "درخواست مشاوره تخصصی این خدمت",
+  ctaLabelEn: "Request Service Consultation",
+  subservices: [],
+  deliverablesFa: [],
+  deliverablesEn: [],
+  metrics: [],
+  metaTitleFa: "",
+  metaTitleEn: "",
+  metaDescFa: "",
+  metaDescEn: "",
+  keywords: "",
+  canonicalUrl: "",
+  ogImage: "",
+  focusKeyword: "",
+  secondaryKeywords: [],
+  isPillar: false,
+  seoConfig: createDefaultSeoConfig("service"),
   position: 0,
-  published: true,
-  seoTitle: "",
-  seoDescription: "",
+  isPublished: true,
+  status: "PUBLISHED",
 };
 
 export default function ServicesAdminPage() {
-  const [items, setItems] = useState<AdminService[]>([]);
+  const [items, setItems] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<ServiceFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<ServiceItem>(EMPTY_SERVICE);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<"general" | "narrative" | "media" | "deliverables" | "seo">("general");
+  const [seoLang, setSeoLang] = useState<SeoLang>("fa");
   const [saving, setSaving] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<"imageUrl" | "coverImage" | "narrativeFa" | null>(null);
+  const narrativeEditorRef = useRef<JoditWysiwygHandle>(null);
+  const [deliverablesInput, setDeliverablesInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const fetchItems = () => {
-    adminFetch("/api/v1/services", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setItems(data.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)));
-        }
-      })
-      .catch(() => setMessage({ type: "err", text: "خطا در دریافت لیست خدمات" }))
-      .finally(() => setLoading(false));
-  };
+  const notify = useCallback((type: "ok" | "err", text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => {
+      setMessage((cur) => (cur?.text === text ? null : cur));
+    }, 4500);
+  }, []);
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminFetch("/api/v1/services/all", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0)));
+      } else {
+        notify("err", "خطا در دریافت لیست خدمات");
+      }
+    } catch {
+      notify("err", "خطای ارتباط با سرور");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify]);
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    loadItems();
+  }, [loadItems]);
 
   const openCreateModal = () => {
     setEditingId(null);
-    setFormData({ ...EMPTY_FORM, position: items.length });
+    setForm({
+      ...EMPTY_SERVICE,
+      position: items.length,
+    });
+    setSeoLang("fa");
+    setDeliverablesInput("");
+    setModalTab("general");
     setIsModalOpen(true);
   };
 
-  const openEditModal = (s: AdminService) => {
-    setEditingId(s.id);
-    setFormData({
-      title: s.title || "",
-      titleEn: s.titleEn || "",
-      slug: s.slug || "",
-      iconType: s.iconType || "web",
-      headlineFa: s.headlineFa || "",
-      headlineEn: s.headlineEn || "",
-      subtitle: s.subtitle || "",
-      subtitleEn: s.subtitleEn || "",
-      descriptionFa: s.descriptionFa || s.subtitle || "",
-      descriptionEn: s.descriptionEn || s.subtitleEn || "",
-      detailedNarrativeFa: s.detailedNarrativeFa || "",
-      businessValueTitleFa: s.businessValueTitleFa || "ارزش تجاری و مزیت رقابتی",
-      businessValueFa: s.businessValueFa || "",
-      subservices: Array.isArray(s.subservices) ? s.subservices : [],
-      metrics: Array.isArray(s.metrics) ? s.metrics : [],
-      imageUrl: s.imageUrl || "",
-      imageAlt: s.imageAlt || s.title || "",
-      position: s.position ?? 0,
-      published: s.published !== false,
-      seoTitle: s.seoTitle || "",
-      seoDescription: s.seoDescription || "",
+  const openEditModal = (service: ServiceItem) => {
+    setEditingId(service.id || null);
+    setForm({
+      ...EMPTY_SERVICE,
+      ...service,
+      subservices: Array.isArray(service.subservices) ? service.subservices : [],
+      deliverablesFa: Array.isArray(service.deliverablesFa) ? service.deliverablesFa : [],
+      metrics: Array.isArray(service.metrics) ? service.metrics : [],
+      secondaryKeywords: Array.isArray(service.secondaryKeywords) ? service.secondaryKeywords : [],
+      seoConfig: mergeSeoConfig(service.seoConfig, "service"),
     });
+    setSeoLang("fa");
+    setDeliverablesInput(
+      Array.isArray(service.deliverablesFa) ? service.deliverablesFa.join("\n") : ""
+    );
+    setModalTab("general");
     setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setForm(EMPTY_SERVICE);
+  };
+
+  const handleMediaSelect = (media: MediaItem) => {
+    if (pickerTarget === "imageUrl") {
+      setForm((prev) => ({ ...prev, imageUrl: media.url, imageAlt: media.alt || prev.imageAlt }));
+    } else if (pickerTarget === "coverImage") {
+      setForm((prev) => ({ ...prev, coverImage: media.url }));
+    } else if (pickerTarget === "narrativeFa") {
+      narrativeEditorRef.current?.insertImage(media.url, media.alt || form.title || "تصویر خدمت");
+    }
+    setPickerTarget(null);
+  };
+
+  const handleTogglePublish = async (service: ServiceItem) => {
+    if (!service.id) return;
+    const nextStatus = !service.isPublished;
+    try {
+      const res = await adminFetch(`/api/v1/services/${service.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          isPublished: nextStatus,
+          status: nextStatus ? "PUBLISHED" : "DRAFT",
+        }),
+      });
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((s) =>
+            s.id === service.id
+              ? { ...s, isPublished: nextStatus, status: nextStatus ? "PUBLISHED" : "DRAFT" }
+              : s
+          )
+        );
+        notify("ok", `وضعیت انتشار ${service.title} تغییر یافت.`);
+      } else {
+        notify("err", "تغییر وضعیت ناموفق بود.");
+      }
+    } catch {
+      notify("err", "خطای شبکه");
+    }
+  };
+
+  const handleDelete = async (service: ServiceItem) => {
+    if (!service.id) return;
+    if (!confirm(`خدمت "${service.title}" حذف شود؟`)) return;
+
+    try {
+      const res = await adminFetch(`/api/v1/services/${service.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((s) => s.id !== service.id));
+        notify("ok", `خدمت "${service.title}" با موفقیت حذف شد.`);
+      } else {
+        notify("err", "حذف خدمت ناموفق بود.");
+      }
+    } catch {
+      notify("err", "خطای ارتباط با سرور");
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() && !formData.titleEn.trim()) {
-      setMessage({ type: "err", text: "عنوان خدمت الزامی است." });
+    if (!form.title.trim() && !form.titleEn.trim()) {
+      notify("err", "عنوان خدمت به فارسی یا انگلیسی الزامی است.");
       return;
     }
 
     setSaving(true);
-    setMessage(null);
+    const isEdit = !!editingId;
+    const endpoint = isEdit ? `/api/v1/services/${editingId}` : "/api/v1/services";
+    const method = isEdit ? "PUT" : "POST";
+
+    const parsedDeliverables = deliverablesInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const slug = form.slug.trim()
+      ? form.slug.trim().toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, "-")
+      : (form.titleEn || form.title)
+          .toLowerCase()
+          .replace(/[^a-z0-9\u0600-\u06FF]+/g, "-")
+          .replace(/^-+|-+$/g, "");
 
     const payload = {
-      title: formData.title,
-      titleEn: formData.titleEn,
-      slug: formData.slug || formData.titleEn.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      iconType: formData.iconType,
-      headlineFa: formData.headlineFa,
-      headlineEn: formData.headlineEn,
-      subtitle: formData.subtitle || formData.descriptionFa,
-      subtitleEn: formData.subtitleEn || formData.descriptionEn,
-      descriptionFa: formData.descriptionFa || formData.subtitle,
-      descriptionEn: formData.descriptionEn || formData.subtitleEn,
-      detailedNarrativeFa: formData.detailedNarrativeFa,
-      businessValueTitleFa: formData.businessValueTitleFa,
-      businessValueFa: formData.businessValueFa,
-      subservices: formData.subservices,
-      metrics: formData.metrics,
-      imageUrl: formData.imageUrl || null,
-      imageAlt: formData.imageAlt || formData.title,
-      position: formData.position,
-      published: formData.published,
-      seoTitle: formData.seoTitle,
-      seoDescription: formData.seoDescription,
+      ...form,
+      slug,
+      deliverablesFa: parsedDeliverables,
+      position: Number(form.position) || 0,
     };
 
     try {
-      const url = editingId ? `/api/v1/services/${editingId}` : "/api/v1/services";
-      const method = editingId ? "PUT" : "POST";
-
-      const res = await adminFetch(url, {
+      const res = await adminFetch(endpoint, {
         method,
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        setMessage({ type: "ok", text: editingId ? "خدمت با موفقیت ویرایش شد." : "خدمت جدید افزوده شد." });
-        setIsModalOpen(false);
-        fetchItems();
-      } else {
-        const err = await res.json().catch(() => null);
-        setMessage({ type: "err", text: err?.error || "خطا در ذخیره خدمت." });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "خطا در ذخیره خدمت");
       }
-    } catch {
-      setMessage({ type: "err", text: "خطا در اتصال به سرور." });
+
+      notify("ok", isEdit ? "تغییرات خدمت ذخیره شد." : "خدمت جدید با موفقیت اضافه شد.");
+      closeModal();
+      loadItems();
+    } catch (err: any) {
+      notify("err", err.message || "خطا در برقراری ارتباط");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("آیا از حذف این خدمت اطمینان دارید؟")) return;
-
-    try {
-      const res = await adminFetch(`/api/v1/services/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setMessage({ type: "ok", text: "خدمت حذف شد." });
-        fetchItems();
-      } else {
-        setMessage({ type: "err", text: "خطا در حذف خدمت." });
-      }
-    } catch {
-      setMessage({ type: "err", text: "خطا در اتصال به سرور." });
-    }
-  };
-
+  // Subservice items management inside modal
   const addSubservice = () => {
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
       subservices: [...prev.subservices, { nameFa: "", descFa: "" }],
     }));
   };
 
+  const updateSubservice = (idx: number, key: "nameFa" | "descFa", val: string) => {
+    setForm((prev) => ({
+      ...prev,
+      subservices: prev.subservices.map((sub, i) => (i === idx ? { ...sub, [key]: val } : sub)),
+    }));
+  };
+
   const removeSubservice = (idx: number) => {
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
       subservices: prev.subservices.filter((_, i) => i !== idx),
     }));
   };
 
-  const updateSubservice = (idx: number, field: "nameFa" | "descFa", val: string) => {
-    setFormData((prev) => {
-      const copy = [...prev.subservices];
-      copy[idx] = { ...copy[idx], [field]: val };
-      return { ...prev, subservices: copy };
-    });
-  };
-
+  // Metric items management inside modal
   const addMetric = () => {
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
       metrics: [...prev.metrics, { valueFa: "", labelFa: "" }],
     }));
   };
 
+  const updateMetric = (idx: number, key: "valueFa" | "labelFa", val: string) => {
+    setForm((prev) => ({
+      ...prev,
+      metrics: prev.metrics.map((m, i) => (i === idx ? { ...m, [key]: val } : m)),
+    }));
+  };
+
   const removeMetric = (idx: number) => {
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
       metrics: prev.metrics.filter((_, i) => i !== idx),
     }));
   };
 
-  const updateMetric = (idx: number, field: "valueFa" | "labelFa", val: string) => {
-    setFormData((prev) => {
-      const copy = [...prev.metrics];
-      copy[idx] = { ...copy[idx], [field]: val };
-      return { ...prev, metrics: copy };
-    });
-  };
+  const filteredItems = items.filter((s) =>
+    (s.title + s.titleEn + s.slug + s.tagFa).toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8" dir="rtl">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#232c27] pb-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">مدیریت دپارتمان‌ها و خدمات تخصصی (Services CMS)</h1>
-          <p className="text-sm text-[#8fa397]">
-            مدیریت کامل خدمات OnSupp، زیرخدمات، متریک‌های عملکردی، داستان ارزش تجاری و سئو در صفحات اصلی و اختصاصی
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+            <span className="p-2.5 rounded-xl bg-primary/15 text-mint border border-primary/25">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </span>
+            مدیریت خدمات و سرویس‌ها (Services CMS)
+          </h1>
+          <p className="text-sm text-muted mt-1">
+            مدیریت کامل کارت‌های خدمات صفحه اصلی، صفحات اختصاصی هر سرویس (`/services/[slug]`)، دستاوردها و ارزش‌های تجاری
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-primary to-primary-hover text-white shadow-lg hover:shadow-primary/20 transition-all"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>افزودن خدمت جدید</span>
-        </button>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openCreateModal}
+            className="px-5 py-2.5 rounded-xl bg-lime text-ink font-bold hover:opacity-90 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            افزودن خدمت جدید
+          </button>
+        </div>
       </div>
 
-      {/* ── Notification Banner ── */}
+      {/* Notification Banner */}
       {message && (
         <div
-          className={`p-4 rounded-xl text-sm font-medium border flex items-center justify-between transition-all ${
+          className={`p-4 rounded-xl text-sm font-medium flex items-center justify-between border ${
             message.type === "ok"
-              ? "bg-emerald-950/50 border-emerald-500/40 text-emerald-200"
-              : "bg-red-950/50 border-red-500/40 text-red-200"
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+              : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40"
           }`}
         >
           <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-xs opacity-70 hover:opacity-100">
+          <button onClick={() => setMessage(null)} className="text-xs opacity-70 hover:opacity-100">
             بستن
           </button>
         </div>
       )}
 
-      {/* ── Services Table ── */}
-      <div className="bg-[#131615] border border-[#1f2623] rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-[#181d1a] text-[#8fa397] text-xs font-semibold uppercase border-b border-[#232c27]">
-              <tr>
-                <th className="px-6 py-4">ترتیب</th>
-                <th className="px-6 py-4">تصویر / آیکون</th>
-                <th className="px-6 py-4">عنوان خدمت</th>
-                <th className="px-6 py-4">Slug</th>
-                <th className="px-6 py-4">دسته‌بندی آیکون</th>
-                <th className="px-6 py-4">وضعیت</th>
-                <th className="px-6 py-4 text-center">عملیات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1f2623]">
-              {loading ? (
+      {/* Search & Stats Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-panel border border-border p-4 rounded-2xl shadow-xs">
+        <div className="relative w-full sm:w-80">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="جستجوی عنوان، اسلاگ یا تگ..."
+            className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-muted focus:outline-none focus:border-primary transition-colors"
+          />
+          <svg className="w-4 h-4 text-muted absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <div className="text-xs text-muted flex items-center gap-4">
+          <span>تعداد کل: <strong className="text-foreground">{items.length}</strong></span>
+          <span className="text-border">|</span>
+          <span>منتشر شده: <strong className="text-emerald-600 dark:text-emerald-400">{items.filter((s) => s.isPublished).length}</strong></span>
+          <span className="text-border">|</span>
+          <span>پیش‌نویس: <strong className="text-amber-600 dark:text-amber-400">{items.filter((s) => !s.isPublished).length}</strong></span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-panel border border-border rounded-2xl overflow-hidden shadow-xs">
+        {loading ? (
+          <div className="py-20 text-center text-muted">
+            <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p>در حال بارگذاری اطلاعات خدمات...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="py-20 text-center text-muted">
+            هیچ خدمتی یافت نشد. دکمه «افزودن خدمت جدید» را بزنید.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-raised text-muted text-xs border-b border-border">
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-[#8fa397]">
-                    در حال بارگذاری لیست خدمات...
-                  </td>
+                  <th className="py-3.5 px-4 font-medium">ردیف</th>
+                  <th className="py-3.5 px-4 font-medium">تصویر</th>
+                  <th className="py-3.5 px-4 font-medium">عنوان خدمت</th>
+                  <th className="py-3.5 px-4 font-medium">دسته‌بندی / تگ</th>
+                  <th className="py-3.5 px-4 font-medium">اسلاگ URL</th>
+                  <th className="py-3.5 px-4 font-medium">وضعیت</th>
+                  <th className="py-3.5 px-4 font-medium text-left">عملیات</th>
                 </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-[#8fa397]">
-                    هیچ خدمتی ثبت نشده است. از دکمه بالا برای افزودن خدمت جدید استفاده کنید.
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#8fa397]">{item.position}</td>
-                    <td className="px-6 py-4">
-                      <div className="relative w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
-                        ) : (
-                          <span className="text-xs text-emerald-400 font-mono">
-                            {item.iconType || "web"}
-                          </span>
-                        )}
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredItems.map((service, idx) => (
+                  <tr key={service.id || idx} className="hover:bg-raised/60 transition-colors">
+                    <td className="py-4 px-4 font-mono text-xs text-muted">{service.position ?? idx}</td>
+                    <td className="py-4 px-4">
+                      {service.imageUrl || service.coverImage ? (
+                        <div className="w-12 h-12 rounded-xl overflow-hidden relative border border-border bg-raised">
+                          <Image
+                            src={service.imageUrl || service.coverImage || ""}
+                            alt={service.title}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-xs text-mint font-bold">
+                          {service.title.slice(0, 2)}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-white">
-                      <div>{item.title}</div>
-                      <div className="text-xs text-[#8fa397] font-mono mt-0.5" dir="ltr">
-                        {item.titleEn}
-                      </div>
+                    <td className="py-4 px-4">
+                      <div className="font-semibold text-foreground">{service.title}</div>
+                      <div className="text-xs text-muted font-mono mt-0.5">{service.titleEn}</div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-emerald-400" dir="ltr">
-                      {item.slug || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-mono text-[#8fa397]" dir="ltr">
-                      {item.iconType || "web"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          item.published !== false
-                            ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
-                            : "bg-amber-950/70 text-amber-300 border border-amber-500/30"
-                        }`}
-                      >
-                        {item.published !== false ? "منتشر شده" : "پیش‌نویس"}
+                    <td className="py-4 px-4">
+                      <span className="px-2.5 py-1 rounded-md text-xs bg-raised text-foreground border border-border">
+                        {service.tagFa || "خدمات دیجیتال"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-4 px-4">
+                      <a
+                        href={`/services/${service.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-mono text-mint hover:underline"
+                      >
+                        /services/{service.slug}
+                      </a>
+                    </td>
+                    <td className="py-4 px-4">
+                      <button
+                        onClick={() => handleTogglePublish(service)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                          service.isPublished
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
+                            : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40 hover:bg-amber-500/25"
+                        }`}
+                      >
+                        {service.isPublished ? "منتشر شده" : "پیش‌نویس"}
+                      </button>
+                    </td>
+                    <td className="py-4 px-4 text-left">
+                      <div className="flex items-center justify-end gap-2">
                         <button
-                          type="button"
-                          onClick={() => openEditModal(item)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1a221e] hover:bg-[#232f29] text-emerald-400 border border-[#2a3831] transition-colors"
+                          onClick={() => openEditModal(service)}
+                          className="px-3 py-1.5 rounded-lg bg-raised text-foreground text-xs hover:bg-primary/15 hover:text-mint border border-border transition-colors cursor-pointer"
                         >
                           ویرایش کامل
                         </button>
                         <button
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-950/30 hover:bg-red-950/60 text-red-400 border border-red-500/20 transition-colors"
+                          onClick={() => handleDelete(service)}
+                          className="px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-300 text-xs hover:bg-rose-500/25 border border-rose-500/40 transition-colors cursor-pointer"
                         >
                           حذف
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* ── Add / Edit Modal ── */}
+      {/* Comprehensive Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-[#131615] border border-[#232c27] rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#232c27] pb-4">
-              <h2 className="text-xl font-bold text-white">
-                {editingId ? `ویرایش خدمت: ${formData.title}` : "افزودن خدمت جدید"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-panel border border-border rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 md:p-8 space-y-6 shadow-2xl relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                {editingId ? `ویرایش خدمت: ${form.title}` : "ایجاد خدمت جدید"}
               </h2>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white text-lg p-1"
+                onClick={closeModal}
+                className="text-muted hover:text-foreground text-sm p-1.5 rounded-lg bg-raised hover:bg-subtle cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
+            {/* Modal Subtabs */}
+            <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto text-xs">
+              <button
+                type="button"
+                onClick={() => setModalTab("general")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "general"
+                    ? "bg-lime text-ink font-bold shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۱. عناوین و مشخصات پایه
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("narrative")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "narrative"
+                    ? "bg-lime text-ink font-bold shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۲. روایت و ارزش تجاری
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("media")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "media"
+                    ? "bg-lime text-ink font-bold shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۳. تصاویر و بنرها
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("deliverables")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "deliverables"
+                    ? "bg-lime text-ink font-bold shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۴. خروجی‌ها و زیرخدمات ({form.subservices.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("seo")}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  modalTab === "seo"
+                    ? "bg-lime text-ink font-bold shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                ۵. سئو و بهینه‌سازی
+              </button>
+            </div>
+
             <form onSubmit={handleSave} className="space-y-6">
-              {/* Row 1: Titles & Slug */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">عنوان خدمت (فارسی) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    placeholder="مثال: طراحی وب‌سایت و پرتال سازمانی"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">Service Title (English)</label>
-                  <input
-                    type="text"
-                    value={formData.titleEn}
-                    onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    dir="ltr"
-                    placeholder="Web & Enterprise Portal"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">Slug (شناسه یکتا)</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none font-mono text-emerald-400"
-                    dir="ltr"
-                    placeholder="web-development"
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Icon Type, Position, Published */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">نوع آیکون خدمت</label>
-                  <select
-                    value={formData.iconType}
-                    onChange={(e) => setFormData({ ...formData, iconType: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3 py-2.5 focus:border-primary focus:outline-none"
-                  >
-                    <option value="web">طراحی وب و پرتال (web)</option>
-                    <option value="seo">سئو تکنیکال (seo)</option>
-                    <option value="social">فضای مجازی و اینستاگرام (social)</option>
-                    <option value="studio">استودیو و تیزر (studio)</option>
-                    <option value="motion">انیمیشن و موشن (motion)</option>
-                    <option value="crm">اتوماسیون و CRM (crm)</option>
-                    <option value="software">نرم‌افزار اختصاصی (software)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">ترتیب نمایش</label>
-                  <input
-                    type="number"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) || 0 })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none font-mono"
-                    dir="ltr"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">وضعیت انتشار</label>
-                  <select
-                    value={formData.published ? "true" : "false"}
-                    onChange={(e) => setFormData({ ...formData, published: e.target.value === "true" })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3 py-2.5 focus:border-primary focus:outline-none"
-                  >
-                    <option value="true">منتشر شده (Published)</option>
-                    <option value="false">پیش‌نویس (Draft)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 3: Headline & Subtitle */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">تیتر برجسته خدمت (Headline Fa)</label>
-                  <input
-                    type="text"
-                    value={formData.headlineFa}
-                    onChange={(e) => setFormData({ ...formData, headlineFa: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    placeholder="معماری فرانت‌اند پرفورمنس‌محور و سیستم‌های ابری"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">توضیح کوتاه کارت (Subtitle Fa)</label>
-                  <input
-                    type="text"
-                    value={formData.subtitle}
-                    onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    placeholder="توضیح مختصر برای کارت خدمات در صفحه اصلی..."
-                  />
-                </div>
-              </div>
-
-              {/* Row 4: Detailed Narrative */}
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">روایت تفصیلی خدمت (Detailed Narrative)</label>
-                <textarea
-                  rows={3}
-                  value={formData.detailedNarrativeFa}
-                  onChange={(e) => setFormData({ ...formData, detailedNarrativeFa: e.target.value })}
-                  className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  placeholder="شرح کامل رویکرد مهندسی و ارزش‌آفرینی این دپارتمان در صفحه خدمات..."
-                />
-              </div>
-
-              {/* Row 5: Business Value */}
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">ارزش تجاری و مزیت رقابتی برای کارفرما</label>
-                <textarea
-                  rows={2}
-                  value={formData.businessValueFa}
-                  onChange={(e) => setFormData({ ...formData, businessValueFa: e.target.value })}
-                  className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  placeholder="چرا این خدمت به افزایش درآمد و بهره‌وری کارفرما منجر می‌شود..."
-                />
-              </div>
-
-              {/* Image Picker */}
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">تصویر شاخص خدمت</label>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                    {formData.imageUrl ? (
-                      <Image src={formData.imageUrl} alt="Service" fill className="object-cover" />
-                    ) : (
-                      <span className="text-xs text-gray-500">بدون تصویر</span>
-                    )}
+              {/* TAB 1: GENERAL */}
+              {modalTab === "general" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        عنوان خدمت (فارسی) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={form.title}
+                        onChange={(e) => setForm({ ...form, title: e.target.value })}
+                        placeholder="مثال: طراحی و مهندسی وب‌سایت‌های سازمانی"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        Service Title (English)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={form.titleEn}
+                        onChange={(e) => setForm({ ...form, titleEn: e.target.value })}
+                        placeholder="Enterprise Web & Software Engineering"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-1.5">
-                    <input
-                      type="text"
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                      className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-3 py-2 focus:border-primary focus:outline-none"
-                      dir="ltr"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setPickerOpen(true)}
-                      className="text-xs text-emerald-400 hover:underline"
-                    >
-                      انتخاب از رسانه‌ها...
-                    </button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        اسلاگ یکتای URL (Slug)
+                      </label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={form.slug}
+                        onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                        placeholder="web-design یا خالی بگذارید تا خودکار ایجاد شود"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        برچسب دسته‌بندی (Tag Fa)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.tagFa}
+                        onChange={(e) => setForm({ ...form, tagFa: e.target.value })}
+                        placeholder="توسعه وب / سئو / برندینگ"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        زیرعنوان خلاصه (Subtitle Fa)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={form.subtitle}
+                        onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                        placeholder="توضیح کوتاه کارت صفحه اصلی..."
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground resize-none focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        Subtitle (English)
+                      </label>
+                      <textarea
+                        rows={2}
+                        dir="ltr"
+                        value={form.subtitleEn}
+                        onChange={(e) => setForm({ ...form, subtitleEn: e.target.value })}
+                        placeholder="Short card description for homepage..."
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground resize-none focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">ترتیب نمایش (Position)</label>
+                      <input
+                        type="number"
+                        value={form.position}
+                        onChange={(e) => setForm({ ...form, position: parseInt(e.target.value, 10) || 0 })}
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 pt-6">
+                      <input
+                        type="checkbox"
+                        id="srvPublished"
+                        checked={form.isPublished}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            isPublished: e.target.checked,
+                            status: e.target.checked ? "PUBLISHED" : "DRAFT",
+                          })
+                        }
+                        className="w-5 h-5 rounded bg-raised border-border text-primary"
+                      />
+                      <label htmlFor="srvPublished" className="text-sm font-medium text-foreground cursor-pointer">
+                        انتشار در وب‌سایت (قابل مشاهده برای کاربران عمومی)
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Subservices Manager */}
-              <div className="p-4 rounded-xl bg-[#101413] border border-[#232c27] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">زیرخدمات و شاخه‌های تخصصی (Subservices)</span>
-                  <button
-                    type="button"
-                    onClick={addSubservice}
-                    className="text-xs text-emerald-400 hover:underline"
-                  >
-                    + افزودن زیرخدمت
-                  </button>
-                </div>
-                {formData.subservices.map((sub, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
+              {/* TAB 2: NARRATIVE */}
+              {modalTab === "narrative" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      هدلاین استراتژیک صفحه اختصاصی (Headline Fa)
+                    </label>
                     <input
                       type="text"
-                      value={sub.nameFa}
-                      onChange={(e) => updateSubservice(idx, "nameFa", e.target.value)}
-                      placeholder="عنوان زیرخدمت"
-                      className="w-1/3 bg-[#181d1b] border border-[#2a3530] text-white text-xs rounded-lg px-2.5 py-1.5"
+                      value={form.headlineFa}
+                      onChange={(e) => setForm({ ...form, headlineFa: e.target.value })}
+                      placeholder="مهندسی عملکردی، امنیت نفوذناپذیر و تجربه کاربری بی‌نقص"
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
                     />
-                    <input
-                      type="text"
-                      value={sub.descFa}
-                      onChange={(e) => updateSubservice(idx, "descFa", e.target.value)}
-                      placeholder="توضیح کوتاه زیرخدمت"
-                      className="flex-1 bg-[#181d1b] border border-[#2a3530] text-white text-xs rounded-lg px-2.5 py-1.5"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSubservice(idx)}
-                      className="text-red-400 hover:text-red-300 text-xs px-1.5"
-                    >
-                      ✕
-                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* Metrics Manager */}
-              <div className="p-4 rounded-xl bg-[#101413] border border-[#232c27] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">شاخص‌های کلیدی عملکرد (Metrics & Results)</span>
-                  <button
-                    type="button"
-                    onClick={addMetric}
-                    className="text-xs text-emerald-400 hover:underline"
-                  >
-                    + افزودن شاخص
-                  </button>
-                </div>
-                {formData.metrics.map((m, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={m.valueFa}
-                      onChange={(e) => updateMetric(idx, "valueFa", e.target.value)}
-                      placeholder="مقدار شاخص (مثال: +۲۴۰٪)"
-                      className="w-1/3 bg-[#181d1b] border border-[#2a3530] text-white text-xs rounded-lg px-2.5 py-1.5"
+                  <div data-testid="service-narrative-editor">
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      شرح جامع و روایت عمیق خدمت (Detailed Narrative Fa)
+                    </label>
+                    <JoditWysiwyg
+                      ref={narrativeEditorRef}
+                      value={form.detailedNarrativeFa}
+                      onChange={(newContent) =>
+                        setForm((prev) => ({ ...prev, detailedNarrativeFa: newContent }))
+                      }
+                      placeholder="روایت کامل فرآیند، استانداردهای فنی و رویکرد آن‌ساپ در ارائه این خدمت..."
+                      direction="rtl"
+                      minHeight={340}
+                      onOpenMediaPicker={() => {
+                        narrativeEditorRef.current?.saveSelection();
+                        setPickerTarget("narrativeFa");
+                      }}
                     />
-                    <input
-                      type="text"
-                      value={m.labelFa}
-                      onChange={(e) => updateMetric(idx, "labelFa", e.target.value)}
-                      placeholder="عنوان شاخص (مثال: رشد نرخ تبدیل)"
-                      className="flex-1 bg-[#181d1b] border border-[#2a3530] text-white text-xs rounded-lg px-2.5 py-1.5"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeMetric(idx)}
-                      className="text-red-400 hover:text-red-300 text-xs px-1.5"
-                    >
-                      ✕
-                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* SEO Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#232c27]">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">عنوان سئو (SEO Title)</label>
-                  <input
-                    type="text"
-                    value={formData.seoTitle}
-                    onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">توضیحات سئو (SEO Description)</label>
-                  <input
-                    type="text"
-                    value={formData.seoDescription}
-                    onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-3 py-2"
-                  />
-                </div>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        عنوان کارت ارزش تجاری (Business Value Title Fa)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.businessValueTitleFa}
+                        onChange={(e) => setForm({ ...form, businessValueTitleFa: e.target.value })}
+                        placeholder="مزیت رقابتی و بازگشت سرمایه"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1.5">
+                        متن دکمه مشاوره (CTA Label Fa)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.ctaLabelFa}
+                        onChange={(e) => setForm({ ...form, ctaLabelFa: e.target.value })}
+                        placeholder="درخواست مشاوره تخصصی این خدمت"
+                        className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                  </div>
 
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#232c27]">
+                  <div>
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      شرح ارزش تجاری (Business Value Fa)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={form.businessValueFa}
+                      onChange={(e) => setForm({ ...form, businessValueFa: e.target.value })}
+                      placeholder="این خدمت چگونه نرخ تبدیل، سئو و رشد درآمدی سازمان مشتری را تسریع می‌کند..."
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2 text-sm text-foreground resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: MEDIA */}
+              {modalTab === "media" && (
+                <div className="space-y-6">
+                  {/* Thumbnail / Image */}
+                  <div className="p-4 rounded-2xl bg-raised border border-border space-y-3">
+                    <label className="block text-xs font-semibold text-foreground">
+                      تصویر آیکون / پیش‌نمایش کارت (Thumbnail Image)
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {form.imageUrl ? (
+                        <div className="w-20 h-20 rounded-xl overflow-hidden relative border border-primary/40 bg-panel shrink-0">
+                          <Image src={form.imageUrl} alt={form.imageAlt || "Thumbnail"} fill className="object-cover" sizes="80px" />
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-xl border border-dashed border-border bg-panel flex items-center justify-center text-xs text-muted shrink-0">
+                          بدون تصویر
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2 w-full">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            dir="ltr"
+                            value={form.imageUrl || ""}
+                            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                            placeholder="مسیر فایل یا انتخاب از کتابخانه..."
+                            className="flex-1 bg-panel border border-border rounded-xl px-3 py-2 text-xs text-foreground font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setPickerTarget("imageUrl")}
+                            className="px-4 py-2 rounded-xl bg-primary/15 text-mint border border-primary/30 text-xs font-bold hover:bg-primary/25 cursor-pointer"
+                          >
+                            انتخاب رسانه
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={form.imageAlt || ""}
+                          onChange={(e) => setForm({ ...form, imageAlt: e.target.value })}
+                          placeholder="متن جایگزین (Alt)..."
+                          className="w-full bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-foreground"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cover Banner */}
+                  <div className="p-4 rounded-2xl bg-raised border border-border space-y-3">
+                    <label className="block text-xs font-semibold text-foreground">
+                      تصویر کاور هیرو اختصاصی (Cover Banner)
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {form.coverImage ? (
+                        <div className="w-32 h-20 rounded-xl overflow-hidden relative border border-primary/40 bg-panel shrink-0">
+                          <Image src={form.coverImage} alt="Cover Banner" fill className="object-cover" sizes="128px" />
+                        </div>
+                      ) : (
+                        <div className="w-32 h-20 rounded-xl border border-dashed border-border bg-panel flex items-center justify-center text-xs text-muted shrink-0">
+                          بدون کاور
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2 w-full">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            dir="ltr"
+                            value={form.coverImage || ""}
+                            onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+                            placeholder="مسیر بنر عریض..."
+                            className="flex-1 bg-panel border border-border rounded-xl px-3 py-2 text-xs text-foreground font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setPickerTarget("coverImage")}
+                            className="px-4 py-2 rounded-xl bg-primary/15 text-mint border border-primary/30 text-xs font-bold hover:bg-primary/25 cursor-pointer"
+                          >
+                            انتخاب رسانه
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: DELIVERABLES & SUBSERVICES */}
+              {modalTab === "deliverables" && (
+                <div className="space-y-6">
+                  {/* Deliverables */}
+                  <div>
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      خروجی‌ها و تحویل‌دادنی‌های اصلی خدمت (هر مورد در یک خط)
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={deliverablesInput}
+                      onChange={(e) => setDeliverablesInput(e.target.value)}
+                      placeholder={"معماری سیستم و دیتابیس توزیع‌شده\nکدنویسی تمیز با TypeScript و تست کامل\nپنل مدیریت اختصاصی و سفارشی‌سازی‌شده"}
+                      className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-primary resize-none"
+                    />
+                  </div>
+
+                  {/* Subservices list */}
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-foreground">
+                        زیرمجموعه‌ها و شاخه‌های تخصصی (Subservices)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addSubservice}
+                        className="text-xs text-mint hover:underline font-bold cursor-pointer"
+                      >
+                        + افزودن زیرسرویس
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {form.subservices.map((sub, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={sub.nameFa}
+                            onChange={(e) => updateSubservice(idx, "nameFa", e.target.value)}
+                            placeholder="عنوان زیرسرویس (مثال: طراحی رابط کاربری UI/UX)"
+                            className="w-1/3 bg-raised border border-border rounded-xl px-3 py-2 text-xs text-foreground"
+                          />
+                          <input
+                            type="text"
+                            value={sub.descFa || ""}
+                            onChange={(e) => updateSubservice(idx, "descFa", e.target.value)}
+                            placeholder="توضیح کوتاه شاخه..."
+                            className="flex-1 bg-raised border border-border rounded-xl px-3 py-2 text-xs text-foreground"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSubservice(idx)}
+                            className="p-2 text-burgundy hover:bg-rose-500/15 rounded-xl text-xs cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Metrics KPI */}
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-foreground">
+                        شاخص‌های کلیدی عملکرد (KPI Metrics)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addMetric}
+                        className="text-xs text-mint hover:underline font-bold cursor-pointer"
+                      >
+                        + افزودن متریک
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {form.metrics.map((met, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={met.valueFa}
+                            onChange={(e) => updateMetric(idx, "valueFa", e.target.value)}
+                            placeholder="مقدار (مثال: +۴۰٪ یا ۹۹.۹٪)"
+                            className="w-1/4 bg-raised border border-border rounded-xl px-3 py-2 text-xs text-foreground"
+                          />
+                          <input
+                            type="text"
+                            value={met.labelFa}
+                            onChange={(e) => updateMetric(idx, "labelFa", e.target.value)}
+                            placeholder="عنوان شاخص (مثال: افزایش نرخ تبدیل یا Uptime)"
+                            className="flex-1 bg-raised border border-border rounded-xl px-3 py-2 text-xs text-foreground"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeMetric(idx)}
+                            className="p-2 text-burgundy hover:bg-rose-500/15 rounded-xl text-xs cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: SEO */}
+              {modalTab === "seo" && (() => {
+                const currentConfig = mergeSeoConfig(form.seoConfig, "service");
+                const faLocale = currentConfig.locales?.fa;
+                const enLocale = currentConfig.locales?.en;
+
+                const seoValue: SeoPanelValue =
+                  seoLang === "en"
+                    ? {
+                        focusKeyword: enLocale?.focusKeyword || "",
+                        secondaryKeywords: Array.isArray(enLocale?.secondaryKeywords)
+                          ? enLocale.secondaryKeywords
+                          : [],
+                        metaTitle: form.metaTitleEn || enLocale?.metaTitle || "",
+                        metaDesc: form.metaDescEn || enLocale?.metaDesc || "",
+                        slug: form.slug || "",
+                        canonicalUrl: enLocale?.canonicalUrl || "",
+                        ogImage: form.ogImage || form.coverImage || form.imageUrl || "",
+                        isPillar: Boolean(enLocale?.isPillar),
+                        seoConfig: {
+                          ...currentConfig,
+                          robots: {
+                            ...currentConfig.robots,
+                            ...(enLocale?.robots || {}),
+                          },
+                        },
+                      }
+                    : {
+                        focusKeyword: form.focusKeyword || faLocale?.focusKeyword || "",
+                        secondaryKeywords:
+                          Array.isArray(form.secondaryKeywords) && form.secondaryKeywords.length > 0
+                            ? form.secondaryKeywords
+                            : Array.isArray(faLocale?.secondaryKeywords)
+                            ? faLocale.secondaryKeywords
+                            : [],
+                        metaTitle: form.metaTitleFa || "",
+                        metaDesc: form.metaDescFa || "",
+                        slug: form.slug || "",
+                        canonicalUrl: form.canonicalUrl || faLocale?.canonicalUrl || "",
+                        ogImage: form.ogImage || form.coverImage || form.imageUrl || "",
+                        isPillar: Boolean(form.isPillar),
+                        seoConfig: {
+                          ...currentConfig,
+                          robots: {
+                            ...currentConfig.robots,
+                            ...(faLocale?.robots || {}),
+                          },
+                        },
+                      };
+
+                const handleSeoChange = (next: SeoPanelValue) => {
+                  setForm((prev) => {
+                    const prevCfg = mergeSeoConfig(prev.seoConfig, "service");
+                    if (seoLang === "en") {
+                      return {
+                        ...prev,
+                        slug: next.slug,
+                        metaTitleEn: next.metaTitle,
+                        metaDescEn: next.metaDesc,
+                        ogImage: next.ogImage,
+                        seoConfig: {
+                          ...next.seoConfig,
+                          robots: prevCfg.robots,
+                          locales: {
+                            ...prevCfg.locales,
+                            en: {
+                              focusKeyword: next.focusKeyword,
+                              secondaryKeywords: next.secondaryKeywords,
+                              metaTitle: next.metaTitle,
+                              metaDesc: next.metaDesc,
+                              canonicalUrl: next.canonicalUrl,
+                              isPillar: next.isPillar,
+                              robots: {
+                                index: next.seoConfig.robots.index,
+                                follow: next.seoConfig.robots.follow,
+                              },
+                            },
+                          },
+                        },
+                      };
+                    }
+
+                    return {
+                      ...prev,
+                      slug: next.slug,
+                      focusKeyword: next.focusKeyword,
+                      secondaryKeywords: next.secondaryKeywords,
+                      keywords:
+                        next.secondaryKeywords.length > 0
+                          ? [next.focusKeyword, ...next.secondaryKeywords].filter(Boolean).join(", ")
+                          : prev.keywords,
+                      metaTitleFa: next.metaTitle,
+                      metaDescFa: next.metaDesc,
+                      canonicalUrl: next.canonicalUrl,
+                      ogImage: next.ogImage,
+                      isPillar: next.isPillar,
+                      seoConfig: {
+                        ...next.seoConfig,
+                        locales: {
+                          ...prevCfg.locales,
+                          fa: {
+                            focusKeyword: next.focusKeyword,
+                            secondaryKeywords: next.secondaryKeywords,
+                            metaTitle: next.metaTitle,
+                            metaDesc: next.metaDesc,
+                            canonicalUrl: next.canonicalUrl,
+                            isPillar: next.isPillar,
+                            robots: {
+                              index: next.seoConfig.robots.index,
+                              follow: next.seoConfig.robots.follow,
+                            },
+                          },
+                        },
+                      },
+                    };
+                  });
+                };
+
+                return (
+                  <SeoPanel
+                    entityType="service"
+                    activeLanguage={seoLang}
+                    allowLanguageSwitch={true}
+                    onLanguageChange={setSeoLang}
+                    value={seoValue}
+                    onChange={handleSeoChange}
+                    contentContext={{
+                      title: seoLang === "en" ? form.titleEn || form.title : form.title,
+                      excerpt: seoLang === "en" ? form.subtitleEn || form.subtitle : form.subtitle,
+                      contentHtml:
+                        seoLang === "en"
+                          ? [form.headlineEn, form.detailedNarrativeEn, form.businessValueEn]
+                              .filter(Boolean)
+                              .join("\n")
+                          : [form.headlineFa, form.detailedNarrativeFa, form.businessValueFa]
+                              .filter(Boolean)
+                              .join("\n"),
+                      coverImageUrl: form.coverImage || form.imageUrl,
+                      coverImageAlt: form.imageAlt || form.title,
+                      siteName: seoLang === "en" ? "OnSupp" : "آن‌ساپ",
+                      siteUrl: "https://onsupp.ir",
+                    }}
+                  />
+                );
+              })()}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1f2623] text-gray-300 hover:text-white"
+                  onClick={closeModal}
+                  disabled={saving}
+                  className="px-5 py-2.5 rounded-xl bg-raised text-foreground border border-border text-sm font-medium hover:bg-subtle transition-colors cursor-pointer"
                 >
                   انصراف
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-primary to-primary-hover text-white shadow-lg disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-lime text-ink text-sm font-bold hover:opacity-90 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
                 >
-                  {saving ? "در حال ذخیره..." : "ذخیره خدمت"}
+                  {saving && (
+                    <div className="w-4 h-4 border-2 border-ink border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {editingId ? "ذخیره تغییرات خدمت" : "ایجاد خدمت"}
                 </button>
               </div>
             </form>
@@ -684,20 +1153,12 @@ export default function ServicesAdminPage() {
         </div>
       )}
 
-      {/* Media Picker */}
-      {pickerOpen && (
+      {/* Media Picker Modal */}
+      {pickerTarget && (
         <MediaPickerModal
           open={true}
-          onClose={() => setPickerOpen(false)}
-          onSelect={(item: MediaItem) => {
-            setFormData((prev) => ({
-              ...prev,
-              imageUrl: item.url,
-              imageAlt: prev.imageAlt || item.alt || prev.title,
-            }));
-            setPickerOpen(false);
-          }}
-          
+          onSelect={handleMediaSelect}
+          onClose={() => setPickerTarget(null)}
         />
       )}
     </div>

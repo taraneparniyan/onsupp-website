@@ -4,137 +4,92 @@ import ClientsPartners from "@/components/sections/ClientsPartners";
 import ClientLogoMarquee from "@/components/sections/ClientLogoMarquee";
 import StatsSatisfaction from "@/components/sections/StatsSatisfaction";
 import Services from "@/components/sections/Services";
-import About from "@/components/sections/About";
 import CaseStudies from "@/components/sections/CaseStudies";
 import ContactCTA from "@/components/sections/ContactCTA";
-import BlogArticles from "@/components/sections/BlogArticles";
-import PricingPlans from "@/components/sections/PricingPlans";
 import Testimonials from "@/components/sections/Testimonials";
+import BlogArticles from "@/components/sections/BlogArticles";
 import Footer from "@/components/layout/Footer";
-import { BACKEND_URL } from "@/config/api";
-import { getPageSeo } from "@/lib/seo";
+import { getHomepageSections, getServices, getSiteSettings } from "@/lib/publicApi";
 
-const DEFAULT_SECTIONS = [
-  { key: "hero", position: 1, isEnabled: true },
-  { key: "partners", position: 2, isEnabled: true },
-  { key: "stats", position: 3, isEnabled: true },
-  { key: "about", position: 4, isEnabled: true },
-  { key: "services", position: 5, isEnabled: true },
-  { key: "case_studies", position: 6, isEnabled: true },
-  { key: "articles", position: 7, isEnabled: true },
-  { key: "pricing", position: 8, isEnabled: true },
-  { key: "contact", position: 9, isEnabled: true },
+export const dynamic = "force-dynamic";
+
+const DEFAULT_SECTION_ORDER = [
+  "hero",
+  "clients-partners",
+  "client-marquee",
+  "services",
+  "stats",
+  "casestudies",
+  "contact-cta",
+  "testimonials",
+  "blog-articles",
 ];
 
-const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
-  hero: Hero,
-  partners: ClientsPartners,
-  stats: StatsSatisfaction,
-  about: About,
-  services: Services,
-  case_studies: CaseStudies,
-  articles: BlogArticles,
-  pricing: PricingPlans,
-  contact: ContactCTA,
-  logos: ClientLogoMarquee,
-  testimonials: Testimonials,
+const SECTION_KEY_ALIASES: Record<string, string> = {
+  partners: "clients-partners",
+  logos: "client-marquee",
+  case_studies: "casestudies",
+  contact: "contact-cta",
+  articles: "blog-articles",
 };
 
-async function getHomeSections() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/home-sections`, {
-      next: { tags: ["home-sections"] },
-      cache: "no-store",
-    });
-    if (!res.ok) return DEFAULT_SECTIONS;
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return data;
-    }
-    return DEFAULT_SECTIONS;
-  } catch {
-    return DEFAULT_SECTIONS;
-  }
-}
-
-async function getServicesData() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/services`, {
-      next: { tags: ["services"] },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-async function getClientPartnersData() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/client-partners`, {
-      next: { tags: ["client-partners"] },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-async function getStatsData() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/stats`, {
-      next: { tags: ["stats"] },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-export async function generateMetadata() {
-  return getPageSeo("/", {
-    title: "آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار",
-    description: "آژانس خلاق دیجیتال مارکتینگ آن‌ساپ، پیشرو در طراحی سایت مدرن، سئو تکنیکال، برندینگ و اتوماسیون سازمانی.",
-  });
-}
-
 export default async function HomePage() {
-  const [sections, services, partners, stats] = await Promise.all([
-    getHomeSections(),
-    getServicesData(),
-    getClientPartnersData(),
-    getStatsData(),
+  const [sections, settings, services] = await Promise.all([
+    getHomepageSections(),
+    getSiteSettings(),
+    getServices(),
   ]);
 
-  const activeSections = sections
-    .filter((s: any) => s.isEnabled !== false)
-    .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
+  const sectionComponents: Record<string, React.ReactNode> = {
+    hero: <Hero key="hero" />,
+    "clients-partners": <ClientsPartners key="clients-partners" />,
+    "client-marquee": <ClientLogoMarquee key="client-marquee" />,
+    services: <Services key="services" initialServices={services} />,
+    stats: <StatsSatisfaction key="stats" />,
+    casestudies: <CaseStudies key="casestudies" />,
+    "contact-cta": <ContactCTA key="contact-cta" />,
+    testimonials: <Testimonials key="testimonials" />,
+    "blog-articles": <BlogArticles key="blog-articles" />,
+  };
+
+  let orderedKeys: string[] = DEFAULT_SECTION_ORDER;
+  if (Array.isArray(sections) && sections.length > 0) {
+    const normalized = sections
+      .filter((s) => s.isEnabled !== false)
+      .map((s) => ({
+        ...s,
+        canonicalKey: SECTION_KEY_ALIASES[s.key] ?? s.key,
+      }))
+      .filter((s) => s.canonicalKey in sectionComponents)
+      .sort((a, b) => {
+        const posDiff = (a.position ?? 0) - (b.position ?? 0);
+        if (posDiff !== 0) return posDiff;
+        const orderDiff =
+          DEFAULT_SECTION_ORDER.indexOf(a.canonicalKey) -
+          DEFAULT_SECTION_ORDER.indexOf(b.canonicalKey);
+        if (orderDiff !== 0) return orderDiff;
+        return (a.id ?? 0) - (b.id ?? 0);
+      });
+
+    const deduped: string[] = [];
+    for (const s of normalized) {
+      if (!deduped.includes(s.canonicalKey)) {
+        deduped.push(s.canonicalKey);
+      }
+    }
+
+    if (deduped.length > 0) {
+      orderedKeys = deduped;
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col w-full">
       <Header />
       <main className="flex-1 w-full">
-        {activeSections.map((sec: any) => {
-          if (sec.key === "services") {
-            return <Services key="services" initialServices={services} />;
-          }
-          if (sec.key === "partners") {
-            return <ClientsPartners key="partners" initialPartners={partners} />;
-          }
-          if (sec.key === "stats") {
-            return <StatsSatisfaction key="stats" initialStats={stats} />;
-          }
-          const Comp = COMPONENT_MAP[sec.key];
-          if (!Comp) return null;
-          return <Comp key={sec.key} />;
-        })}
+        {orderedKeys.map((key) => sectionComponents[key])}
       </main>
-      <Footer />
+      <Footer initialSettings={settings} />
     </div>
   );
 }

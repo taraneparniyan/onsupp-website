@@ -118,129 +118,89 @@ function AnimatedNumber({
   return <span>{display}</span>;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// Icons matching Dr. Miresmaeili reference architecture & specific metric concepts
+const STAT_ICONS = [
+  // 1. پروژه‌های موفق (Briefcase / Completed Projects)
+  (
+    <svg key="projects" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
+  // 2. رضایت مشتریان (Star / Satisfaction)
+  (
+    <svg key="satisfaction" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  // 3. سال تجربه تخصصی (Clock / Experience & History)
+  (
+    <svg key="experience" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  // 4. خدمات تخصصی (Layers / Specialized Services)
+  (
+    <svg key="services" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  ),
+];
 
-
-export const CANONICAL_STATS = [
+const DEFAULT_METRICS = [
+  {
+    id: "projects",
+    valFa: "+۲۰۰",
+    valEn: "+200",
+    titleFa: "پروژه‌های موفق",
+    titleEn: "Successful Projects",
+    icon: STAT_ICONS[0],
+  },
   {
     id: "satisfaction",
     valFa: "۴.۹ / ۵",
     valEn: "4.9 / 5",
-    titleFa: "رضایت مراجعین و برندها",
-    titleEn: "Client Satisfaction Score",
-    icon: getStatIcon("star"),
-  },
-  {
-    id: "projects",
-    valFa: "+۵۰",
-    valEn: "+50",
-    titleFa: "پروژه موفق برندینگ و نرم‌افزار",
-    titleEn: "Delivered Enterprise Projects",
-    icon: getStatIcon("projects"),
+    titleFa: "رضایت مشتریان",
+    titleEn: "Client Satisfaction",
+    icon: STAT_ICONS[1],
   },
   {
     id: "experience",
-    valFa: "+۵",
-    valEn: "+5",
-    titleFa: "سال تجربه خلق ارزش و مقیاس‌پذیری",
-    titleEn: "Years of Sustained Excellence",
-    icon: getStatIcon("experience"),
+    valFa: "۸ سال",
+    valEn: "8 Years",
+    titleFa: "سال تجربه تخصصی",
+    titleEn: "Years of Specialized Rigor",
+    icon: STAT_ICONS[2],
   },
   {
-    id: "team",
-    valFa: "+۱۵",
-    valEn: "+15",
-    titleFa: "متخصص، طراح و استراتژیست",
-    titleEn: "Specialized Team & Experts",
-    icon: getStatIcon("team"),
+    id: "services",
+    valFa: "۷ حوزه",
+    valEn: "7 Disciplines",
+    titleFa: "خدمات تخصصی",
+    titleEn: "Specialized Services",
+    icon: STAT_ICONS[3],
   },
 ];
 
-function getStatIcon(iconType: string) {
-  if (iconType === "user" || iconType === "projects") {
-    return (
-      <svg className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    );
-  }
-  if (iconType === "clock" || iconType === "experience") {
-    return (
-      <svg className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    );
-  }
-  if (iconType === "building" || iconType === "team") {
-    return (
-      <svg className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-        <line x1="9" y1="22" x2="9" y2="22.01" />
-        <line x1="15" y1="22" x2="15" y2="22.01" />
-        <line x1="8" y1="6" x2="8" y2="6.01" />
-        <line x1="16" y1="6" x2="16" y2="6.01" />
-        <line x1="8" y1="10" x2="8" y2="10.01" />
-        <line x1="16" y1="10" x2="16" y2="10.01" />
-        <line x1="8" y1="14" x2="8" y2="14.01" />
-        <line x1="16" y1="14" x2="16" y2="14.01" />
-        <line x1="8" y1="18" x2="8" y2="18.01" />
-        <line x1="16" y1="18" x2="16" y2="18.01" />
-      </svg>
-    );
-  }
-  return (
-    <svg className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  );
-}
+// ─── Component ────────────────────────────────────────────────────────────────
 
-export default function StatsSatisfaction({ initialStats }: { initialStats?: any[] }) {
+export default function StatsSatisfaction() {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.2 });
-
-  const mapStats = (data: any[]) => data.map((item: any, idx: number) => {
-    const valFa = item.valueFa || item.value || "";
-    const valEn = item.valueEn || item.value || "";
-    return {
-      id: String(item.id || idx),
-      valFa: `${toFa(String(valFa))}${item.suffixFa ? " " + item.suffixFa : ""}`,
-      valEn: `${valEn}${item.suffixEn ? " " + item.suffixEn : ""}`,
-      titleFa: item.labelFa || item.titleFa || "",
-      titleEn: item.labelEn || item.titleEn || "",
-      icon: getStatIcon(item.iconType || "star"),
-    };
-  });
-
-  const [statItems, setStatItems] = useState(() => {
-    if (Array.isArray(initialStats) && initialStats.length > 0) {
-      return mapStats(initialStats);
-    }
-    return CANONICAL_STATS;
-  });
-
-  useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/stats`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setStatItems(mapStats(data));
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const metrics = DEFAULT_METRICS;
 
   return (
     <section
       id="statistics"
       aria-label={isRtl ? "آمار و دستاوردهای آن‌ساپ" : "OnSupp Statistics & Achievements"}
-      className="relative w-full py-16 sm:py-20 lg:py-24 bg-[#F8F9FA] dark:bg-[#121413] border-y border-[#1F1F1E]/[0.08] dark:border-white/[0.08] transition-colors duration-500 overflow-hidden"
+      className="section-viewport-balanced relative w-full py-16 sm:py-20 lg:py-28 bg-[#F8F9FA] dark:bg-[#121413] border-y border-[#1F1F1E]/[0.08] dark:border-white/[0.08] transition-colors duration-500 overflow-hidden"
       dir={isRtl ? "rtl" : "ltr"}
     >
       {/* ── Subtle Atmospheric Ambient Glows (Inspired by Dr. Miresmaeili Reference) ── */}
@@ -287,13 +247,13 @@ export default function StatsSatisfaction({ initialStats }: { initialStats?: any
 
             {/* Commanding Headline */}
             <h2
-              className={`text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-bold text-[#1F1F1E] dark:text-[#F8F9FA] tracking-tight leading-[1.3] ${
+              className={`text-2xl sm:text-3xl lg:text-[23px] xl:text-[26px] lg:whitespace-nowrap font-bold text-[#1F1F1E] dark:text-[#F8F9FA] tracking-tight leading-[1.3] ${
                 isRtl ? "font-[family-name:var(--font-vazirmatn)]" : "font-[family-name:var(--font-gendy)]"
               }`}
             >
               {isRtl ? (
                 <>
-                  ۸ سال تخصص و نوآوری؛{" "}
+                  ۸ سال تجربه تخصصی و نوآوری؛{" "}
                   <span className="text-[#4F0001] dark:text-[#D9757A]">
                     در خدمت تمایز و رشد برند شما
                   </span>
@@ -332,9 +292,9 @@ export default function StatsSatisfaction({ initialStats }: { initialStats?: any
                   ? "visible"
                   : "hidden"
               }
-              className="grid grid-cols-2 gap-x-8 sm:gap-x-12 lg:gap-x-14 gap-y-10 sm:gap-y-12 lg:gap-y-14 w-full max-w-lg"
+              className="grid grid-cols-2 gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-10 sm:gap-y-14 lg:gap-y-16 w-full max-w-xl"
             >
-              {statItems.map((m) => {
+              {metrics.map((m) => {
                 const val = isRtl ? m.valFa : m.valEn;
                 const title = isRtl ? m.titleFa : m.titleEn;
 

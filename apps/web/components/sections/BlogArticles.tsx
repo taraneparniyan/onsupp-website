@@ -177,37 +177,44 @@ export default function BlogArticles() {
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const prefersReducedMotion = useReducedMotion();
-  const [articles, setArticles] = useState<Article[]>(() =>
-    IS_DEV ? DEV_PREVIEW_ARTICLES : []
-  );
-  const [loading, setLoading] = useState(!IS_DEV);
+  const [articles, setArticles] = useState<Article[]>(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
+  const [loading, setLoading] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/articles?limit=3`, { cache: "no-store" })
+    const langParam = isRtl ? "fa" : "en";
+    fetch(`${BACKEND_URL}/api/v1/articles?limit=3&language=${langParam}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setArticles(data.slice(0, 3));
-        } else if (IS_DEV) {
-          setArticles(DEV_PREVIEW_ARTICLES);
+          const valid = data.filter(
+            (a) =>
+              a &&
+              a.published !== false &&
+              !a.slug?.startsWith("test") &&
+              !a.slug?.startsWith("article-179") &&
+              a.slug !== "seo-technical-architecture-1793534887383" &&
+              a.titleFa !== "تست" &&
+              a.titleFa !== "New Article" &&
+              a.titleFa !== "API Service Post" &&
+              (isRtl ? Boolean(a.titleFa?.trim()) : Boolean((a.titleEn || a.titleFa)?.trim()))
+          );
+          setArticles(valid.length > 0 ? valid.slice(0, 3) : CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
         } else {
-          setArticles([]);
+          setArticles(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
         }
       })
       .catch(() => {
-        if (IS_DEV) {
-          setArticles(DEV_PREVIEW_ARTICLES);
-        }
+        setArticles(CANONICAL_PREVIEW_ARTICLES.slice(0, 3));
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [lang, isRtl]);
 
   return (
-    <section id="blog" className="w-full relative overflow-hidden">
+    <section id="blog" className="section-viewport w-full relative overflow-hidden">
       <div dir={isRtl ? "rtl" : "ltr"} className="w-full">
-        <div className="w-full border-y border-black/[0.06] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111416] px-2 sm:px-[10px] py-14 sm:py-20 lg:py-24 relative overflow-hidden transition-colors">
+        <div className="section-viewport w-full border-y border-black/[0.06] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111416] px-2 sm:px-[10px] py-16 sm:py-20 lg:py-24 relative overflow-hidden transition-colors">
           {/* Subtle Ambient Background Glows */}
           <div
             aria-hidden="true"
@@ -221,7 +228,7 @@ export default function BlogArticles() {
             <ScrollReveal>
               {/* ── Section Header ─────────────────────────────── */}
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 mb-10 sm:mb-14">
-                <div className="max-w-3xl">
+                <div className="max-w-3xl lg:max-w-none">
                   <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-4">
                     <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50" />
                     <span>
@@ -231,7 +238,7 @@ export default function BlogArticles() {
                     </span>
                   </div>
 
-                  <h2 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight leading-[1.25]">
+                  <h2 className="font-display text-2xl sm:text-4xl lg:text-4xl xl:text-[42px] lg:whitespace-nowrap font-black text-foreground tracking-tight leading-[1.25]">
                     {isRtl ? (
                       <>
                         جدیدترین مقالات{" "}
@@ -251,19 +258,20 @@ export default function BlogArticles() {
 
                   <p className="mt-3 text-sm sm:text-base text-foreground/65 leading-relaxed max-w-2xl">
                     {isRtl
-                      ? "تازه‌ترین مقالات تخصصی، راهنماهای جامع بالینی، طراحی وب و استراتژی‌های رشد برند با نگارش کارشناسان ارشد آن‌ساپ"
-                      : "Explore authoritative articles, comprehensive clinical guides, web engineering, and brand growth strategies."}
+                      ? "تازه‌ترین مقالات تخصصی در حوزه سئو تکنیکال، طراحی وب‌سایت سازمانی و ویدیو مارکتینگ با نگارش کارشناسان ارشد آن‌ساپ"
+                      : "Explore authoritative articles, web engineering architecture, technical SEO, and brand media strategies."}
                   </p>
                 </div>
 
+                {/* Desktop "View All Articles" button (hidden on mobile, shown on lg+) */}
                 <motion.div
                   whileHover={prefersReducedMotion ? undefined : buttonHover}
                   whileTap={prefersReducedMotion ? undefined : tapFeedback}
-                  className="w-full sm:w-auto shrink-0"
+                  className="hidden lg:block shrink-0"
                 >
                   <Link
                     href="/blog"
-                    className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 transition-all duration-300 group cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 transition-all duration-300 group cursor-pointer"
                   >
                     <span>
                       {isRtl ? "مشاهده همه مقالات" : "View All Articles"}
@@ -450,6 +458,35 @@ export default function BlogArticles() {
                       </div>
                     </div>
                   )}
+
+                  {/* ── Mobile-Only "View All Articles" button placed below articles & slider ── */}
+                  <div className="mt-8 pt-2 flex justify-center w-full">
+                    <Link
+                      href="/blog"
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-[#38534A] dark:bg-white text-white dark:text-[#1F1F1E] px-7 py-3.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg hover:bg-[#2B4038] dark:hover:bg-white/90 active:scale-95 transition-all duration-300 group cursor-pointer text-center"
+                    >
+                      <span>
+                        {isRtl ? "مشاهده همه مقالات" : "View All Articles"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isRtl
+                            ? "rotate-180 group-hover:-translate-x-1"
+                            : "group-hover:translate-x-1"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.4"
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
               </>
             )}

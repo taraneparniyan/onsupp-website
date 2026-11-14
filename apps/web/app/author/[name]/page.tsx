@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -50,9 +51,27 @@ export default function AuthorArticlesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground font-sans antialiased">
       <Header />
-      <main className="flex-1 w-full pt-[72px] sm:pt-[90px] pb-16 space-y-10 px-[10px]" dir={isRtl ? "rtl" : "ltr"}>
-        <div className="w-full max-w-[1600px] mx-auto space-y-10">
+      <main className="flex-1 w-full pt-[72px] sm:pt-[90px] pb-16 space-y-8 px-[10px]" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="w-full max-w-[1600px] mx-auto space-y-6">
           
+          {/* Breadcrumb Navigation */}
+          <nav
+            aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+            className="flex items-center gap-2 text-xs font-mono text-foreground/50 select-none px-2"
+          >
+            <Link href="/" className="hover:text-foreground transition-colors">
+              {isRtl ? "خانه" : "Home"}
+            </Link>
+            <span className="opacity-40">/</span>
+            <Link href="/blog" className="hover:text-foreground transition-colors">
+              {isRtl ? "دانشنامه و مقالات" : "Articles"}
+            </Link>
+            <span className="opacity-40">/</span>
+            <span className="text-foreground/90 font-medium">
+              {rawAuthor || (isRtl ? "نویسنده" : "Author")}
+            </span>
+          </nav>
+
           {/* Author Header Banner */}
           <div className="w-full rounded-lg sm:rounded-xl border border-foreground/15 bg-gradient-to-r from-panel via-panel to-background p-6 sm:p-12 shadow-md relative overflow-hidden mt-[10px]">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">

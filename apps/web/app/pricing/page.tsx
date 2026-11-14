@@ -97,25 +97,108 @@ function PricingContent() {
     >
       <Header />
 
-      <main className="flex-1 pt-28 sm:pt-36 pb-20 sm:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* ── 1. Page Header: Title & Short Introduction ─────────────── */}
-          <section className="text-center mb-10 sm:mb-12">
-            <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-4">
-              <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
-              <span>{isRtl ? "پلن‌ها و سطوح خدمات" : "Service Packages"}</span>
+      <main className="flex-1 pb-20 sm:pb-28">
+        {/* ── 1. Dedicated Pricing Hero Section ── */}
+        <section
+          id="pricing-hero"
+          aria-label={isRtl ? "پلن‌ها و تعرفه‌های خدمات آن‌ساپ" : "OnSupp Service Packages & Pricing"}
+          className="relative w-full pt-28 sm:pt-36 pb-14 sm:pb-20 overflow-hidden border-b border-black/[0.06] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111416] mb-12 sm:mb-16 transition-colors"
+        >
+          {/* Subtle Ambient Brand Glows */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden select-none"
+          >
+            <div className="absolute -top-28 start-1/3 w-[640px] h-[340px] bg-[#38534A]/[0.06] dark:bg-[#38534A]/[0.14] rounded-full blur-[100px]" />
+            <div className="absolute top-1/2 -start-20 w-[320px] h-[320px] bg-[#4F0001]/[0.04] dark:bg-[#4F0001]/[0.10] rounded-full blur-[80px]" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Breadcrumb Navigation */}
+            <nav
+              aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+              className="flex items-center gap-2 text-xs font-mono text-foreground/50 mb-6 sm:mb-8 select-none"
+            >
+              <Link href="/" className="hover:text-foreground transition-colors">
+                {isRtl ? "خانه" : "Home"}
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-foreground/90 font-medium">
+                {isRtl ? "پلن‌ها و تعرفه‌ها" : "Pricing & Packages"}
+              </span>
+            </nav>
+
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase">
+                <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+                <span>
+                  {isRtl
+                    ? "تعرفه‌ها و سطوح سرمایه‌گذاری • TRANSPARENT PRICING"
+                    : "SERVICE PACKAGES & INVESTMENT TIERS"}
+                </span>
+              </div>
+
+              <h1
+                className={`text-2xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight leading-[1.25] ${
+                  isRtl
+                    ? "font-[family-name:var(--font-vazirmatn)]"
+                    : "font-[family-name:var(--font-gendy)]"
+                }`}
+              >
+                {isRtl ? (
+                  <>
+                    سرمایه‌گذاری شفاف و متناسب با{" "}
+                    <span className="text-[#38534A] dark:text-[#8AB3A0] underline decoration-[#4F0001] decoration-2 underline-offset-[10px]">
+                      مقیاس رشد سازمان
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Transparent Investment Models Engineered for{" "}
+                    <span className="text-[#38534A] dark:text-[#8AB3A0] underline decoration-[#4F0001] decoration-2 underline-offset-[10px]">
+                      Enterprise Scale
+                    </span>
+                  </>
+                )}
+              </h1>
+
+              <p className="text-sm sm:text-base md:text-lg text-foreground/75 leading-relaxed font-normal">
+                {isRtl
+                  ? "بسته‌های ساختاریافته، شفاف و منعطف در حوزه‌های مهندسی وب، سئو تکنیکال، تولید محتوا و هویت دیجیتال با تضمین بالاترین استاندارد اجرایی."
+                  : "Structured, transparent, and modular service packages across web engineering, technical SEO, media production, and digital identity with guaranteed execution rigor."}
+              </p>
+
+              {/* Trust & Transparency Value Chips */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#38534A]/10 dark:bg-[#8AB3A0]/15 border border-[#38534A]/20 dark:border-[#8AB3A0]/25 text-xs font-semibold text-[#38534A] dark:text-[#8AB3A0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#38534A] dark:bg-[#8AB3A0]" />
+                  <span>{isRtl ? "شفافیت ۱۰۰٪ هزینه‌ها بدون هزینه پنهان" : "100% Transparent Scopes"}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-raised border border-foreground/10 text-xs font-semibold text-foreground/75">
+                  <span>{isRtl ? "پشتیبانی فنی و گزارش‌دهی دوره‌ای" : "Dedicated Support & Reporting"}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-raised border border-foreground/10 text-xs font-semibold text-foreground/75">
+                  <span>{isRtl ? "امکان سفارشی‌سازی کامل بر اساس نیاز" : "Custom Tailored SOWs"}</span>
+                </div>
+              </div>
+
+              {/* CTA Action */}
+              <div className="pt-3">
+                <Link
+                  href="/#contact"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#38534A] hover:bg-[#2B4039] text-white font-semibold text-xs sm:text-sm tracking-wide transition-all shadow-md active:scale-95"
+                >
+                  <span>{isRtl ? "درخواست پیش‌فاکتور و مشاوره اختصاصی" : "Request Custom Proposal"}</span>
+                  <svg className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+              </div>
             </div>
+          </div>
+        </section>
 
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
-              {isRtl ? "پلن‌ها و بسته‌های تخصصی خدمات آن‌ساپ" : "OnSupp Service Packages & Tiers"}
-            </h1>
-
-            <p className="text-sm sm:text-base text-foreground/70 max-w-2xl mx-auto leading-relaxed">
-              {isRtl
-                ? "بسته‌های ساختاریافته، منعطف و متناسب با اهداف رشد برند شما در حوزه سئو، توسعه نرم‌افزار، تولید محتوا و هویت دیجیتال."
-                : "Structured, flexible service tiers engineered to scale with your digital objectives."}
-            </p>
-          </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Backend API Status & Transparent Notice ────────────────── */}
           {apiError && (
@@ -127,11 +210,11 @@ function PricingContent() {
                   </svg>
                 </span>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
+                  <p className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
                     {isRtl
                       ? "اطلاعیه اتصال وب‌سرویس تعرفه‌ها (API)"
                       : "Pricing API Connection Notice"}
-                  </h4>
+                  </p>
                   <p className="text-xs text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                     {isRtl
                       ? `ارتباط زنده با بک‌اند (${BACKEND_URL}/api/v1/pricing/categories) برقرار نشد (${apiError}). در حال حاضر داده‌های پایه و مستندشده اولیه نمایش داده می‌شوند و با فعال‌سازی وب‌سرویس، پلن‌ها به‌صورت خودکار با پایگاه داده همگام خواهند شد.`
@@ -239,8 +322,8 @@ function PricingContent() {
                       <div className="space-y-6">
                         {/* Title & Description */}
                         <div>
-                          <h3
-                            className={`text-xl sm:text-2xl font-bold tracking-tight text-foreground ${
+                          <h2
+                            className={`text-xl sm:text-[22px] lg:whitespace-nowrap font-bold tracking-tight text-foreground ${
                               plan.badgeFa
                                 ? isRtl
                                   ? "pl-24"
@@ -249,7 +332,7 @@ function PricingContent() {
                             }`}
                           >
                             {isRtl ? plan.nameFa : plan.nameEn}
-                          </h3>
+                          </h2>
                           <p className="mt-2 text-xs sm:text-sm leading-relaxed text-foreground/60 min-h-[44px]">
                             {isRtl ? plan.descriptionFa : plan.descriptionEn}
                           </p>
@@ -336,11 +419,11 @@ function PricingContent() {
           {/* ── 4. Bottom Custom Consultation Callout ──────────────────── */}
           <section className="mt-16 sm:mt-20 p-8 sm:p-10 rounded-3xl bg-panel border border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
+              <h2 className="font-display text-xl sm:text-2xl lg:whitespace-nowrap font-bold text-foreground mb-2">
                 {isRtl
                   ? "نیاز به پلن سفارشی یا مشاوره تلفنی دارید؟"
                   : "Need a Custom Strategy or Enterprise Quote?"}
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-foreground/60 max-w-xl">
                 {isRtl
                   ? "اگر پروژه شما نیازمندی‌های اختصاصی فراتر از پلن‌های استاندارد دارد، کارشناسان آن‌ساپ آماده تدوین بسته شخصی‌سازی‌شده برای شما هستند."

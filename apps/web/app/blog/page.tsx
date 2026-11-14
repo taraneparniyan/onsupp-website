@@ -41,7 +41,8 @@ function BlogContent() {
     setLoading(true);
     setApiError(null);
 
-    fetch(`${BACKEND_URL}/api/v1/articles`, { cache: "no-store" })
+    const langParam = isRtl ? "fa" : "en";
+    fetch(`${BACKEND_URL}/api/v1/articles?language=${langParam}`, { cache: "no-store" })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`خطای سرور: وضعیت پاسخ ${res.status}`);
@@ -50,7 +51,19 @@ function BlogContent() {
       })
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setArticles(data);
+          const valid = data.filter(
+            (a) =>
+              a &&
+              a.published !== false &&
+              !a.slug?.startsWith("test") &&
+              !a.slug?.startsWith("article-179") &&
+              a.slug !== "seo-technical-architecture-1793534887383" &&
+              a.titleFa !== "تست" &&
+              a.titleFa !== "New Article" &&
+              a.titleFa !== "API Service Post" &&
+              (isRtl ? Boolean(a.titleFa?.trim()) : Boolean((a.titleEn || a.titleFa)?.trim()))
+          );
+          setArticles(valid);
           setApiError(null);
         } else if (Array.isArray(data) && data.length === 0) {
           // Connected successfully but database is currently empty
@@ -75,7 +88,7 @@ function BlogContent() {
 
   useEffect(() => {
     fetchArticlesFromApi();
-  }, []);
+  }, [lang, isRtl]);
 
   // Compute dynamic categories present in actual articles
   const categories = useMemo(() => {
@@ -149,25 +162,95 @@ function BlogContent() {
     >
       <Header />
 
-      <main className="flex-1 pt-28 sm:pt-36 pb-20 sm:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* ── 1. Page Header: Title & Short Introduction ─────────────── */}
-          <section className="text-center mb-10 sm:mb-12">
-            <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-4">
-              <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
-              <span>{isRtl ? "اسکلت اولیه مجله آن‌ساپ" : "Magazine Skeleton"}</span>
+      <main className="flex-1 pb-20 sm:pb-28">
+        {/* ── 1. Dedicated Editorial Hero Section ── */}
+        <section
+          id="blog-hero"
+          aria-label={isRtl ? "دانشنامه و مقالات تخصصی آن‌ساپ" : "OnSupp Magazine & Insights"}
+          className="relative w-full pt-28 sm:pt-36 pb-14 sm:pb-20 overflow-hidden border-b border-black/[0.06] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111416] mb-12 sm:mb-16 transition-colors"
+        >
+          {/* Subtle Ambient Brand Glows */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden select-none"
+          >
+            <div className="absolute -top-28 start-1/3 w-[640px] h-[340px] bg-[#38534A]/[0.06] dark:bg-[#38534A]/[0.14] rounded-full blur-[100px]" />
+            <div className="absolute top-1/2 -start-20 w-[320px] h-[320px] bg-[#4F0001]/[0.04] dark:bg-[#4F0001]/[0.10] rounded-full blur-[80px]" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Breadcrumb Navigation */}
+            <nav
+              aria-label={isRtl ? "مسیر دسترسی" : "Breadcrumbs"}
+              className="flex items-center gap-2 text-xs font-mono text-foreground/50 mb-6 sm:mb-8 select-none"
+            >
+              <Link href="/" className="hover:text-foreground transition-colors">
+                {isRtl ? "خانه" : "Home"}
+              </Link>
+              <span className="opacity-40">/</span>
+              <span className="text-foreground/90 font-medium">
+                {isRtl ? "دانشنامه و مقالات تخصصی" : "Insights & Articles"}
+              </span>
+            </nav>
+
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase">
+                <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+                <span>
+                  {isRtl
+                    ? "دانشنامه و تحلیل‌های تحریریه • ONSUPP INSIGHTS"
+                    : "EDITORIAL INSIGHTS & KNOWLEDGE HUB"}
+                </span>
+              </div>
+
+              <h1
+                className={`text-2xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight leading-[1.25] ${
+                  isRtl
+                    ? "font-[family-name:var(--font-vazirmatn)]"
+                    : "font-[family-name:var(--font-gendy)]"
+                }`}
+              >
+                {isRtl ? (
+                  <>
+                    بینش‌های تخصصی، تحلیل‌های دیجیتال و{" "}
+                    <span className="text-[#38534A] dark:text-[#8AB3A0] underline decoration-[#4F0001] decoration-2 underline-offset-[10px]">
+                      راهنماهای مهندسی
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Specialized Insights, Technical Guides &{" "}
+                    <span className="text-[#38534A] dark:text-[#8AB3A0] underline decoration-[#4F0001] decoration-2 underline-offset-[10px]">
+                      Strategic Analyses
+                    </span>
+                  </>
+                )}
+              </h1>
+
+              <p className="text-sm sm:text-base md:text-lg text-foreground/75 leading-relaxed font-normal">
+                {isRtl
+                  ? "مرجع علمی و کاربردی سئو تکنیکال، معماری پلتفرم‌های مقیاس‌پذیر وب، استراتژی محتوا و بازاریابی داده‌محور به قلم متخصصان آن‌ساپ."
+                  : "Explore in-depth engineering breakdowns, technical SEO frameworks, and data-driven growth strategies authored by OnSupp specialists."}
+              </p>
+
+              {/* Topic Highlights Chips */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#38534A]/10 dark:bg-[#8AB3A0]/15 border border-[#38534A]/20 dark:border-[#8AB3A0]/25 text-xs font-semibold text-[#38534A] dark:text-[#8AB3A0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#38534A] dark:bg-[#8AB3A0]" />
+                  <span>{isRtl ? "سئو تکنیکال و معماری وب" : "Technical SEO & Architecture"}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-raised border border-foreground/10 text-xs font-semibold text-foreground/75">
+                  <span>{isRtl ? "استراتژی بازاریابی دیجیتال" : "Digital Strategy"}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-raised border border-foreground/10 text-xs font-semibold text-foreground/75">
+                  <span>{isRtl ? "طراحی محصول و تجربه کاربری" : "Product Design & UX"}</span>
+                </div>
+              </div>
             </div>
+          </div>
+        </section>
 
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
-              {isRtl ? "مجله تخصصی و دانشنامه آن‌ساپ" : "OnSupp Magazine & Insights"}
-            </h1>
-
-            <p className="text-sm sm:text-base text-foreground/70 max-w-2xl mx-auto leading-relaxed">
-              {isRtl
-                ? "مرجع مقالات تخصصی، راهنماهای سئو، معماری سیستم‌های دیجیتال، طراحی محصول و تحلیل‌های استراتژیک آن‌ساپ. در این مرحله اسکلت اولیه صفحه، اتصال به وب‌سرویس و ساختار مقالات پیاده‌سازی شده است."
-                : "Explore in-depth articles, technical SEO guides, web architecture insights, and digital growth strategies engineered by the OnSupp editorial team."}
-            </p>
-          </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Backend API Status & Transparent Error Notice ──────────── */}
           {apiError && (
@@ -179,11 +262,11 @@ function BlogContent() {
                   </svg>
                 </span>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
+                  <p className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
                     {isRtl
                       ? "اطلاعیه اتصال وب‌سرویس بک‌اند (API)"
                       : "Backend API Connection Notice"}
-                  </h4>
+                  </p>
                   <p className="text-xs text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                     {isRtl
                       ? `ارتباط زنده با بک‌اند (${BACKEND_URL}/api/v1/articles) برقرار نشد (${apiError}). در حال حاضر داده‌های مستند اولیه جهت بررسی اسکلت صفحه نمایش داده می‌شوند و با اجرای سرور بک‌اند، مقالات داینامیک دیتابیس جایگزین خواهند شد.`
@@ -524,9 +607,9 @@ function BlogContent() {
           {/* ── 6. Bottom Magazine Callout ─────────────────────────────── */}
           <section className="mt-16 sm:mt-20 p-8 sm:p-10 rounded-3xl bg-panel border border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
+              <h2 className="font-display text-xl sm:text-2xl lg:whitespace-nowrap font-bold text-foreground mb-2">
                 {isRtl ? "می‌خواهید استراتژی اختصاصی کسب‌وکار خود را داشته باشید؟" : "Ready to Engineer Your Next Milestone?"}
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-foreground/60 max-w-xl">
                 {isRtl
                   ? "تیم متخصصان آن‌ساپ آماده همراهی در طراحی وب‌سایت، سئو، هویت‌سازی دیجیتال و توسعه نرم‌افزار کسب‌وکار شما هستند."

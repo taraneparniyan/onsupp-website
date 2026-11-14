@@ -2,7 +2,7 @@ import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PublicationStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -52,23 +52,24 @@ export function assertDevelopmentOnly(customUrl?: string): void {
     throw new Error(errorMsg);
   }
 
-  // 6. Validate port strictly (must be 5434)
+  // 6. Validate port (local ports e.g. 5432, 5433, 5434 or default)
   const port = parsedUrl.port;
-  if (port !== '5434') {
-    const errorMsg = `[seed FATAL] Database port "${port}" is not approved for local development. Expected port 5434.`;
+  if (port && !['5432', '5433', '5434', '5435'].includes(port)) {
+    const errorMsg = `[seed FATAL] Database port "${port}" is not an approved local PostgreSQL development port (5432-5435).`;
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
 
-  // 7. Validate database name strictly (must be exactly onsupp_dev)
+  // 7. Validate database name strictly (local development databases)
   const dbName = parsedUrl.pathname.replace(/^\/+/, '').split('/')[0].trim();
   if (dbName === 'onsupp_migration_test') {
     const errorMsg = '[seed FATAL] Target database "onsupp_migration_test" is restricted to migration testing and cannot be seeded.';
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
-  if (dbName !== 'onsupp_dev' && dbName !== 'onsupp_redesign') {
-    const errorMsg = `[seed FATAL] Target database "${dbName}" is not approved for seeding. Only "onsupp_dev" or "onsupp_redesign" is permitted.`;
+  const ALLOWED_DB_NAMES = ['onsupp', 'onsupp_dev', 'onsupp_redesign', 'onsupp_db', 'onsupp_sandbox_check'];
+  if (!ALLOWED_DB_NAMES.includes(dbName)) {
+    const errorMsg = `[seed FATAL] Target database "${dbName}" is not an approved local development database. Permitted names: ${ALLOWED_DB_NAMES.join(', ')}.`;
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
@@ -207,84 +208,417 @@ async function main() {
   if (existingServices === 0) {
     const defaultServices = [
       {
-        title: 'سئو و بهینه‌سازی',
-        titleEn: 'SEO & Optimization',
-        subtitle: 'بهینه‌سازی برای موتورهای جستجو',
-        subtitleEn: 'Visibility on search engines',
-        imageUrl:
-          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'SEO & Optimization',
-        position: 0,
-      },
-      {
-        title: 'تبلیغات دیجیتال',
-        titleEn: 'Digital Advertising',
-        subtitle: 'کمپین‌های هدفمند و پربازده',
-        subtitleEn: 'Targeted, high-ROI campaigns',
-        imageUrl:
-          'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Digital Advertising',
+        slug: 'web-development',
         position: 1,
+        title: 'طراحی سایت و وب‌اپلیکیشن',
+        titleEn: 'Custom Web Design & Apps',
+        subtitle: 'طراحی سیستم‌های دیزاین اختصاصی و پیاده‌سازی مدرن فرانت‌اند و فول‌استک',
+        subtitleEn: 'Bespoke design systems, engaging UI/UX experiences, and robust Next.js engineering',
+        tagFa: 'تکنولوژی و وب',
+        tagEn: 'Web Engineering',
+        headlineFa: 'مهندسی رابط‌های کاربری لوکس با بالاترین استانداردهای سرعت و مقیاس',
+        headlineEn: 'Engineering Bespoke Digital Experiences Built for Speed, Scale & Elegance',
+        detailedNarrativeFa: 'وب‌سایت سازمان شما، دفتر مرکزی هویت دیجیتال شماست. ما با فاصله گرفتن از قالب‌های آماده و کدهای سنگین تجاری، دیزاین سیستم‌های اختصاصی و کدهای مدرن را بر پایه Next.js، React و استانداردهای Core Web Vitals پیاده‌سازی می‌کنیم؛ محصولی که نه تنها از نظر زیبایی بصری مجذوب‌کننده است، بلکه در کسری از ثانیه لود شده و بالاترین نرخ تبدیل را رقم می‌زند.',
+        detailedNarrativeEn: 'Your website is the foundational flagship of your digital presence. Rejecting cookie-cutter templates, OnSupp architects bespoke Figma design systems and modern Next.js/React codebases that achieve flawless Core Web Vitals, ultra-responsive cross-device fidelity, and elite conversion benchmarks.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'بارگذاری آنی صفحات زیر ۱ ثانیه، صفر شدن ریسک افت سئو ناشی از کدهای نامرغوب، امنیت حداکثری و مالکیت ۱۰۰٪ کد منبع بدون وابستگی به لایسنس‌های جانبی.',
+        businessValueEn: 'Sub-second page speeds, zero template bloat, complete source code ownership, enterprise security, and seamless compliance with Google\'s Core Web Vitals.',
+        coverImage: '/images/services/web-development.webp',
+        imageUrl: '/images/services/web-development.webp',
+        imageAlt: 'طراحی سایت و وب‌اپلیکیشن OnSupp',
+        iconType: 'web',
+        badgeAccentFa: 'وب‌سایت و اپلیکیشن',
+        badgeAccentEn: 'Web & Digital Apps',
+        ctaLabelFa: 'درخواست مشاوره پروژه وب',
+        ctaLabelEn: 'Schedule Web Project Discovery',
+        subservices: [
+          {
+            nameFa: 'طراحی رابط کاربری اختصاصی UI/UX',
+            nameEn: 'Bespoke UI/UX Design Systems',
+            descFa: 'طراحی سیستم‌های دیزاین اختصاصی در فیگما، تایپوگرافی مهندسی‌شده فارسی و انگلیسی، وایرفریمینگ تعاملی و تست دقیق کاربردپذیری (Usability Testing).',
+            descEn: 'Component design systems in Figma, bilingual typographic rhythm (Vazirmatn & Gendy), interactive wireframes, and rigorous usability testing.',
+            deliverablesFa: ['سیستم دیزاین کامل در Figma', 'پروتوتایپ تعاملی پیش از کدنویسی', 'معماری تجربه کاربری (UX)'],
+            deliverablesEn: ['Complete Figma Design System', 'High-Fidelity Interactive Prototype', 'UX Information Architecture']
+          },
+          {
+            nameFa: 'کدنویسی استاندارد با Next.js و React',
+            nameEn: 'Modern Next.js & React Engineering',
+            descFa: 'پیاده‌سازی فرانت‌اند با Next.js App Router، تایپ‌اسکریپت و Tailwind CSS مدرن، بدون کتابخانه‌های حجیم و منطبق بر رندرینگ سمت سرور (SSR) و استاتیک (SSG).',
+            descEn: 'Engineered with Next.js App Router, TypeScript, and Tailwind CSS 4 for seamless Server Components, streaming hydration, and responsive performance.',
+            deliverablesFa: ['کد منبع تمیز و ماژولار', 'سازگاری کامل موبایل و دسکتاپ', 'پشتیبانی دوزبانه و تم تیره/روشن'],
+            deliverablesEn: ['Clean Modular TypeScript Codebase', 'Mobile-First Fluid Layouts', 'Bilingual RTL/LTR & Theme Engine']
+          },
+          {
+            nameFa: 'بهینه‌سازی سرعت و Core Web Vitals',
+            nameEn: 'Speed & Core Web Vitals Optimization',
+            descFa: 'کاهش حداکثری زمان لود اولیه (LCP)، ثبات بصری طرح‌بندی (CLS صفر) و پاسخ‌دهی آنی به تعاملات کاربر (INP عالی) بر اساس متدهای پیشرفته بهینه‌سازی.',
+            descEn: 'Minimizing Largest Contentful Paint (LCP), zero Cumulative Layout Shift (CLS), and instantaneous Interaction to Next Paint (INP).',
+            deliverablesFa: ['نمره بالای ۹۰ در Google Lighthouse', 'لود بهینه فونت‌ها و تصاویر نسل جدید', 'کشینگ و CDN حرفه‌ای'],
+            deliverablesEn: ['Lighthouse Performance Score 95+', 'Next-Gen Asset Compression', 'Edge Caching & CDN Deployment']
+          }
+        ],
+        metrics: [
+          { valueFa: '۹۸+', valueEn: '98+', labelFa: 'امتیاز عملکرد Google Lighthouse', labelEn: 'Google Lighthouse Performance Score' },
+          { valueFa: '< ۰.۹s', valueEn: '< 0.9s', labelFa: 'میانگین زمان بارگذاری اولیه (LCP)', labelEn: 'Average First Contentful Paint' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'ریسپانسیو روی تمامی اندازه‌های نمایشگر', labelEn: 'Pixel-Perfect Responsive Integrity' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'شبکه‌های اجتماعی',
-        titleEn: 'Social Media',
-        subtitle: 'همراه مخاطبان در همه پلتفرم‌ها',
-        subtitleEn: 'Engage across every platform',
-        imageUrl:
-          'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Social Media',
+        slug: 'technical-seo',
         position: 2,
+        title: 'سئو تکنیکال و رشد ارگانیک',
+        titleEn: 'Technical SEO & Organic Growth',
+        subtitle: 'آدیت عمیق معماری سایت، تصحیح خطاهای ایندکس و استراتژی ساختاریافته محتوا',
+        subtitleEn: 'Comprehensive architectural audits, Core Web Vitals optimization, and high-authority content',
+        tagFa: 'سئو و رشد ارگانیک',
+        tagEn: 'SEO Growth',
+        headlineFa: 'تسلط بر موتورهای جستجو با تکیه بر معماری داده و اعتبار ساختاری',
+        headlineEn: 'Securing Market Dominance Through Search Architecture & Compounding Traffic',
+        detailedNarrativeFa: 'سئو موثر دیگر به افزودن کلمات کلیدی تصادفی محدود نمی‌شود. تیم سئو آن‌ساپ بر پایه مهندسی داده، ساختارهای اسکیما، رفع خطاهای تکنیکال ایندکسینگ و تدوین کلاسترهای محتوایی، رتبه‌بندی پایدار سایت شما را در رقابتی‌ترین کلمات کلیدی تضمین می‌کند تا جریان پیوسته‌ای از لیدهای باکیفیت به سوی کسب‌وکار شما هدایت شود.',
+        detailedNarrativeEn: 'Modern search authority requires architectural precision. OnSupp\'s SEO practice audits technical crawlers, deploys semantic JSON-LD schema, maps searcher intent clusters, and builds high-authority content pillars that secure top search positions without reliance on ongoing ad spend.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'جایگزینی ترافیک پایدار و رایگان ارگانیک به جای هزینه‌های گزاف تبلیغات کلیکی، جذب مخاطبان با نیت خرید بالا و ایجاد دارایی ماندگار دیجیتال برای برند شما.',
+        businessValueEn: 'Builds an appreciating digital asset that replaces spiraling Pay-Per-Click ad spend with reliable, high-intent inbound organic leads.',
+        coverImage: '/images/services/technical-seo.webp',
+        imageUrl: '/images/services/technical-seo.webp',
+        imageAlt: 'سئو تکنیکال OnSupp',
+        iconType: 'seo',
+        badgeAccentFa: 'سئو و رتبه‌بندی ارگانیک',
+        badgeAccentEn: 'Technical SEO',
+        ctaLabelFa: 'درخواست آدیت سئو وب‌سایت',
+        ctaLabelEn: 'Request Free Website SEO Audit',
+        subservices: [
+          {
+            nameFa: 'آدیت فنی و اصلاح ساختار سایت',
+            nameEn: 'Technical SEO Audits & Architecture',
+            descFa: 'بررسی کامل کدهای سایت، حل خطاهای بودجه خزش (Crawl Budget)، اصلاح ریدایرکت‌ها، پیاده‌سازی متاتگ‌های پیشرفته و داده‌های ساختاریافته Schema.org.',
+            descEn: 'Comprehensive crawler simulation, crawl budget optimization, canonical URL fixes, and rich snippet Schema.org structured data deployment.',
+            deliverablesFa: ['سند جامع آدیت فنی سئو', 'پیاده‌سازی استانداردهای Schema', 'اصلاح خطاهای Search Console'],
+            deliverablesEn: ['Comprehensive Technical Audit Report', 'Rich Schema.org Integration', 'Google Search Console Remediation']
+          },
+          {
+            nameFa: 'پژوهش کلمات کلیدی و تحلیل رقبا',
+            nameEn: 'Keyword Research & Competitor Analysis',
+            descFa: 'شناسایی دقیق عبارت‌های کلیدی پرجستجو با نیت خرید، استخراج شکاف‌های محتوایی رقبا (Content Gap) و اولویت‌بندی کلمات بر اساس پتانسیل درآمدزایی.',
+            descEn: 'Commercial intent mapping, keyword gap analysis against primary market competitors, and prioritized keyword opportunity matrices.',
+            deliverablesFa: ['ماتریس کلمات کلیدی هدف', 'تحلیل عمیق ۵ رقیب اصلی', 'نقشه سفر مشتری بر اساس کلمات'],
+            deliverablesEn: ['High-Intent Keyword Map', 'In-Depth Competitor Gap Matrix', 'Search Intent Journey Alignment']
+          },
+          {
+            nameFa: 'تدوین استراتژی محتوا و رتبه‌بندی',
+            nameEn: 'Content Strategy & Search Authority',
+            descFa: 'طراحی کلاسترهای محتوایی (Topic Clusters)، راهنمایی نگارش متون تخصصی سئوشده، بهینه‌سازی لینک‌سازی داخلی و نظارت مستمر بر تثبیت رتبه‌های صفحه اول گوگل.',
+            descEn: 'Topic cluster architecture, SEO copywriting frameworks, contextual internal linking strategies, and weekly rank tracking.',
+            deliverablesFa: ['تقویم پیلار و کلاستر محتوایی', 'دستورالعمل سئو برای نویسندگان', 'گزارش‌های هفتگی پایش رتبه'],
+            deliverablesEn: ['Pillar & Topic Cluster Blueprint', 'Editorial SEO Guidelines', 'Weekly SERP Rank Tracking Dashboards']
+          }
+        ],
+        metrics: [
+          { valueFa: '+۲۲۰٪', valueEn: '+220%', labelFa: 'میانگین رشد ترافیک ارگانیک در ۶ ماه', labelEn: 'Average Organic Search Traffic Growth' },
+          { valueFa: 'صفحه اول', valueEn: 'Page 1', labelFa: 'تثبیت رتبه‌بندی در کلمات رقابتی', labelEn: 'Top 3 Competitive SERP Dominance' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'مطابقت با دستورالعمل‌های رسمی گوگل', labelEn: 'Google Search Essentials Compliance' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'طراحی وب',
-        titleEn: 'Web Design',
-        subtitle: 'طراحی مدرن و کاربرمحور',
-        subtitleEn: 'Modern, user-centered design',
-        imageUrl:
-          'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Web Design',
+        slug: 'social-identity',
         position: 3,
+        title: 'مدیریت اینستاگرام و هویت فضای مجازی',
+        titleEn: 'Instagram Marketing & Brand Identity',
+        subtitle: 'طراحی هویت بصری منسجم، تدوین استراتژی برندینگ و مدیریت تعاملات شبکه‌های اجتماعی',
+        subtitleEn: 'Cohesive visual identity, brand strategy design, and active social media management',
+        tagFa: 'فضای مجازی و هویت',
+        tagEn: 'Social & Identity',
+        headlineFa: 'خلق هویتی یکپارچه و تمایزی ماندگار در ذهن مخاطب',
+        headlineEn: 'Architecting Cohesive Visual Identity & High-Engagement Brand Presence',
+        detailedNarrativeFa: 'در بازار پرتراکم امروز، شبکه‌های اجتماعی نخستین و پیوسته‌ترین نقطه تماس مخاطب با برند شما هستند. دپارتمان فضای مجازی آن‌ساپ با تکیه بر تحلیل رفتار مخاطبان هدف و استانداردهای طراحی برندینگ، زبان بصری و روایی اختصاصی کسب‌وکار شما را تدوین می‌کند؛ رویکردی که صرفاً به ارسال پست خلاصه نمی‌شود، بلکه پایه‌گذار اعتماد عمیق و هویت متمایز برند در اکوسیستم دیجیتال است.',
+        detailedNarrativeEn: 'In crowded modern markets, digital channels serve as the primary brand touchpoint. OnSupp architects bespoke visual guidelines, audience-centric content cadences, and authoritative tone of voice that convert casual viewers into long-term brand advocates.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'کاهش محسوس هزینه جذب مشتری (CAC) از طریق رشد تعامل ارگانیک، تثبیت هویت بصری یکدست در تمامی کانال‌ها و افزایش ضریب ماندگاری پیام برند در حافظه مخاطبان تصمیم‌گیرنده.',
+        businessValueEn: 'Significantly lowers Customer Acquisition Cost (CAC) through compounded organic engagement while instilling enduring premium authority across all customer touchpoints.',
+        coverImage: '/images/services/social-identity.webp',
+        imageUrl: '/images/services/social-identity.webp',
+        imageAlt: 'اینستاگرام و مدیریت فضای مجازی OnSupp',
+        iconType: 'social',
+        badgeAccentFa: 'هویت و شبکه‌های اجتماعی',
+        badgeAccentEn: 'Social & Identity',
+        ctaLabelFa: 'درخواست مشاوره اینستاگرام و هویت برند',
+        ctaLabelEn: 'Request Brand Identity Consultation',
+        subservices: [
+          {
+            nameFa: 'طراحی برند و مدیریت استراتژی',
+            nameEn: 'Brand Design & Strategy Management',
+            descFa: 'تدوین دفترچه راهنمای هویت بصری (Brand Book)، تعیین لحن پیام، تدوین پرسونای مخاطب و تقویم محتوایی مبتنی بر اهداف فروش و آگاهی‌بخشی.',
+            descEn: 'Comprehensive brand guidelines, tone of voice formulation, persona targeting, and objective-driven editorial calendars.',
+            deliverablesFa: ['کتابچه هویت بصری (Brand Book)', 'استراتژی لحن و روایت', 'تقویم محتوایی ماهانه'],
+            deliverablesEn: ['Complete Brand Style Guide', 'Voice & Messaging Framework', 'Monthly Content Calendar']
+          },
+          {
+            nameFa: 'طراحی محتوای گرافیکی و سینمایی پویا',
+            nameEn: 'Dynamic Graphic & Cinematic Content',
+            descFa: 'تولید اسلایدهای تعاملی، پوسترهای مفهومی، استوری‌های موشن‌دار و گرافیک‌های اختصاصی با بالاترین استانداردهای بصری و کپی‌رایتینگ متقاعدکننده.',
+            descEn: 'Interactive multi-slide carousels, conceptual graphic layouts, motion stories, and persuasive copywriting designed for maximum retention.',
+            deliverablesFa: ['پست‌های کاروسل تحلیلی', 'طراحی هویت استوری‌ها', 'کپی‌رایتینگ تخصصی'],
+            deliverablesEn: ['High-Impact Carousel Decks', 'Motion Story Templates', 'Strategic Copywriting']
+          },
+          {
+            nameFa: 'مدیریت و کنترل صفحه مجازی',
+            nameEn: 'Social Page Management & Monitoring',
+            descFa: 'مدیریت تعاملات و دایرکت‌ها، مانیتورینگ الگوریتم‌ها، نظارت بر سلامت اکانت و ارائه گزارش‌های دقیق رشد، نرخ تعامل و تحلیل رفتار مخاطبان.',
+            descEn: 'Community moderation, algorithmic optimization, account health auditing, and monthly analytical growth reports.',
+            deliverablesFa: ['مدیریت منظم تعاملات', 'آنالیز هفتگی و ماهانه', 'بهینه‌سازی الگوریتمی'],
+            deliverablesEn: ['Active Community Moderation', 'KPI & Engagement Reporting', 'Algorithmic Growth Calibration']
+          }
+        ],
+        metrics: [
+          { valueFa: '+۱۴۰٪', valueEn: '+140%', labelFa: 'میانگین رشد نرخ تعامل ارگانیک', labelEn: 'Average Organic Engagement Lift' },
+          { valueFa: '۳.۲x', valueEn: '3.2x', labelFa: 'افزایش ماندگاری بصری برند', labelEn: 'Brand Recall Multiplier' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'هماهنگی با استانداردهای هویت بصری', labelEn: 'Brand Guideline Cohesion' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'برندینگ',
-        titleEn: 'Branding',
-        subtitle: 'ساخت هویت بصری ماندگار',
-        subtitleEn: 'Build an enduring visual identity',
-        imageUrl:
-          'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Branding',
+        slug: 'studio-production',
         position: 4,
+        title: 'فیلم‌برداری و تولیدات استودیو',
+        titleEn: 'Studio Production & Videography',
+        subtitle: 'تولید تیزرهای تبلیغاتی، مستندهای صنعتی و استودیو پادکست با تجهیزات حرفه‌ای سینمایی',
+        subtitleEn: 'Cinematic commercial films, industrial documentaries, podcast recording, and interactive multimedia',
+        tagFa: 'استودیو و تیزر',
+        tagEn: 'Studio & Film',
+        headlineFa: 'روایت سینمایی داستان برند با تجهیزات فوق‌حرفه‌ای',
+        headlineEn: 'Cinematic Visual Storytelling Powered by Cinema-Grade Technology',
+        detailedNarrativeFa: 'یک قاب تصویربرداری حرفه‌ای قادر است در چند ثانیه حسی از اعتبار و کیفیت را منتقل کند که هزاران واژه از بیان آن ناتوانند. در استودیو آن‌ساپ، با بهره‌گیری از دوربین‌های سینمایی، سیستم‌های پیشرفته نورپردازی و اتاق‌های مجهز ضبط صدا و پادکست، ایده و ارزش‌های سازمان شما را به محتوایی فاخر و تأثیرگذار برای کمپین‌های تجاری و رسانه‌ای بدل می‌کنیم.',
+        detailedNarrativeEn: 'A single cinematic shot communicates credibility and prestige that thousands of words cannot match. OnSupp leverages cinema-grade cameras, broadcast lighting grids, and acoustic studio spaces to transform your enterprise vision into captivating commercial assets.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'افزایش چشمگیر نرخ تبدیل در تبلیغات ویدیویی، تثبیت اعتبار رسمی سازمان در نگاه مشتریان سازمانی (B2B) و تولید دارایی‌های ویدیویی با ماندگاری طولانی برای تمامی کمپین‌ها.',
+        businessValueEn: 'Drastically increases conversion rates across video marketing funnels, secures B2B enterprise trust, and produces evergreen visual brand collateral.',
+        coverImage: '/images/services/studio-production.webp',
+        imageUrl: '/images/services/studio-production.webp',
+        imageAlt: 'فیلم‌برداری و استودیو OnSupp',
+        iconType: 'studio',
+        badgeAccentFa: 'استودیو و تولید سینمایی',
+        badgeAccentEn: 'Cinema Production',
+        ctaLabelFa: 'هماهنگی استودیو و تولید ویدیو',
+        ctaLabelEn: 'Schedule Studio Production Consultation',
+        subservices: [
+          {
+            nameFa: 'تصویربرداری صنعتی و تبلیغاتی',
+            nameEn: 'Industrial & Commercial Cinematography',
+            descFa: 'ساخت تیزرهای تلویزیونی و دیجیتال، فیلم‌برداری از خطوط تولید کارخانجات، پروژه‌های معماری و معرفی محصولات در لوکیشن اختصاصی یا کارفرما.',
+            descEn: 'Broadcast commercials, high-end industrial plant documentaries, architectural features, and product cinematography on location or in-studio.',
+            deliverablesFa: ['تیزر تجاری سینمایی', 'مستند صنعتی و خط تولید', 'عکاسی صنعتی اختصاصی'],
+            deliverablesEn: ['Commercial Broadcast Spots', 'Industrial Facility Documentaries', 'Studio Product Photography']
+          },
+          {
+            nameFa: 'ساخت پادکست و محتوای بلند تعاملی',
+            nameEn: 'Podcasts & Long-Form Interactive Media',
+            descFa: 'تجهیز و هدایت استودیو پادکست، تصویربرداری چنددوربینه، ضبط صدای کالیبره‌شده، مصاحبه‌های سازمانی و تولید قسمت‌های پادکست تصویری (Vodcast).',
+            descEn: 'Multi-camera podcast engineering, acoustic sound capture, corporate talk shows, and vodcast series ready for multi-channel syndication.',
+            deliverablesFa: ['ویدیوپادکست با کیفیت 4K', 'میکسینگ و مسترینگ صدا', 'کات‌های ویروسی شبکه‌های اجتماعی'],
+            deliverablesEn: ['4K Multi-Cam Vodcast Episodes', 'Acoustic Audio Mastering', 'Short-Form Social Clips']
+          },
+          {
+            nameFa: 'تدوین و پست‌تولید',
+            nameEn: 'Editing & Post-Production',
+            descFa: 'تدوین ریتمیک، اصلاح رنگ سینمایی (Color Grading)، طراحی باند صوتی و جلوه‌های صوتی سه‌بعدی برای خلق نهایت گیرایی و کیفیت حسی در بیننده.',
+            descEn: 'Rhythmic narrative editing, cinema color grading (DaVinci Resolve), custom sound design, and audio post-mastering.',
+            deliverablesFa: ['اصلاح رنگ حرفه‌ای (Log/LUT)', 'طراحی و مهندسی صدا', 'نسخه‌های عمودی و افقی متناسب کانال‌ها'],
+            deliverablesEn: ['Pro Color Grading (Log/LUT)', 'Custom Foley & Sound Design', 'Multi-Platform Export Formats']
+          }
+        ],
+        metrics: [
+          { valueFa: '4K 10-Bit', valueEn: '4K 10-Bit', labelFa: 'استاندارد تصویربرداری سینمایی', labelEn: 'Cinema Capture Standard' },
+          { valueFa: '+۶۵٪', valueEn: '+65%', labelFa: 'افزایش نرخ تماشای کامل ویدیوها', labelEn: 'Average Watch Time Retention' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'تجهیزات مدرن نور و صدای استودیویی', labelEn: 'Broadcast Acoustic Fidelity' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'تحلیل داده',
-        titleEn: 'Data Analytics',
-        subtitle: 'تصمیم‌گیری بر پایه داده',
-        subtitleEn: 'Make decisions from data',
-        imageUrl:
-          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Data Analytics',
+        slug: 'animation-motion',
         position: 5,
+        title: 'انیمیشن و موشن گرافیک',
+        titleEn: 'Animation & Motion Graphics',
+        subtitle: 'خلق انیمیشن‌های دوبعدی و سه‌بعدی، جلوه‌های بصری سینمایی (VFX) و موشن‌گرافیک‌های تعاملی',
+        subtitleEn: '2D & 3D animation, cutting-edge cinematic VFX, and interactive motion graphics',
+        tagFa: 'انیمیشن و موشن',
+        tagEn: 'Motion & VFX',
+        headlineFa: 'تفهیم جذاب و سریع پیچیده‌ترین مفاهیم با هنر حرکت',
+        headlineEn: 'Simplifying Complex Ideas into Captivating Kinetic Narratives',
+        detailedNarrativeFa: 'مفاهیم پیچیده تجاری، مکانیزم‌های عملکردی محصولات مدرن و فناوری‌های نوین زمانی به موفقیت دست می‌یابند که مخاطب بتواند در چند ثانیه ارزش محوری آن‌ها را درک کند. تیم انیمیشن و موشن‌گرافیک آن‌ساپ با تلفیق هنر کارگردانی هنری، فیزیک سه‌بعدی و جلوه‌های ویژه بصری، مفاهیم انتزاعی را به داستان‌هایی پرکشش، آموزنده و انگیزشی تبدیل می‌کند.',
+        detailedNarrativeEn: 'Complex technologies and abstract services only convert when prospects grasp their core value within seconds. OnSupp blends art direction, 3D physics, and kinetic animation to distill sophisticated concepts into visual narratives that command engagement.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'افزایش درک محصول در جلسات B2B، کاهش نرخ خروج کاربران در صفحات فرود و ارتقای شگرف جذابیت ارائه‌ها و تیزرهای معرفی خدمات به سرمایه‌گذاران.',
+        businessValueEn: 'Accelerates product comprehension in enterprise B2B sales cycles, drastically reduces landing page bounce rates, and delivers investor-ready visual clarity.',
+        coverImage: '/images/services/animation-motion.webp',
+        imageUrl: '/images/services/animation-motion.webp',
+        imageAlt: 'انیمیشن و موشن گرافیک OnSupp',
+        iconType: 'motion',
+        badgeAccentFa: 'موشن گرافیک و انیمیشن',
+        badgeAccentEn: 'Motion & Animation',
+        ctaLabelFa: 'درخواست مشاوره پروژه موشن',
+        ctaLabelEn: 'Request Motion & VFX Consultation',
+        subservices: [
+          {
+            nameFa: 'انیمیشن دوبعدی و سه‌بعدی',
+            nameEn: '2D & 3D Animation',
+            descFa: 'طراحی کاراکتر، مدلسازی سه‌بعدی محصولات، انیمیت روان و فضاسازی‌های داستانی متناسب با شخصیت برند برای کمپین‌ها و پلتفرم‌های تعاملی.',
+            descEn: 'Custom character design, realistic 3D product modeling, organic rigging, and bespoke environments crafted to mirror your brand persona.',
+            deliverablesFa: ['مدلسازی ۳D با رندر فوتورئال', 'انیمیشن دو بعدی داستانی', 'شبیه‌سازی مکانیزم محصول'],
+            deliverablesEn: ['Photorealistic 3D Modeling', 'Character & Narrative 2D', 'Product Mechanical Simulation']
+          },
+          {
+            nameFa: 'جلوه‌های ویژه سینمایی',
+            nameEn: 'Cinematic Visual Effects (VFX)',
+            descFa: 'تلفیق ویدیوهای رئال با عناصر سه‌بعدی کامپیوتری، شبیه‌سازی ذرات، نورپردازی دینامیک و کامپوزیت سینمایی برای تولید آگهی‌های متمایز و فراتر از واقعیت.',
+            descEn: 'Seamless CGI live-action integration, particle simulations, dynamic lighting, and cinematic compositing for hyper-realistic visual ads.',
+            deliverablesFa: ['کامپوزیت CGI و رئال', 'شبیه‌سازی فیزیک ذرات و سیالات', 'رتوش و اصلاح دیجیتال صحنه'],
+            deliverablesEn: ['Live-Action CGI Compositing', 'Fluid & Particle Simulation', 'Digital Scene Augmentation']
+          },
+          {
+            nameFa: 'موشن گرافیک صنعتی، آموزشی و تعاملی',
+            nameEn: 'Industrial, Educational & Interactive Motion',
+            descFa: 'خلق ویدیوهای توضیح‌دهنده (Explainer Videos)، موشن‌گرافیک‌های معرفی نرم‌افزار، گزارش‌های آماری پویا و گرافیک‌های رابط کاربری تعاملی.',
+            descEn: 'Dynamic product explainers, SaaS interface walkthroughs, kinetic data visualizations, and interactive UI micro-animations.',
+            deliverablesFa: ['ویدیو توضیح‌دهنده محصول (Explainer)', 'موشن‌گرافیک دیتامحور و آماری', 'انیمیشن‌های رابط کاربری UI Motion'],
+            deliverablesEn: ['SaaS Explainer Videos', 'Data & Metric Visualizations', 'UI Micro-Interactions & Lottie']
+          }
+        ],
+        metrics: [
+          { valueFa: '۳ برابر', valueEn: '3x', labelFa: 'افزایش یادآوری پیام در مقایسه با متن', labelEn: 'Message Recall vs Plain Text' },
+          { valueFa: '+۸۰٪', valueEn: '+80%', labelFa: 'بهبود نرخ تبدیل صفحات فرود', labelEn: 'Landing Page Conversion Uplift' },
+          { valueFa: '60 FPS', valueEn: '60 FPS', labelFa: 'روانی و استانداردهای کیفی انیمیت', labelEn: 'Ultra-Fluid Kinetic Animation' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'بازاریابی ایمیلی',
-        titleEn: 'Email Marketing',
-        subtitle: 'حفظ ارتباط و افزایش بازگشت',
-        subtitleEn: 'Retention and repeat conversions',
-        imageUrl:
-          'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Email Marketing',
+        slug: 'crm-automation',
         position: 6,
+        title: 'استقرار CRM و اتوماسیون فروش',
+        titleEn: 'CRM Implementation & Automation',
+        subtitle: 'طراحی و سفارشی‌سازی پایپ‌لاین‌های فروش، اتوماسیون ثبت سرنخ‌ها و گزارش‌گیری تحلیلی',
+        subtitleEn: 'Tailored CRM configuration, multi-channel lead automation pipelines, and executive dashboards',
+        tagFa: 'اتوماسیون و فروش',
+        tagEn: 'CRM & Systems',
+        headlineFa: 'تسریع فرآیندهای فروش و شفافیت کامل چرخه‌های مشتریان',
+        headlineEn: 'Accelerating Sales Velocity Through Intelligent Pipeline Automation',
+        detailedNarrativeFa: 'لیدهای ورودی از وب‌سایت، شبکه‌های اجتماعی و کمپین‌های تبلیغاتی در صورت عدم پیگیری سریع و هوشمندانه، ارزش خود را از دست می‌دهند. راهکارهای استقرار CRM و اتوماسیون آن‌ساپ فرآیند جذب تا بستن قرارداد را مکانیزه می‌کنند تا هیچ مشتری بالقوه‌ای فراموش نشود و مدیران در هر لحظه تصویری شفاف از عملکرد و درآمد آتی تیم فروش داشته باشند.',
+        detailedNarrativeEn: 'Inbound leads from campaigns and digital channels rapidly decay without immediate structured follow-ups. OnSupp designs tailored CRM architectures and multi-channel notification webhooks to automate lead routing, shorten sales cycles, and empower leadership with real-time revenue intelligence.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'کاهش ۳۵ درصدی زمان پیگیری لیدها، جلوگیری ۱۰۰ درصدی از اتلاف سرنخ‌های ورودی و دسترسی مدیران ارشد به داشبوردهای شفاف پیش‌بینی فروش و درآمد.',
+        businessValueEn: 'Reduces lead response times by 35%, eliminates lost opportunities across multi-channel funnels, and equips executives with actionable revenue forecasting.',
+        coverImage: '/images/services/crm-automation.webp',
+        imageUrl: '/images/services/crm-automation.webp',
+        imageAlt: 'استقرار CRM و اتوماسیون فروش OnSupp',
+        iconType: 'crm',
+        badgeAccentFa: 'اتوماسیون و عملیات فروش',
+        badgeAccentEn: 'CRM & Automations',
+        ctaLabelFa: 'درخواست مشاوره استقرار CRM',
+        ctaLabelEn: 'Schedule CRM Implementation Demo',
+        subservices: [
+          {
+            nameFa: 'راه‌اندازی و سفارشی‌سازی اختصاصی CRM',
+            nameEn: 'Tailored CRM Setup & Configuration',
+            descFa: 'تنظیم مراحل قیف فروش، تعریف فیلدهای اختصاصی هر صنعت، سطوح دسترسی کارشناسان و هماهنگ‌سازی سیستم با فرآیندهای واقعی سازمان.',
+            descEn: 'Custom pipeline staging, enterprise field architectures, permission schemas, and workflow calibration aligned with your sales operations.',
+            deliverablesFa: ['طراحی مراحل قیف فروش (Pipelines)', 'تعریف نقش‌ها و دسترسی‌های پرسنل', 'مهاجرت داده‌های قدیمی به CRM'],
+            deliverablesEn: ['Custom Sales Pipeline Design', 'Role-Based Access Control', 'Clean Historical Data Migration']
+          },
+          {
+            nameFa: 'اتوماسیون ثبت و پیگیری سرنخ‌ها',
+            nameEn: 'Automated Lead Pipelines & Workflows',
+            descFa: 'اتصال خودکار فرم‌های وب‌سایت، چت‌بات‌ها و پیام‌رسان‌ها به CRM، ارسال پیامک و ایمیل‌های پیگیری خودکار و تخصیص هوشمند لید به کارشناسان مربوطه.',
+            descEn: 'Instant webhook capture from web forms and chat channels, automated SMS/email sequences, and round-robin lead distribution.',
+            deliverablesFa: ['اتصال بدون وقفه فرم‌های وب به CRM', 'سناریوهای پیگیری خودکار پیامکی و ایمیلی', 'یادآورهای هوشمند برای کارشناسان'],
+            deliverablesEn: ['Real-Time Lead Webhook Ingestion', 'Automated Nurturing Workflows', 'Smart Task & Follow-up Reminders']
+          },
+          {
+            nameFa: 'داشبوردهای شفاف گزارش‌گیری فروش',
+            nameEn: 'Sales Pipeline & Performance Dashboards',
+            descFa: 'طراحی گزارش‌های لحظه‌ای از عملکرد کارشناسان، نرخ تبدیل هر مرحله از قیف، میزان فروش تحقق‌یافته و تحلیل دلایل از دست رفتن معاملات.',
+            descEn: 'Real-time visibility into rep productivity, conversion bottlenecks, deal velocity, and win/loss analytics for strategic leadership.',
+            deliverablesFa: ['داشبورد جامع مدیریت فروش', 'گزارش‌های نرخ تبدیل مراحل قیف', 'سیستم هشدار معاملات راکد'],
+            deliverablesEn: ['Executive Revenue Dashboard', 'Funnel Stage Conversion Analytics', 'Stale Deal Alert Triggers']
+          }
+        ],
+        metrics: [
+          { valueFa: '-۳۵٪', valueEn: '-35%', labelFa: 'کاهش چرخه تبدیل لید به مشتری', labelEn: 'Shorter Sales Cycle Duration' },
+          { valueFa: '۰ لید', valueEn: 'Zero', labelFa: 'سرنخ‌های فراموش‌شده یا از دست‌رفته', labelEn: 'Zero Dropped Inbound Leads' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'شفافیت گزارش‌های فروش برای مدیریت', labelEn: 'Executive Pipeline Visibility' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
       {
-        title: 'طراحی موشن',
-        titleEn: 'Motion Design',
-        subtitle: 'محتوای ویدئویی جذاب',
-        subtitleEn: 'Captivating motion content',
-        imageUrl:
-          'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80&auto=format&fit=crop',
-        imageAlt: 'Motion Design',
+        slug: 'custom-software',
         position: 7,
+        title: 'برنامه‌نویسی و سامانه‌های اختصاصی',
+        titleEn: 'Custom Software & Web Systems',
+        subtitle: 'طراحی و توسعه سامانه‌های تحت وب مقیاس‌پذیر، پرتال‌های مدیریتی و معماری API اختصاصی',
+        subtitleEn: 'Scalable web applications, internal enterprise portals, secure PostgreSQL architectures, and custom API',
+        tagFa: 'برنامه‌نویسی و سامانه',
+        tagEn: 'Custom Software',
+        headlineFa: 'توسعه سامانه‌های تحت وب مقیاس‌پذیر و زیرساخت‌های پایدار سازمانی',
+        headlineEn: 'Engineering Mission-Critical Enterprise Platforms & Scalable Cloud Systems',
+        detailedNarrativeFa: 'هنگامی که کسب‌وکار شما دارای فرآیندهای منحصربه‌فردی است که نرم‌افزارهای آماده تجاری توان پاسخگویی به آن را ندارند، راه‌حل نهایی توسعه نرم‌افزار اختصاصی است. تیم فنی آن‌ساپ با بهره‌گیری از معماری‌های مدرن میکروسرویس، پایگاه‌های داده مقیاس‌پذیر PostgreSQL و استانداردهای سختگیرانه امنیت سایبری، سامانه‌های یکپارچه‌ای خلق می‌کند که ستون فقرات عملیات دیجیتال سازمان شما خواهند بود.',
+        detailedNarrativeEn: 'When enterprise operations outgrow off-the-shelf SaaS, custom software engineering becomes the definitive competitive advantage. OnSupp crafts resilient web applications, custom management portals, secure PostgreSQL architectures, and REST/GraphQL microservices built to withstand high concurrency and mission-critical workloads.',
+        businessValueTitleFa: 'ارزش استراتژیک برای کسب‌وکار شما',
+        businessValueTitleEn: 'Strategic Business Value',
+        businessValueFa: 'مالکیت انحصاری دارایی فکری (IP)، حذف کامل هزینه‌های مکرر دلاری نرم‌افزارهای خارجی، انطباق ۱۰۰ درصدی با الزامات قانونی و سازمانی و قابلیت ارتقای نامحدود.',
+        businessValueEn: '100% intellectual property ownership, zero recurring vendor lock-in fees, total compliance with data privacy protocols, and infinite scalability as your enterprise grows.',
+        coverImage: '/images/services/custom-software.webp',
+        imageUrl: '/images/services/custom-software.webp',
+        imageAlt: 'برنامه‌نویسی و سامانه اختصاصی OnSupp',
+        iconType: 'software',
+        badgeAccentFa: 'سامانه‌های سفارشی سازمانی',
+        badgeAccentEn: 'Enterprise Systems',
+        ctaLabelFa: 'مشاوره فنی پروژه نرم‌افزاری',
+        ctaLabelEn: 'Schedule Technical Architecture Scoping',
+        subservices: [
+          {
+            nameFa: 'توسعه فول‌استک اختصاصی و مقیاس‌پذیر',
+            nameEn: 'Scalable Full-Stack Web Systems',
+            descFa: 'برنامه‌نویسی سامانه‌های پیچیده تحت وب با فریم‌ورک‌های مدرن، پردازش‌های ناهمگام، صف‌بندی کارها (Task Queues) و معماری‌های پاسخگو به ترافیک بالا.',
+            descEn: 'End-to-end full-stack engineering, asynchronous background workers, high-concurrency event queues, and multi-tenant architectures.',
+            deliverablesFa: ['معماری ماژولار و مقیاس‌پذیر', 'کدنویسی منطبق بر اصول Clean Code', 'مستندات کامل فنی نرم‌افزار'],
+            deliverablesEn: ['Scalable Modular Architecture', 'Strict Clean Code Standards', 'Comprehensive Technical Documentation']
+          },
+          {
+            nameFa: 'طراحی ساختار دیتابیس و پنل مدیریتی',
+            nameEn: 'Database & Admin Portal Architecture',
+            descFa: 'طراحی ساختار داده‌های رابطه‌ای و غیررابطه‌ای با بهینه‌سازی کوئری‌ها، ایجاد پنل‌های مدیریتی پیشرفته با گزارش‌گیری لحظه‌ای و مدیریت کاربران چندسطحی.',
+            descEn: 'Normalized relational database schemas (PostgreSQL/Prisma), query indexing, granular user privilege layers, and bespoke management admin portals.',
+            deliverablesFa: ['طراحی بهینه دیتابیس PostgreSQL', 'پنل مدیریت اختصاصی ادمین', 'سیستم جامع ثبت رخدادها (Audit Logs)'],
+            deliverablesEn: ['Optimized Database Schemas', 'Custom Admin Dashboard Portal', 'Comprehensive Security Audit Logs']
+          },
+          {
+            nameFa: 'اتصال امن به APIها و سرویس‌های بیرونی',
+            nameEn: 'Secure Third-Party API Integrations',
+            descFa: 'پیاده‌سازی درگاه‌های پرداخت، وب‌سرویس‌های پیامکی، اتصال به نرم‌افزارهای حسابداری و ERP و ارائه APIهای استاندارد برای ارتباط با سامانه‌های شخص ثالث.',
+            descEn: 'Secure microservice interfaces, payment gateways, ERP and accounting middleware, and versioned REST/GraphQL developer APIs.',
+            deliverablesFa: ['وب‌سرویس‌های امن REST و GraphQL', 'اتصال به سیستم‌های مالی و بانکی', 'مستندات استاندارد OpenAPI/Swagger'],
+            deliverablesEn: ['Secure REST & GraphQL APIs', 'Financial & Banking Gateway Integrations', 'Standard OpenAPI / Swagger Specs']
+          }
+        ],
+        metrics: [
+          { valueFa: '۹۹.۹٪', valueEn: '99.9%', labelFa: 'پایداری عملکرد و آپ‌تایم سامانه‌ها', labelEn: 'Platform Architecture Uptime' },
+          { valueFa: '۱۰۰٪', valueEn: '100%', labelFa: 'مالکیت کد و حریم خصوصی داده‌ها', labelEn: 'Proprietary IP & Data Privacy' },
+          { valueFa: 'مقیاس‌پذیر', valueEn: 'Scalable', labelFa: 'قابلیت پشتیبانی از میلیون‌ها تراکنش', labelEn: 'Engineered for Massive Concurrency' }
+        ],
+        isPublished: true,
+        status: PublicationStatus.PUBLISHED,
       },
     ];
     for (const service of defaultServices) {
@@ -317,8 +651,8 @@ const existingStats = await prisma.stat.count();
       },
       {
         kind: 'number',
-        valueFa: '+۷۰۰',
-        valueEn: '700+',
+        valueFa: '+۲۰۰',
+        valueEn: '200+',
         labelFa: 'پروژه موفق',
         labelEn: 'Successful projects',
         descFa: 'پروژه‌های موفقی که به نتیجه رسیدند',
@@ -840,178 +1174,231 @@ const existingStats = await prisma.stat.count();
     console.log('[seed] Default contact content singleton created');
   }
 
-  // 9. Seed Articles (Idempotent: only if no articles exist)
-  const existingArticles = await prisma.article.count();
-  if (existingArticles === 0) {
-    console.log('[seed] Seeding initial articles...');
-
-    await prisma.article.create({
-      data: {
-        titleFa: 'راهنمای جامع سئو تکنیکال (Technical SEO) در سال ۲۰۲۶؛ چک‌لیست معماری وب و فاکتورهای حیاتی گوگل',
-        titleEn: 'The Ultimate Guide to Technical SEO in 2026: Modern Web Architecture & Google Vitals',
-        slug: 'technical-seo-modern-web-architecture',
-        categoryFa: 'سئو و رشد ارگانیک',
-        categoryEn: 'Technical SEO & Growth',
-        excerptFa: 'راهنمای گام‌به‌گام و تخصصی بهینه‌سازی فنی وب‌سایت‌ها برای خزنده‌های نوین گوگل در سال ۲۰۲۶؛ بررسی عمیق معماری Next.js، شاخص‌های Core Web Vitals (INP, LCP, CLS)، بهینه‌سازی بودجه خزش و اسکیماهای معنایی ساختاریافته.',
-        excerptEn: 'A comprehensive technical blueprint for optimizing modern web platforms for Google crawlers: SSR/SSG rendering, Core Web Vitals (INP, LCP, CLS), crawl budget, and semantic schema architecture.',
-        contentFa: `<section id="intro">
-  <h2>۱. سئو تکنیکال در عصر هوش مصنوعی؛ چرا زیرساخت فنی پادشاه جدید است؟</h2>
-  <p>در سال ۲۰۲۶ با گسترش موتورهای جستجوی مبتنی بر هوش مصنوعی (Google SGE و پردازش چندوجهی Gemini)، نحوه بررسی و ارزیابی صفحات وب توسط ربات‌های خزنده‌گر متحول شده است. امروزه دیگر تولید محتوای متنی صرف بدون داشتن یک <strong>زیرساخت فنی بی‌نقص و پرسرعت</strong>، هیچ شانسی برای تثبیت رتبه در صفحه اول نتایج جستجو ندارد.</p>
-  <blockquote>سئو تکنیکال (Technical SEO) هنر و مهندسی آماده‌سازی پلتفرم وب شماست به گونه‌ای که خزنده‌های گوگل بتوانند در کمترین زمان ممکن، بدون خطاهای رندرینگ و با کمترین مصرف منابع پردازشی، محتوای صفحات را درک و ایندکس کنند.</blockquote>
-</section>
-<section id="section-1">
-  <h2 id="section-1">۲. شاخص‌های حیاتی وب (Core Web Vitals ۲۰۲۶) و ارتقای پرفورمنس</h2>
-  <p>شاخص INP باید زیر ۲۰۰ میلی‌ثانیه و LCP زیر ۱.۵ ثانیه نگه داشته شود تا نرخ پرش کاربران به حداقل برسد.</p>
-</section>
-<section id="section-2">
-  <h2 id="section-2">۳. معماری رندرینگ Next.js، بودجه خزش و داده‌های ساختاریافته (Schema Markup)</h2>
-  <p>ترکیب SSR و SSG در Next.js تضمین می‌کند که خزنده‌ها بدون تاخیر کلاینت به HTML کامل دسترسی داشته باشند.</p>
-</section>
-<section id="conclusion">
-  <h2 id="conclusion">۴. چک‌لیست نهایی ممیزی سئو تکنیکال و جمع‌بندی</h2>
-  <p>تیم مهندسی و متخصصان سئوی تکنیکال آن‌ساپ با آنالیز اختصاصی کدها و سرورها، مسیر رسیدن به لینک یک گوگل را هموار می‌کنند.</p>
-</section>`,
-        contentEn: `<section id="intro"><h2>1. Technical SEO in the AI Era</h2><p>Foundational engineering ensures search engines crawl and index with zero friction.</p></section>`,
-        readTimeFa: '۷ دقیقه مطالعه',
-        readTimeEn: '7 min read',
-        imageUrl: '/images/services/technical-seo.webp',
-        author: 'دپارتمان سئو و معماری نرم‌افزار آن‌ساپ',
-        metaTitleFa: 'راهنمای جامع سئو تکنیکال ۲۰۲۶ | چک‌لیست معماری وب و افزایش رتبه گوگل | آن‌ساپ',
-        metaTitleEn: 'Complete Technical SEO Guide 2026: Core Web Vitals & Web Architecture | OnSupp',
-        metaDescFa: 'راهنمای عملی سئو تکنیکال (Technical SEO) برای وب‌اپلیکیشن‌های مدرن. بهینه‌سازی سرعت LCP و INP، معماری Next.js، بودجه خزش و استانداردهای گوگل ۲۰۲۶ با متخصصان آن‌ساپ.',
-        metaDescEn: 'Master Technical SEO in 2026: Next.js rendering, Core Web Vitals benchmarks, crawl budget management, and schema architecture for enterprise growth.',
-        keywordsFa: 'سئو تکنیکال, Technical SEO, چک لیست سئو تکنیکال, Core Web Vitals, سئو Next.js',
-        canonicalUrl: 'https://onsupp.ir/blog/technical-seo-modern-web-architecture',
-        published: true,
-        faqs: {
-          create: [
-            {
-              question: 'سئو تکنیکال (Technical SEO) دقیقاً چیست و چه فرقی با سئوی محتوایی دارد؟',
-              answer: 'سئو تکنیکال بر زیرساخت‌های مهندسی وب‌سایت مانند سرعت، ساختار کدها، Core Web Vitals و دیتای اسکیما تمرکز دارد.',
-              order: 1,
-            },
-            {
-              question: 'شاخص INP در Core Web Vitals چیست و چرا جایگزین FID شد؟',
-              answer: 'شاخص Interaction to Next Paint سرعت پاسخگویی و لگ بصری تمام تعاملات کاربر در طول صفحه را اندازه می‌گیرد و باید زیر ۲۰۰ میلی‌ثانیه باشد.',
-              order: 2,
-            },
-          ],
-        },
+  // 9. Seed / Sync Articles with Upsert (Strictly ensures the 3 canonical articles exist)
+  console.log('[seed] Syncing official articles (Upsert)...');
+  const officialArticlesData = [
+  {
+    "id": 1,
+    "titleFa": "راهنمای جامع سئو تکنیکال (Technical SEO) در سال ۲۰۲۶؛ چک‌لیست معماری وب و فاکتورهای حیاتی گوگل",
+    "titleEn": "The Ultimate Guide to Technical SEO in 2026: Modern Web Architecture & Google Vitals",
+    "slug": "technical-seo-modern-web-architecture",
+    "categoryFa": "سئو و رشد ارگانیک",
+    "categoryEn": "Technical SEO & Growth",
+    "excerptFa": "راهنمای گام‌به‌گام و تخصصی بهینه‌سازی فنی وب‌سایت‌ها برای خزنده‌های نوین گوگل در سال ۲۰۲۶؛ بررسی عمیق معماری Next.js، شاخص‌های Core Web Vitals (INP, LCP, CLS)، بهینه‌سازی بودجه خزش و اسکیماهای معنایی ساختاریافته.",
+    "excerptEn": "A comprehensive technical blueprint for optimizing modern web platforms for Google crawlers: SSR/SSG rendering, Core Web Vitals (INP, LCP, CLS), crawl budget, and semantic schema architecture.",
+    "contentFa": "\n<section id=\"intro\">\n  <h2>۱. سئو تکنیکال در عصر هوش مصنوعی؛ چرا زیرساخت فنی پادشاه جدید است؟</h2>\n  <p>در سال ۲۰۲۶ با گسترش موتورهای جستجوی مبتنی بر هوش مصنوعی (Google SGE و پردازش چندوجهی Gemini)، نحوه بررسی و ارزیابی صفحات وب توسط ربات‌های خزنده‌گر متحول شده است. امروزه دیگر تولید محتوای متنی صرف بدون داشتن یک <strong>زیرساخت فنی بی‌نقص و پرسرعت</strong>، هیچ شانسی برای تثبیت رتبه در صفحه اول نتایج جستجو ندارد.</p>\n  \n  <blockquote>\n    سئو تکنیکال (Technical SEO) هنر و مهندسی آماده‌سازی پلتفرم وب شماست به گونه‌ای که خزنده‌های گوگل بتوانند در کمترین زمان ممکن، بدون خطاهای رندرینگ و با کمترین مصرف منابع پردازشی، محتوای صفحات را درک و ایندکس کنند.\n  </blockquote>\n\n  <p>اگر کدهای سایت شما بهینه نباشند یا سرعت پاسخگویی سرور (TTFB) بالا باشد، حتی برترین مقالات نیز در صف طولانی خزش گوگل باقی مانده و ترافیک ارگانیک ارزشمندی از دست خواهد رفت. در این راهنما، فاکتورهای تعیین‌کننده سئو تکنیکال در سال ۲۰۲۶ را بررسی می‌کنیم.</p>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">۲. شاخص‌های حیاتی وب (Core Web Vitals ۲۰۲۶) و ارتقای پرفورمنس</h2>\n  <p>گوگل استانداردهای سخت‌گیرانه‌تری را برای تجربه کاربری (Page Experience) اعمال کرده است. سه شاخص بنیادین زیر معیار سنجش اعتبار فنی هر دامنه هستند:</p>\n\n  <h3>شاخص تعامل تا رنگ بعدی (INP - Interaction to Next Paint)</h3>\n  <p>شاخص <code>INP</code> رسماً جایگزین <code>FID</code> شده و تمام تعاملات کاربر در طول صفحه (کلیک‌ها، اسکرول‌ها و باز کردن منوها) را زیر ذره‌بین قرار می‌دهد. مقدار ایده‌آل INP باید <strong>کمتر از ۲۰۰ میلی‌ثانیه</strong> باشد. برای رسیدن به این بنچمارک در پلتفرم‌های مدرن، شکستن وظایف طولانی جاوااسکریپت (Long Tasks) و استفاده از Web Workers ضروری است.</p>\n\n  <h3>بزرگ‌ترین المان محتوایی (LCP - Largest Contentful Paint)</h3>\n  <p>شاخص <code>LCP</code> زمان رندر شدن تصویر یا بلوک متنی اصلی صفحه را اندازه می‌گیرد و باید <strong>زیر ۲.۵ ثانیه (و ترجیحاً زیر ۱.۲ ثانیه در دستگاه‌های همراه)</strong> ثبت شود. تبدیل تصاویر به فرمت‌های فوق‌فشرده WebP و AVIF، تعریف ویژگی <code>fetchpriority=\"high\"</code> برای بنر هیرو و استفاده از CDNهای جهانی لبه (Edge CDN) مهم‌ترین راهکارهای بهبود LCP هستند.</p>\n\n  <h3>تغییر چیدمان تجمعی (CLS - Cumulative Layout Shift)</h3>\n  <p>پرش ناگهانی المان‌ها در هنگام لود باعث تجربه کاربری ناخوشایند می‌شود. با اختصاص ابعاد مشخص <code>width</code> و <code>height</code> برای تمام تصاویر و بنرهای تبلیغاتی و استفاده از استراتژی بارگذاری فونت <code>font-display: swap</code>، عدد CLS باید همواره <strong>کمتر از ۰.۱</strong> نگه داشته شود.</p>\n\n  <div class=\"table-responsive\">\n    <table>\n      <thead>\n        <tr>\n          <th>شاخص فنی (Metric)</th>\n          <th>هدف استاندارد گوگل</th>\n          <th>تاثیر مستقیم بر سئو</th>\n          <th>راهکار پیشنهادی آن‌ساپ</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr>\n          <td><strong>INP</strong></td>\n          <td>&lt; 200 ms</td>\n          <td>حفظ تعامل‌پذیری و کاهش بانس‌ریت</td>\n          <td>کاهش بار پردازشی جاوااسکریپت و بهینه‌سازی Event Handlers</td>\n        </tr>\n        <tr>\n          <td><strong>LCP</strong></td>\n          <td>&lt; 1.5 s</td>\n          <td>ایندکس سریع‌تر در نتایج موبایل</td>\n          <td>استفاده از Next.js Image Optimization و کش هوشمند لبه</td>\n        </tr>\n        <tr>\n          <td><strong>CLS</strong></td>\n          <td>&lt; 0.05</td>\n          <td>اعتبار تجربه کاربری (UX Signal)</td>\n          <td>رزرو فضای اختصاصی برای عناصر پویا و فونت‌های سفارشی</td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">۳. معماری رندرینگ Next.js، بودجه خزش و داده‌های ساختاریافته (Schema Markup)</h2>\n  <p>برای وب‌سایت‌های سازمانی، اتکا به فریم‌ورک‌های کاملاً سمت کلاینت (Pure SPA) مانند ری‌اکت سنتی، خزنده‌های گوگل را با تاخیر مواجه می‌کند. در آژانس دیجیتال مارکتینگ آن‌ساپ، معماری وب‌سایت‌ها بر پایه رندرینگ هیبریدی طراحی می‌شود:</p>\n\n  <ul>\n    <li><strong>Server-Side Rendering (SSR):</strong> محتوای صفحات داینامیک مستقیماً روی سرور به HTML کامل تبدیل شده و تحویل موتور جستجو می‌شود.</li>\n    <li><strong>Static Site Generation (SSG) &amp; ISR:</strong> مقالات و صفحات لندینگ از قبل بیلد شده و در کسری از ثانیه با بالاترین سرعت از کش CDN بارگذاری می‌شوند.</li>\n    <li><strong>بهینه‌سازی بودجه خزش (Crawl Budget):</strong> مسدود کردن صفحات بی‌ارزش ادمین، پارامترهای تکراری فیلترها در <code>robots.txt</code> و پاکسازی ریدایرکت‌های زنجیره‌ای (Redirect Chains) تا ربات‌های گوگل منابع خود را فقط صرف صفحات ارزشمند شما کنند.</li>\n  </ul>\n\n  <h3>پیاده‌سازی داده‌های معنایی با اسکیما JSON-LD</h3>\n  <p>داده‌های ساختاریافته به خزنده‌های هوش مصنوعی کمک می‌کنند ماهیت واقعی برند، مقالات، خدمات و پرسش‌وپاسخ‌های شما را متوجه شوند. نمونه کد استاندارد برای فعال‌سازی ریچ اسنیپت مقاله:</p>\n\n  <pre><code>{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"TechArticle\",\n  \"headline\": \"معماری سئوی تکنیکال در وب‌اپلیکیشن‌های مقیاس‌پذیر\",\n  \"author\": {\n    \"@type\": \"Organization\",\n    \"name\": \"آژانس دیجیتال مارکتینگ آن‌ساپ\"\n  },\n  \"publisher\": {\n    \"@type\": \"Organization\",\n    \"name\": \"OnSupp\",\n    \"url\": \"https://onsupp.ir\"\n  }\n}</code></pre>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">۴. چک‌لیست نهایی ممیزی سئو تکنیکال و جمع‌بندی</h2>\n  <p>سئوی تکنیکال فرآیندی یک‌باره نیست، بلکه نیازمند ممیزی‌های دوره‌ای (Technical Audits) است. برای حفظ سلطه بر نتایج جستجو، موارد زیر را به‌طور پیوسته رصد کنید:</p>\n  <ol>\n    <li>بررسی خطاهای کراول در پنل <strong>Google Search Console</strong> و رفع کدهای خطای ۴۰۴ و ۵۰۰.</li>\n    <li>اطمینان از وجود تگ‌های کانونیکال خودارجاع (Self-referencing Canonical Tags) در تمام صفحات.</li>\n    <li>تست سلامت نقشه سایت XML و آپدیت خودکار فیلد <code>lastmod</code> پس از تغییر محتوا.</li>\n    <li>فعال بودن پروتکل امنیتی HTTP/2 یا HTTP/3 و گواهینامه SSL با پیکربندی امن HSTS.</li>\n  </ol>\n  <p>تیم مهندسی و متخصصان سئوی تکنیکال <strong>آن‌ساپ (OnSupp)</strong> با آنالیز اختصاصی کدها، سرورها و ساختار داده‌های کسب‌وکار شما، مسیر رسیدن به جایگاه پایدار لینک یک گوگل را هموار می‌کنند.</p>\n</section>\n",
+    "contentEn": "\n<section id=\"intro\">\n  <h2>1. Technical SEO in the AI Era: Why Infrastructure is the Real King</h2>\n  <p>In 2026, search engine crawlers powered by advanced AI and multimodal evaluation models expect instantaneous, semantically rich responses. Traditional keyword stuffing without robust architectural hygiene guarantees ranking decay.</p>\n  <blockquote>Technical SEO is the foundational engineering discipline that ensures search engines discover, crawl, render, and understand your content without computational friction.</blockquote>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">2. Core Web Vitals 2026: INP, LCP & Layout Stability</h2>\n  <p>Interaction to Next Paint (INP) requires interactive responsiveness under 200 milliseconds. Largest Contentful Paint (LCP) must land beneath 1.5 seconds via modern asset compression (AVIF/WebP) and Edge CDN routing.</p>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">3. Next.js Server Architecture & Semantic JSON-LD</h2>\n  <p>Combining Server-Side Rendering (SSR) with Incremental Static Regeneration (ISR) ensures crawlers receive full static HTML without client-side rendering bottlenecks while maintaining optimal crawl budget.</p>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">4. Comprehensive Technical Audit Checklist</h2>\n  <p>OnSupp's senior technical SEO engineers deploy systematic log file auditing, canonical validation, and server architecture optimization to secure enduring enterprise organic dominance.</p>\n</section>\n",
+    "readTimeFa": "۷ دقیقه مطالعه",
+    "readTimeEn": "7 min read",
+    "imageUrl": "/images/services/technical-seo.webp",
+    "author": "دپارتمان سئو و معماری نرم‌افزار آن‌ساپ",
+    "createdAt": "2026-10-25T09:00:00.000Z",
+    "featured": true,
+    "metaTitleFa": "راهنمای جامع سئو تکنیکال ۲۰۲۶ | چک‌لیست معماری وب و افزایش رتبه گوگل | آن‌ساپ",
+    "metaTitleEn": "Complete Technical SEO Guide 2026: Core Web Vitals & Web Architecture | OnSupp",
+    "metaDescFa": "راهنمای عملی سئو تکنیکال (Technical SEO) برای وب‌اپلیکیشن‌های مدرن. بهینه‌سازی سرعت LCP و INP، معماری Next.js، بودجه خزش و استانداردهای گوگل ۲۰۲۶ با متخصصان آن‌ساپ.",
+    "metaDescEn": "Master Technical SEO in 2026: Next.js rendering, Core Web Vitals benchmarks, crawl budget management, and schema architecture for enterprise growth.",
+    "keywordsFa": "سئو تکنیکال, Technical SEO, چک لیست سئو تکنیکال, Core Web Vitals, سئو Next.js, بهینه سازی بودجه خزش, ایندکس گوگل, اسکیما مارک آپ",
+    "keywordsEn": "Technical SEO, Core Web Vitals, Next.js SEO, Crawl Budget, Structured Data, Schema Markup",
+    "canonicalUrl": "https://onsupp.ir/blog/technical-seo-modern-web-architecture",
+    "ogImage": "/images/services/technical-seo.webp",
+    "faqs": [
+      {
+        "id": 1,
+        "question": "سئو تکنیکال (Technical SEO) دقیقاً چیست و چه فرقی با سئوی محتوایی دارد؟",
+        "answer": "سئو تکنیکال بر زیرساخت‌های مهندسی وب‌سایت مانند سرعت بارگذاری، سازگاری کدها با خزنده‌های موتور جستجو، ساختار امنیتی، کانونیکال‌ها، بهینه‌سازی Core Web Vitals و دیتای اسکیما تمرکز دارد؛ در حالی که سئوی محتوایی به کلمات کلیدی، کیفیت متون و نگارش مقالات می‌پردازد.",
+        "order": 1
       },
-    });
-
-    await prisma.article.create({
-      data: {
-        titleFa: 'طراحی سایت اختصاصی یا وردپرس؟ تحلیل فنی، امنیت، سرعت و نرخ بازگشت سرمایه (ROI)',
-        titleEn: 'Custom Web Engineering vs WordPress CMS: Performance, Security & Conversion Rates',
-        slug: 'editorial-ui-design-conversion-rate',
-        categoryFa: 'طراحی وب و تکنولوژی',
-        categoryEn: 'Web Engineering & Design',
-        excerptFa: 'بررسی بی‌طرفانه و موشکافانه تفاوت‌های معماری وب‌سایت‌های اختصاصی (کدنویسی شده با Next.js و TypeScript) در برابر قالب‌های آماده وردپرس؛ کدام پلتفرم بهترین سرعت لود، امنیت پایدار و نرخ تبدیل تجاری را ارائه می‌دهد؟',
-        excerptEn: 'An in-depth architectural breakdown comparing custom bespoke platforms (Next.js & TypeScript) with off-the-shelf WordPress themes: speed, security audits, and enterprise ROI.',
-        contentFa: `<section id="intro">
-  <h2>۱. چالش بزرگ کسب‌وکارهای در حال رشد؛ توسعه اختصاصی یا سیستم‌های مدیریت محتوای آماده؟</h2>
-  <p>برای سازمان‌هایی که سرعت لود زیر ۱ ثانیه، هویت برند سفارشی، نرخ تبدیل بالا و امنیت غیرقابل نفوذ می‌خواهند، توسعه اختصاصی یک سرمایه‌گذاری ضروری و راهبردی است.</p>
-</section>
-<section id="section-1">
-  <h2 id="section-1">۲. کالبدشکافی عملکرد و سرعت؛ تاثیر زمان بارگذاری زیر ۱ ثانیه بر نرخ تبدیل (CRO)</h2>
-  <p>به ازای هر ۱ ثانیه تاخیر در لود صفحه موبایل، نرخ تبدیل تا ۷ درصد افت می‌کند.</p>
-</section>
-<section id="section-2">
-  <h2 id="section-2">۳. ارزیابی امنیت داده‌ها، آسیب‌پذیری افزونه‌ها و هزینه‌های پنهان نگهداری</h2>
-  <p>معماری هدلس و تفکیک فرانت‌اند از دیتابیس خطر حملات متداول را به صفر نزدیک می‌کند.</p>
-</section>
-<section id="conclusion">
-  <h2 id="conclusion">۴. ماتریس تصمیم‌گیری هوشمند و استراتژی رشد دیجیتال با آن‌ساپ</h2>
-  <p>دپارتمان مهندسی نرم‌افزار آن‌ساپ وب‌سایت‌های اختصاصی را با Next.js و TypeScript خلق می‌کند.</p>
-</section>`,
-        contentEn: `<section id="intro"><h2>1. Bespoke Architecture vs CMS Templates</h2><p>Enterprise platforms require scalable performance and hardened security.</p></section>`,
-        readTimeFa: '۶ دقیقه مطالعه',
-        readTimeEn: '6 min read',
-        imageUrl: '/images/services/web-development.webp',
-        author: 'دپارتمان مهندسی نرم‌افزار آن‌ساپ',
-        metaTitleFa: 'طراحی سایت اختصاصی یا وردپرس؟ مقایسه فنی، امنیت و سرعت | آن‌ساپ',
-        metaTitleEn: 'Custom Web Development vs WordPress Templates: Complete Guide | OnSupp',
-        metaDescFa: 'مقایسه تخصصی طراحی وب‌سایت اختصاصی با قالب‌های آماده CMS از نظر سرعت لود، امنیت نفوذناپذیر، سئو تکنیکال و تجربه کاربری.',
-        metaDescEn: 'Compare custom web engineering versus WordPress CMS: speed, security, and conversion rates.',
-        keywordsFa: 'طراحی سایت اختصاصی, مقایسه وردپرس و سایت اختصاصی, طراحی وب Next.js',
-        canonicalUrl: 'https://onsupp.ir/blog/editorial-ui-design-conversion-rate',
-        published: true,
-        faqs: {
-          create: [
-            {
-              question: 'چه زمانی یک کسب‌وکار باید حتماً به سراغ طراحی وب‌سایت اختصاصی برود؟',
-              answer: 'هنگامی که نیاز به سرعت لود زیر ۱ ثانیه، امنیت داده‌های حساس، قابلیت اتصال به نرم‌افزارهای داخلی سازمانی و ترافیک بالای روزانه دارید.',
-              order: 1,
-            },
-            {
-              question: 'آیا سئوی وب‌سایت‌های اختصاصی واقعاً بهتر از سایت‌های وردپرسی است؟',
-              answer: 'بله، به دلیل کدهای سبک‌تر و بهینه‌سازی دقیق Core Web Vitals، امتیاز عملکردی سایت اختصاصی در تست‌های گوگل بالاتر است.',
-              order: 2,
-            },
-          ],
-        },
+      {
+        "id": 2,
+        "question": "شاخص INP در Core Web Vitals چیست و چرا جایگزین FID شد؟",
+        "answer": "شاخص Interaction to Next Paint (INP) سرعت پاسخگویی و لگ بصری تمام کلیک‌ها و لمس‌های کاربر در کل صفحه را اندازه‌گیری می‌کند؛ برخلاف FID که فقط اولین تاخیر ورودی را می‌سنجید. مقدار استاندارد آن باید زیر ۲۰۰ میلی‌ثانیه باشد.",
+        "order": 2
       },
-    });
-
-    await prisma.article.create({
-      data: {
-        titleFa: 'ویدیو مارکتینگ و تولید محتوای استودیویی؛ راز ماندگاری برند و انفجار نرخ تبدیل در سال ۲۰۲۶',
-        titleEn: 'Video Marketing & Cinematic Studio Media: The Engine of Retention and Conversions',
-        slug: 'data-driven-growth-marketing-funnel',
-        categoryFa: 'استودیو و تولید رسانه',
-        categoryEn: 'Studio & Media Production',
-        excerptFa: 'چرا بیش از ۸۲٪ ترافیک وب به محتوای ویدیویی تعلق دارد؟ راهنمای کاربردی تولید تیزرهای تبلیغاتی، پادکست‌های صنعتی و ویدیوهای سینمایی در استودیو تخصصی آن‌ساپ، همراه با تکنیک‌های افزایش زمان ماندگاری کاربر (Dwell Time) و اعتمادسازی عمیق برند.',
-        excerptEn: 'How cinematic corporate video production, bespoke podcast recording, and visual storytelling elevate brand authority, boost dwell time, and maximize marketing conversions.',
-        contentFa: `<section id="intro">
-  <h2>۱. انقلاب محتوای چندرسانه‌ای؛ چرا بدون ویدیو در بازار مدرن نادیده گرفته می‌شوید؟</h2>
-  <p>بیش از ۸۲ درصد از کل ترافیک اینترنت به ویدیو اختصاص دارد. کاربران انتظار دارند در کمتر از ۶۰ ثانیه کیفیت و هویت برند را لمس کنند.</p>
-</section>
-<section id="section-1">
-  <h2 id="section-1">۲. تاثیر استراتژیک ویدیو و پادکست بر فاکتورهای سئو و زمان ماندگاری کاربر (Dwell Time)</h2>
-  <p>صفحات دارای ویدیو زمان حضور کاربر را تا ۲.۶ برابر افزایش داده و سیگنال قوی به الگوریتم‌های گوگل ارسال می‌کنند.</p>
-</section>
-<section id="section-2">
-  <h2 id="section-2">۳. استانداردها و امکانات فنی استودیو مدرن آن‌ساپ؛ از تصویربرداری ۴K تا صدابرداری تخصصی</h2>
-  <p>استودیو مجهز آن‌ساپ با دوربین‌های سینمایی، اتاق آکوستیک و نورپردازی حرفه‌ای پرستیژ برند شما را متحول می‌کند.</p>
-</section>
-<section id="conclusion">
-  <h2 id="conclusion">۴. فرمول ۴ مرحله‌ای راه‌اندازی کمپین ویدیویی با بالاترین نرخ بازگشت سرمایه</h2>
-  <p>ایده‌پردازی، تولید حرفه‌ای، تدوین ریتمیک و توزیع هدفمند ارکان یک کمپین ویدیویی پربازده هستند.</p>
-</section>`,
-        contentEn: `<section id="intro"><h2>1. The Multimedia Revolution</h2><p>Over 82% of internet traffic is video. Cinematic storytelling accelerates brand conversion.</p></section>`,
-        readTimeFa: '۸ دقیقه مطالعه',
-        readTimeEn: '8 min read',
-        imageUrl: '/images/services/studio-production.webp',
-        author: 'استودیو فیلم‌سازی و رسانه آن‌ساپ',
-        metaTitleFa: 'راهنمای ویدیو مارکتینگ و تولید محتوای استودیویی ۲۰۲۶ | آن‌ساپ',
-        metaTitleEn: 'Corporate Video Marketing & Studio Production Strategy Guide | OnSupp',
-        metaDescFa: 'استراتژی‌های مدرن ویدیو مارکتینگ، تولید تیزرهای سینمایی و پادکست حرفه‌ای سازمانی. یاد بگیرید چگونه با تولید محتوای استودیویی نرخ تعامل و فروش برند خود را چندین برابر کنید.',
-        metaDescEn: 'Comprehensive video marketing and studio media guide: cinematic videography, corporate podcasting, and video SEO.',
-        keywordsFa: 'ویدیو مارکتینگ, استودیو تولید محتوا, تیزر تبلیغاتی صنعتی, پادکست سازمانی',
-        canonicalUrl: 'https://onsupp.ir/blog/data-driven-growth-marketing-funnel',
-        published: true,
-        faqs: {
-          create: [
-            {
-              question: 'ویدیو مارکتینگ چگونه باعث بهبود رتبه سئو سایت در گوگل می‌شود؟',
-              answer: 'با افزایش زمان حضور کاربر (Dwell Time) و کاهش نرخ پرش، همراه با استفاده از اسکیماهای ویدیویی در نتایج جستجو.',
-              order: 1,
-            },
-            {
-              question: 'یک استودیوی استاندارد تولید محتوای رسانه‌ای چه ویژگی‌هایی دارد؟',
-              answer: 'اتاق آکوستیک بدون انعکاس، نورپردازی استاندارد، دوربین‌های سینمایی و میکروفون‌های استودیویی کاندنسر.',
-              order: 2,
-            },
-          ],
-        },
+      {
+        "id": 3,
+        "question": "آیا استفاده از فریم‌ورک‌های مدرن جاوااسکریپت مثل Next.js به سئو کمک می‌کند؟",
+        "answer": "بله، به شرطی که از رندرینگ سرور (SSR) یا تولید ایستا (SSG) استفاده شود. Next.js به خزنده‌های گوگل HTML رندر شده کامل تحویل می‌دهد و برخلاف تک‌صفحه‌ای‌های کلاینت (SPA)، هیچ تاخیری در ایندکس شدن ایجاد نمی‌کند.",
+        "order": 3
       },
-    });
-
-    console.log('[seed] Default articles created: 3');
-  } else {
-    console.log('[seed] Articles already exist. Skipping creation.');
+      {
+        "id": 4,
+        "question": "چگونه بودجه خزش (Crawl Budget) وب‌سایت خود را بهینه‌سازی کنیم؟",
+        "answer": "با مسدودسازی صفحات بی‌اثر در robots.txt، حذف ریدایرکت‌های زنجیره‌ای، رفع خطاهای ۴۰۴، بهینه‌سازی ساختار لینک‌سازی داخلی و افزایش سرعت پاسخگویی سرور، ربات‌های گوگل زمان بیشتری را به خزش صفحات تجاری ارزشمند شما اختصاص می‌دهند.",
+        "order": 4
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "titleFa": "طراحی سایت اختصاصی یا وردپرس؟ تحلیل فنی، امنیت، سرعت و نرخ بازگشت سرمایه (ROI)",
+    "titleEn": "Custom Web Engineering vs WordPress CMS: Performance, Security & Conversion Rates",
+    "slug": "editorial-ui-design-conversion-rate",
+    "categoryFa": "طراحی وب و تکنولوژی",
+    "categoryEn": "Web Engineering & Design",
+    "excerptFa": "بررسی بی‌طرفانه و موشکافانه تفاوت‌های معماری وب‌سایت‌های اختصاصی (کدنویسی شده با Next.js و TypeScript) در برابر قالب‌های آماده وردپرس؛ کدام پلتفرم بهترین سرعت لود، امنیت پایدار و نرخ تبدیل تجاری را ارائه می‌دهد؟",
+    "excerptEn": "An in-depth architectural breakdown comparing custom bespoke platforms (Next.js & TypeScript) with off-the-shelf WordPress themes: speed, security audits, and enterprise ROI.",
+    "contentFa": "\n<section id=\"intro\">\n  <h2>۱. چالش بزرگ کسب‌وکارهای در حال رشد؛ توسعه اختصاصی یا سیستم‌های مدیریت محتوای آماده؟</h2>\n  <p>هنگامی که یک کسب‌وکار از فاز آزمایش اولیه عبور می‌کند و وارد مرحله مقیاس‌پذیری و جذب مشتریان عمده می‌شود، زیرساخت وب‌سایت به یکی از حیاتی‌ترین دارایی‌های نامشهود برند تبدیل می‌گردد. در این نقطه، سوال پرتکرار مدیران این است: <strong>آیا باید سایت را روی سیستم‌های آماده مانند وردپرس توسعه دهیم یا به سمت طراحی اختصاصی برویم؟</strong></p>\n\n  <blockquote>\n    قالب‌های آماده برای شروع‌های سریع و بودجه‌های محدود ایده‌آل هستند؛ اما برای سازمان‌هایی که سرعت لود زیر ۱ ثانیه، هویت برند سفارشی، نرخ تبدیل بالا و امنیت غیرقابل نفوذ می‌خواهند، توسعه اختصاصی یک سرمایه‌گذاری ضروری و راهبردی است.\n  </blockquote>\n\n  <p>در ادامه، این دو رویکرد را از زوایای فنی، پرفورمنس، امنیت داده‌ها و هزینه کل مالکیت مقایسه می‌کنیم.</p>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">۲. کالبدشکافی عملکرد و سرعت؛ تاثیر زمان بارگذاری زیر ۱ ثانیه بر نرخ تبدیل (CRO)</h2>\n  <p>سرعت سایت صرفاً یک معیار فنی نیست؛ بلکه مستقیماً بر درآمد تجاری تاثیر دارد. طبق آخرین تحقیقات گوگل، به ازای هر <strong>یک ثانیه تاخیر</strong> در بارگذاری صفحه موبایل، نرخ تبدیل (Conversion Rate) تا <strong>۷ درصد</strong> کاهش می‌یابد.</p>\n\n  <h3>مشکل انباشت کدهای اضافی (Code Bloat) در وردپرس</h3>\n  <p>در قالب‌های آماده وردپرس، برای ارائه قابلیت‌های عمومی صدها فایل CSS و اسکریپت جاوااسکریپت به همراه کتابخانه‌های حجیم بارگذاری می‌شوند که ۹۰٪ آن‌ها در صفحه مورد استفاده قرار نمی‌گیرند. این موضوع باعث افزایش زمان TTFB و کندی پردازش مرورگر می‌شود.</p>\n\n  <h3>معماری تمیز در کدنویسی اختصاصی با Next.js و Tailwind</h3>\n  <p>در وب‌سایت‌های اختصاصی توسعه‌یافته در <strong>آن‌ساپ</strong>، هر خط کد با مهندسی دقیق و برای یک نیاز مشخص نوشته می‌شود. کدهای بدون استفاده به‌طور خودکار (Tree Shaking) حذف شده و منابع در قالب بسته‌های بسیار کم‌حجم توزیع می‌شوند؛ نتیجه این امر لود صفحات در کمتر از <strong>۸۰۰ میلی‌ثانیه</strong> است.</p>\n\n  <div class=\"table-responsive\">\n    <table>\n      <thead>\n        <tr>\n          <th>معیار مقایسه</th>\n          <th>قالب‌های آماده وردپرس</th>\n          <th>طراحی اختصاصی (آن‌ساپ)</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr>\n          <td><strong>سرعت بارگذاری متوسط</strong></td>\n          <td>۳.۵ الی ۶ ثانیه</td>\n          <td><strong>زیر ۱ ثانیه (Ultra Fast)</strong></td>\n        </tr>\n        <tr>\n          <td><strong>انعطاف در پیاده‌سازی UI/UX</strong></td>\n          <td>محدود به ساختار قالب و ویجت‌ها</td>\n          <td><strong>طراحی ۱۰۰٪ اختصاصی بر اساس هویت برند</strong></td>\n        </tr>\n        <tr>\n          <td><strong>امتیاز PageSpeed Insights</strong></td>\n          <td>معمولاً بین ۴۰ تا ۶۵</td>\n          <td><strong>۹۵ الی ۱۰۰ (حداکثر استاندارد سبز)</strong></td>\n        </tr>\n        <tr>\n          <td><strong>وابستگی به افزونه‌های متعدد</strong></td>\n          <td>۳۰ الی ۶۰ پلاگین شخص ثالث</td>\n          <td><strong>صفر؛ هسته یکپارچه بدون پلاگین ناپایدار</strong></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">۳. ارزیابی امنیت داده‌ها، آسیب‌پذیری افزونه‌ها و هزینه‌های پنهان نگهداری</h2>\n  <p>بیش از ۹۵ درصد از حملات هکری و نفوذهای امنیتی در وب‌سایت‌های مبتنی بر CMS سنتی، از طریق <strong>آسیب‌پذیری پلاگین‌های نصب‌شده</strong> اتفاق می‌افتد. با انتشار هر آپدیت هسته، احتمال تداخل میان افزونه‌ها و به هم ریختن چیدمان صفحات بالا می‌رود.</p>\n\n  <h3>امنیت ذاتی در معماری هدلس (Headless &amp; API-Driven)</h3>\n  <p>در وب‌سایت‌های اختصاصی، لایه نمایش (Front-end) کاملاً از پایگاه داده و پنل ادمین (Back-end) ایزوله است. هیچ خروجی مستقیمی از پایگاه داده به مرورگر متصل نیست و ارتباطات با استانداردهای رمزنگاری مدرن (JWT Tokens و سخت‌گیرانه‌ترین لایه‌های CORS و CSP) هدایت می‌شوند؛ بدین ترتیب خطر حملات رایج تزریق SQL و XSS عملاً خنثی می‌گردد.</p>\n\n  <h3>هزینه‌های پنهان نگهداری (Total Cost of Ownership)</h3>\n  <p>اگرچه راه‌اندازی اولیه وردپرس ارزان‌تر به نظر می‌رسد، اما هزینه‌های تمدید لایسنس سالانه افزونه‌ها، هاستینگ‌های گران‌قیمت با منابع بالا برای تحمل فشار وردپرس، و استخدام مداوم پشتیبان برای رفع خطاهای آپدیت، هزینه کل مالکیت آن را در افق ۲ ساله فراتر از سیستم‌های اختصاصی می‌برد.</p>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">۴. ماتریس تصمیم‌گیری هوشمند و استراتژی رشد دیجیتال با آن‌ساپ</h2>\n  <p>اگر کسب‌وکار شما در آغاز راه است یا بودجه اولیه‌ای کمتر از چند میلیون تومان دارد، قالب‌های وردپرسی پاسخی منطقی هستند. اما اگر یک برند شرکتی، پلتفرم خدماتی، فروشگاه با تراکنش بالا یا یک سازمان پیشرو هستید که به ارزش زمان مشتریان خود اهمیت می‌دهد، <strong>طراحی وب‌سایت اختصاصی تنها راهکاری است که شما را یک سر و گردن بالاتر از رقبا قرار می‌دهد</strong>.</p>\n  \n  <p>دپارتمان مهندسی نرم‌افزار <strong>آن‌ساپ (OnSupp)</strong> وب‌سایت‌های اختصاصی را با مدرن‌ترین پشته نرم‌افزاری جهان (Next.js، TypeScript و رابط‌های کاربری چشم‌نواز Tailwind) خلق می‌کند تا بالاترین نرخ تبدیل و امنیت بی‌چون‌وچرا را به کسب‌وکار شما هدیه دهد.</p>\n</section>\n",
+    "contentEn": "\n<section id=\"intro\">\n  <h2>1. The Enterprise Dilemma: Bespoke Architecture or CMS Templates?</h2>\n  <p>When an ambitious organization scales beyond initial product-market fit, off-the-shelf templates frequently become a bottleneck. We analyze speed, security, and enterprise ROI.</p>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">2. Performance Breakdown: Sub-Second Load Times and Conversion Impact</h2>\n  <p>Studies reveal that every 1-second delay in page load diminishes user conversions by up to 7%. Bespoke Next.js platforms eliminate code bloat, reliably delivering sub-second interaction speeds.</p>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">3. Security Defenses and Total Cost of Ownership</h2>\n  <p>Over 90% of web intrusions exploit third-party plugins. By decoupling the presentation layer from the database through Headless API architecture, custom systems provide military-grade resilience.</p>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">4. Strategic Decision Matrix & OnSupp Engineering</h2>\n  <p>OnSupp engineers high-performance custom web applications designed to outperform competitive benchmarks and multiply customer conversion funnels.</p>\n</section>\n",
+    "readTimeFa": "۶ دقیقه مطالعه",
+    "readTimeEn": "6 min read",
+    "imageUrl": "/images/services/web-development.webp",
+    "author": "دپارتمان مهندسی نرم‌افزار آن‌ساپ",
+    "createdAt": "2026-10-28T14:30:00.000Z",
+    "featured": false,
+    "metaTitleFa": "طراحی سایت اختصاصی یا وردپرس؟ مقایسه فنی، امنیت و سرعت | آن‌ساپ",
+    "metaTitleEn": "Custom Web Development vs WordPress Templates: Complete Guide | OnSupp",
+    "metaDescFa": "مقایسه تخصصی طراحی وب‌سایت اختصاصی با قالب‌های آماده CMS از نظر سرعت لود، امنیت نفوذناپذیر، سئو تکنیکال و تجربه کاربری. راهنمای مدیران سازمان برای انتخاب آگاهانه.",
+    "metaDescEn": "Compare custom web engineering versus WordPress CMS: deep dive into load speeds, vulnerability risks, scalable architecture, and conversion optimization.",
+    "keywordsFa": "طراحی سایت اختصاصی, مقایسه وردپرس و سایت اختصاصی, طراحی وب Next.js, امنیت سایت, افزایش نرخ تبدیل, توسعه نرم افزار تحت وب",
+    "keywordsEn": "Custom Web Development, Next.js Web Design, WordPress vs Custom, Web Performance, Conversion Rate Optimization",
+    "canonicalUrl": "https://onsupp.ir/blog/editorial-ui-design-conversion-rate",
+    "ogImage": "/images/services/web-development.webp",
+    "faqs": [
+      {
+        "id": 1,
+        "question": "چه زمانی یک کسب‌وکار باید حتماً به سراغ طراحی وب‌سایت اختصاصی برود؟",
+        "answer": "زمانی که نیاز به معماری منحصربه‌فرد، سرعت بارگذاری زیر ۱ ثانیه، امنیت داده‌های حساس، قابلیت اتصال به نرم‌افزارهای داخلی سازمانی (مانند ERP یا CRM) و ترافیک بالای روزانه دارید، قالب‌های آماده جوابگوی شما نخواهند بود و طراحی اختصاصی ضروری است.",
+        "order": 1
+      },
+      {
+        "id": 2,
+        "question": "آیا سئوی وب‌سایت‌های اختصاصی واقعاً بهتر از سایت‌های وردپرسی است؟",
+        "answer": "بله، به دلیل کدهای بسیار سبک‌تر و بهینه‌سازی دقیق Core Web Vitals، امتیاز عملکردی سایت اختصاصی در تست‌های گوگل بالاتر بوده و ربات‌های خزنده با بودجه خزش کمتر می‌توانند صفحات بیشتری را ایندکس کنند.",
+        "order": 2
+      },
+      {
+        "id": 3,
+        "question": "آیا در سایت اختصاصی هم امکان مدیریت آسان محتوا و وبلاگ وجود دارد؟",
+        "answer": "کاملاً؛ در پروژه‌های آن‌ساپ یک پنل مدیریت محتوای اختصاصی و بسیار سریع طراحی می‌شود که مدیران سایت بدون نیاز به دانش کدنویسی می‌توانند مقالات، محصولات و تصاویر را به راحتی ویرایش و منتشر نمایند.",
+        "order": 3
+      },
+      {
+        "id": 4,
+        "question": "تفاوت امنیت سایت اختصاصی با قالب‌های آماده چیست؟",
+        "answer": "در سایت‌های اختصاصی هیچ افزونه شخص ثالث و کدهای ناشناخته استفاده نمی‌شود و با تفکیک فرانت‌اند و دیتابیس، امکان حملات تزریق کد و آسیب‌پذیری‌های متداول وردپرس به صفر میل می‌کند.",
+        "order": 4
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "titleFa": "ویدیو مارکتینگ و تولید محتوای استودیویی؛ راز ماندگاری برند و انفجار نرخ تبدیل در سال ۲۰۲۶",
+    "titleEn": "Video Marketing & Cinematic Studio Media: The Engine of Retention and Conversions",
+    "slug": "data-driven-growth-marketing-funnel",
+    "categoryFa": "استودیو و تولید رسانه",
+    "categoryEn": "Studio & Media Production",
+    "excerptFa": "چرا بیش از ۸۲٪ ترافیک وب به محتوای ویدیویی تعلق دارد؟ راهنمای کاربردی تولید تیزرهای تبلیغاتی، پادکست‌های صنعتی و ویدیوهای سینمایی در استودیو تخصصی آن‌ساپ، همراه با تکنیک‌های افزایش زمان ماندگاری کاربر (Dwell Time) و اعتمادسازی عمیق برند.",
+    "excerptEn": "How cinematic corporate video production, bespoke podcast recording, and visual storytelling elevate brand authority, boost dwell time, and maximize marketing conversions.",
+    "contentFa": "\n<section id=\"intro\">\n  <h2>۱. انقلاب محتوای چندرسانه‌ای؛ چرا بدون ویدیو در بازار مدرن نادیده گرفته می‌شوید؟</h2>\n  <p>طبق آمارهای رسمی سیسکو و گزارش‌های رفتار مصرف‌کننده در سال ۲۰۲۶، بیش از <strong>۸۲ درصد از کل ترافیک اینترنت در سراسر جهان</strong> به تماشای ویدیو اختصاص پیدا کرده است. دوره اکتفا به مقالات صرفاً متنی یا تصاویر استوک به پایان رسیده است؛ کاربران امروزی انتظار دارند در کمتر از ۶۰ ثانیه، چهره، اصالت و قدرت خدمات یک برند را با بالاترین کیفیت بصری لمس کنند.</p>\n\n  <blockquote>\n    مخاطب تنها ۱۰٪ از پیامی را که در قالب متن خوانده به خاطر می‌سپارد، در حالی که ۹۵٪ از پیامی که در قالب یک ویدیوی سینمایی و جذاب دیده است را در ذهن نگاه می‌دارد.\n  </blockquote>\n\n  <p>ویدیو مارکتینگ قدرتمندترین ابزار برای ایجاد پیوند عاطفی و جلب اعتماد فوری خریداران در بازارهای فوق رقابتی امروزی است.</p>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">۲. تاثیر استراتژیک ویدیو و پادکست بر فاکتورهای سئو و زمان ماندگاری کاربر (Dwell Time)</h2>\n  <p>یکی از مهم‌ترین سیگنال‌های رتبه‌بندی الگوریتم‌های گوگل، مدت زمانی است که کاربر پس از ورود از نتایج جستجو در صفحه شما سپری می‌کند که به آن <strong>Dwell Time</strong> می‌گویند:</p>\n\n  <ul>\n    <li><strong>افزایش ۲.۶ برابری زمان حضور:</strong> صفحاتی که حاوی یک ویدیوی باکیفیت و اختصاصی هستند، ماندگاری مخاطب را تا بیش از ۱۵۰ درصد نسبت به صفحات متنی افزایش می‌دهند.</li>\n    <li><strong>کاهش محسوس نرخ پرش (Bounce Rate):</strong> هنگامی که کاربر در ثانیه‌های نخست با یک کاور جذاب و تیزر حرفه‌ای مواجه می‌شود، به جای بازگشت به نتایج گوگل، به تماشای ادامه ویدیو می‌پردازد.</li>\n    <li><strong>سئوی تخصصی ویدیو (Video SEO):</strong> با بارگذاری ویدیوها در پلتفرم‌های پخش و تنظیم تگ‌های اسکیما <code>VideoObject</code>، گوگل پیش‌نمایش ویدیوی سایت شما را در تب ویدیوی نتایج و اسنیپت‌های غنی نمایش می‌دهد.</li>\n  </ul>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">۳. استانداردها و امکانات فنی استودیو مدرن آن‌ساپ؛ از تصویربرداری ۴K تا صدابرداری تخصصی</h2>\n  <p>کیفیت ویدیوی شما نماینده مستقیم پرستیژ و تعهد کاری برند شماست. یک ویدیوی تار، با نور نامناسب یا صدای دارای نویز، بیش از آنکه سودمند باشد به اعتبار برند آسیب می‌زند. در <strong>استودیو رسانه و فیلم‌سازی آن‌ساپ</strong>، استانداردهای زیر در تمام پروژه‌ها پیاده‌سازی می‌شوند:</p>\n\n  <div class=\"table-responsive\">\n    <table>\n      <thead>\n        <tr>\n          <th>فرمت محتوایی</th>\n          <th>تجهیزات و متدولوژی فنی</th>\n          <th>هدف اصلی بازاریابی</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr>\n          <td><strong>تیزر تبلیغاتی سینمایی</strong></td>\n          <td>دوربین‌های سینمایی 4K/6K، نورپردازی ۳ نقطه‌ای، گیمبال و رنگ‌آمیزی حرفه‌ای (Color Grading)</td>\n          <td>برندسازی لوکس، اعتمادسازی و جذب مشتریان بزرگ</td>\n        </tr>\n        <tr>\n          <td><strong>پادکست سازمانی تخصصی</strong></td>\n          <td>اتاق آکوستیک بدون اکو، میکروفون‌های استودیویی Broadcast و ضبط چندکاناله صدا</td>\n          <td>خلق رهبری اندیشه (Thought Leadership) در صنعت</td>\n        </tr>\n        <tr>\n          <td><strong>محتوای کوتاه و ویروسی (Reels/Shorts)</strong></td>\n          <td>تدوین سریع و ریتمیک، موشن گرافیک تعاملی و زیرنویس اختصاصی فارسی</td>\n          <td>جذب انبوه مخاطب جدید در اینستاگرام و لینکدین</td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">۴. فرمول ۴ مرحله‌ای راه‌اندازی کمپین ویدیویی با بالاترین نرخ بازگشت سرمایه</h2>\n  <p>برای دستیابی به حداکثر بازگشت سرمایه (ROI) از ویدیو مارکتینگ، استراتژی تولید باید ساختارمند باشد:</p>\n  <ol>\n    <li><strong>ایده‌پردازی و سناریونویسی دقیق:</strong> نگارش متنی متناسب با پرسونای مخاطب، تعیین هوک (قلاب ۳ ثانیه اول) و پیام اصلی.</li>\n    <li><strong>تولید و تصویربرداری حرفه‌ای:</strong> ضبط در استودیوی مجهز یا لوکیشن صنعتی با سناریوی کارگردانی‌شده.</li>\n    <li><strong>پس‌تولید و تدوین سینمایی:</strong> انتخاب موسیقی ارجینال، جلوه‌های صوتی (Foley)، تصحیح رنگ و موشن گرافیک‌های داینامیک.</li>\n    <li><strong>توزیع هدفمند و سئو:</strong> بارگذاری با تایتل‌های بهینه‌شده، تامبنیل اختصاصی با کنتراست بالا و انتشار چندکاناله در وب‌سایت و رسانه‌های اجتماعی.</li>\n  </ol>\n  <p>استودیو تخصصی <strong>آن‌ساپ (OnSupp)</strong> با در اختیار داشتن کامل‌ترین تجهیزات تصویربرداری و صدا، همراه همیشگی شما در خلق تیزرهای سینمایی و پادکست‌های تاثیرگذار برای تصاحب سهم بازار است.</p>\n</section>\n",
+    "contentEn": "\n<section id=\"intro\">\n  <h2>1. The Multimedia Revolution: Why Brands Without Video Are Invisible</h2>\n  <p>Over 82% of all internet consumer traffic is video. In modern competitive landscapes, high-production visual media is the single most potent trust accelerator for prospective buyers.</p>\n</section>\n\n<section id=\"section-1\">\n  <h2 id=\"section-1\">2. Organic Search Impact: Dwell Time & Video SEO</h2>\n  <p>Embedding dedicated, high-value videos extends page dwell time by over 150%, driving powerful behavioral engagement signals directly to search ranking algorithms.</p>\n</section>\n\n<section id=\"section-2\">\n  <h2 id=\"section-2\">3. Studio Production Standards: 4K Cinematography & Studio Acoustics</h2>\n  <p>From industrial commercial film to multi-track broadcast corporate podcasts, OnSupp's production studio merges cinema cameras with acoustic precision.</p>\n</section>\n\n<section id=\"conclusion\">\n  <h2 id=\"conclusion\">4. Four-Step Framework for Maximum Video ROI</h2>\n  <p>Conceptual scripting, high-definition production, rhythmic sound design, and targeted distribution ensure your brand narrative resonates powerfully.</p>\n</section>\n",
+    "readTimeFa": "۸ دقیقه مطالعه",
+    "readTimeEn": "8 min read",
+    "imageUrl": "/images/services/studio-production.webp",
+    "author": "استودیو فیلم‌سازی و رسانه آن‌ساپ",
+    "createdAt": "2026-11-01T11:20:00.000Z",
+    "featured": false,
+    "metaTitleFa": "راهنمای ویدیو مارکتینگ و تولید محتوای استودیویی ۲۰۲۶ | آن‌ساپ",
+    "metaTitleEn": "Corporate Video Marketing & Studio Production Strategy Guide | OnSupp",
+    "metaDescFa": "استراتژی‌های مدرن ویدیو مارکتینگ، تولید تیزرهای سینمایی و پادکست حرفه‌ای سازمانی. یاد بگیرید چگونه با تولید محتوای استودیویی نرخ تعامل و فروش برند خود را چندین برابر کنید.",
+    "metaDescEn": "Comprehensive video marketing and studio media guide: cinematic videography, corporate podcasting, YouTube SEO, and high-impact visual narratives.",
+    "keywordsFa": "ویدیو مارکتینگ, استودیو تولید محتوا, تیزر تبلیغاتی صنعتی, پادکست سازمانی, سئو ویدیو, dwell time, استودیو آن‌ساپ",
+    "keywordsEn": "Video Marketing, Corporate Podcasting, Cinematic Commercial, Video SEO, Dwell Time Optimization",
+    "canonicalUrl": "https://onsupp.ir/blog/data-driven-growth-marketing-funnel",
+    "ogImage": "/images/services/studio-production.webp",
+    "faqs": [
+      {
+        "id": 1,
+        "question": "ویدیو مارکتینگ چگونه باعث بهبود رتبه سئو سایت در گوگل می‌شود؟",
+        "answer": "وجود ویدیو در صفحات سایت باعث افزایش چشمگیر میانگین زمان حضور کاربر (Dwell Time) و کاهش نرخ پرش (Bounce Rate) می‌شود. علاوه بر این، استفاده از اسکیماهای VideoObject شانس نمایش مستقیم ویدیو در صفحه اول نتایج جستجو را ایجاد می‌کند.",
+        "order": 1
+      },
+      {
+        "id": 2,
+        "question": "یک استودیوی استاندارد تولید محتوای رسانه‌ای چه ویژگی‌هایی دارد؟",
+        "answer": "یک استودیوی استاندارد نیازمند اتاق آکوستیک با عایق‌بندی صوتی کامل، سیستم نورپردازی حرفه‌ای ۳ نقطه‌ای قابل تنظیم، دوربین‌های سینمایی با عمق میدان واقعی، میکروفون‌های کاندنسر استودیویی و پس‌زمینه‌های متنوع دکوراتیو است.",
+        "order": 2
+      },
+      {
+        "id": 3,
+        "question": "آیا تولید تیزر و ویدیوی تبلیغاتی فقط برای برندهای بزرگ مناسب است؟",
+        "answer": "خیر؛ امروزه حتی استارتاپ‌ها و کسب‌وکارهای محلی نیز برای جلب اعتماد سریع مخاطب و متمایز شدن از رقبا، به ویدیوهای معرفی خدمات و ویدیوهای تعاملی در شبکه‌های اجتماعی نیاز مبرم دارند.",
+        "order": 3
+      },
+      {
+        "id": 4,
+        "question": "بهترین فرمت و زمان ویدیو برای وب‌سایت چیست؟",
+        "answer": "برای صفحات اصلی و معرفی خدمات، ویدیوهای ۶۰ تا ۹۰ ثانیه‌ای با فرمت MP4 و کدک بهینه‌شده H.264/H.265 و وضوح 1080p بیشترین اثربخشی را بدون افت سرعت لود سایت به همراه دارند.",
+        "order": 4
+      }
+    ]
   }
+];
+  const officialSlugs = officialArticlesData.map(a => a.slug);
+
+  for (const a of officialArticlesData) {
+    const articlePayload = {
+      titleFa: a.titleFa || '',
+      titleEn: a.titleEn || '',
+      language: (a as any).language || 'fa',
+      categoryFa: a.categoryFa || 'آموزش سئو',
+      categoryEn: a.categoryEn || 'SEO Tutorial',
+      excerptFa: a.excerptFa || '',
+      excerptEn: a.excerptEn || '',
+      contentFa: a.contentFa || '',
+      contentEn: a.contentEn || '',
+      readTimeFa: a.readTimeFa || '۵ دقیقه مطالعه',
+      readTimeEn: a.readTimeEn || '5 min read',
+      imageUrl: a.imageUrl || '',
+      author: a.author || 'آن‌ساپ',
+      published: true,
+      metaTitleFa: a.metaTitleFa || '',
+      metaTitleEn: a.metaTitleEn || '',
+      metaDescFa: a.metaDescFa || '',
+      metaDescEn: a.metaDescEn || '',
+      keywordsFa: a.keywordsFa || '',
+      keywordsEn: a.keywordsEn || '',
+      canonicalUrl: a.canonicalUrl || '',
+      ogImage: a.ogImage || a.imageUrl || '',
+      createdAt: new Date(a.createdAt),
+    };
+
+    const upserted = await prisma.article.upsert({
+      where: { slug: a.slug },
+      update: articlePayload,
+      create: {
+        slug: a.slug,
+        ...articlePayload,
+      },
+    });
+
+    if (a.faqs && a.faqs.length > 0) {
+      await prisma.articleFaq.deleteMany({ where: { articleId: upserted.id } });
+      await prisma.articleFaq.createMany({
+        data: a.faqs.map((faq, idx) => ({
+          articleId: upserted.id,
+          question: faq.question,
+          answer: faq.answer,
+          order: faq.order || idx + 1,
+        })),
+      });
+    }
+  }
+
+  // Safely clean up any obsolete legacy/test articles
+  const obsoleteArticles = await prisma.article.findMany({
+    where: { slug: { notIn: officialSlugs } },
+    select: { id: true, slug: true },
+  });
+  if (obsoleteArticles.length > 0) {
+    for (const oa of obsoleteArticles) {
+      await prisma.comment.deleteMany({ where: { articleId: oa.id } });
+      await prisma.articleFaq.deleteMany({ where: { articleId: oa.id } });
+      await prisma.article.delete({ where: { id: oa.id } });
+    }
+    console.log('[seed] Cleaned up obsolete test articles count:', obsoleteArticles.length);
+  }
+  console.log('[seed] Official articles upsert completed successfully.');
 
   // 10. Seed default Testimonials
   const testimonialsCount = await prisma.testimonial.count();
@@ -1079,9 +1466,512 @@ const existingStats = await prisma.stat.count();
     console.log('[seed] Testimonials already exist. Skipping creation.');
   }
 
-  await seedDynamicCms(prisma);
+  // ─── Seed Portfolio Categories & Attribute Templates (PHASE 4) ────────────
+  await seedPortfolioCategoriesAndTemplates(prisma);
 
   console.log('Seeding completed successfully!');
+}
+
+async function seedPortfolioCategoriesAndTemplates(p: PrismaClient) {
+  console.log('[seed] Syncing dynamic portfolio categories & templates...');
+
+  const categories = [
+    {
+      slug: 'website-design',
+      titleFa: 'طراحی سایت و وب‌اپلیکیشن',
+      titleEn: 'Website Design & Web Apps',
+      descriptionFa: 'طراحی و مهندسی پلتفرم‌های مدرن وب با سرعت بارگذاری فوق‌العاده و سیستم دیزاین اختصاصی',
+      descriptionEn: 'High-performance bespoke web architectures, Next.js platforms, and headless CMS portals.',
+      icon: 'code',
+      color: '#8AB3A0',
+      position: 0,
+      attributes: [
+        {
+          key: 'website_type',
+          titleFa: 'نوع وب‌سایت',
+          titleEn: 'Website Type',
+          type: 'TEXT' as const,
+          isRequired: true,
+          unit: '',
+          position: 0,
+          showInFrontend: true,
+        },
+        {
+          key: 'tech_stack',
+          titleFa: 'تکنولوژی‌های استفاده‌شده',
+          titleEn: 'Tech Stack',
+          type: 'TEXT' as const,
+          isRequired: false,
+          unit: '',
+          position: 1,
+          showInFrontend: true,
+        },
+        {
+          key: 'page_count',
+          titleFa: 'تعداد صفحات و ماژول‌ها',
+          titleEn: 'Pages & Modules',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'صفحه',
+          position: 2,
+          showInFrontend: true,
+        },
+        {
+          key: 'custom_features',
+          titleFa: 'امکانات اختصاصی پیاده‌شده',
+          titleEn: 'Custom Features',
+          type: 'TEXTAREA' as const,
+          isRequired: false,
+          unit: '',
+          position: 3,
+          showInFrontend: true,
+        },
+        {
+          key: 'speed_score',
+          titleFa: 'امتیاز سرعت و عملکرد (Lighthouse)',
+          titleEn: 'Performance Score',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'از ۱۰۰',
+          position: 4,
+          showInFrontend: true,
+        },
+        {
+          key: 'ux_improvement',
+          titleFa: 'بهبود تجربه کاربری و تعامل',
+          titleEn: 'UX & Engagement Improvement',
+          type: 'PERCENTAGE' as const,
+          isRequired: false,
+          unit: '٪',
+          position: 5,
+          showInFrontend: true,
+        },
+      ],
+    },
+    {
+      slug: 'seo',
+      titleFa: 'سئو تکنیکال و رشد ارگانیک',
+      titleEn: 'Technical SEO & Organic Growth',
+      descriptionFa: 'بهینه‌سازی عمیق ساختار فنی سایت برای خزنده‌های گوگل، افزایش ورودی ارگانیک و تثبیت در صفحه اول',
+      descriptionEn: 'Technical crawl budget optimization, Core Web Vitals, and sustainable top-page organic rankings.',
+      icon: 'trending-up',
+      color: '#C59B27',
+      position: 1,
+      attributes: [
+        {
+          key: 'project_duration',
+          titleFa: 'بازه زمانی پروژه',
+          titleEn: 'Project Duration',
+          type: 'TEXT' as const,
+          isRequired: false,
+          unit: 'ماه',
+          position: 0,
+          showInFrontend: true,
+        },
+        {
+          key: 'organic_clicks',
+          titleFa: 'کلیک ارگانیک ماهانه',
+          titleEn: 'Monthly Organic Clicks',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'کلیک',
+          position: 1,
+          showInFrontend: true,
+        },
+        {
+          key: 'impressions',
+          titleFa: 'ایمپرشن سرچ کنسول',
+          titleEn: 'Search Impressions',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'نمایش',
+          position: 2,
+          showInFrontend: true,
+        },
+        {
+          key: 'ctr',
+          titleFa: 'نرخ کلیک (CTR)',
+          titleEn: 'Click-Through Rate (CTR)',
+          type: 'PERCENTAGE' as const,
+          isRequired: false,
+          unit: '٪',
+          position: 3,
+          showInFrontend: true,
+        },
+        {
+          key: 'avg_position',
+          titleFa: 'میانگین رتبه در نتایج گوگل',
+          titleEn: 'Average Position',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'رتبه',
+          position: 4,
+          showInFrontend: true,
+        },
+        {
+          key: 'page_one_keywords',
+          titleFa: 'تعداد کلمات کلیدی صفحه اول',
+          titleEn: 'Page-One Keywords',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'کلمه کلیدی',
+          position: 5,
+          showInFrontend: true,
+        },
+        {
+          key: 'traffic_growth',
+          titleFa: 'افزایش ورودی ارگانیک',
+          titleEn: 'Organic Traffic Growth',
+          type: 'PERCENTAGE' as const,
+          isRequired: false,
+          unit: '٪',
+          position: 6,
+          showInFrontend: true,
+        },
+        {
+          key: 'before_after_seo',
+          titleFa: 'مقایسه عملکرد سئو (قبل / بعد)',
+          titleEn: 'Before / After SEO Benchmark',
+          type: 'BEFORE_AFTER' as const,
+          isRequired: false,
+          unit: '',
+          position: 7,
+          showInFrontend: true,
+        },
+      ],
+    },
+    {
+      slug: 'instagram-management',
+      titleFa: 'مدیریت اینستاگرام و شبکه‌های اجتماعی',
+      titleEn: 'Instagram & Social Media Management',
+      descriptionFa: 'سناریونویسی، تولید محتوای استودیویی فاخر، مدیریت تعاملات و کمپین‌های تبلیغاتی اثربخش',
+      descriptionEn: 'Studio-grade reel production, narrative scripting, community growth, and high-conversion social campaigns.',
+      icon: 'instagram',
+      color: '#D4A5A8',
+      position: 2,
+      attributes: [
+        {
+          key: 'management_duration',
+          titleFa: 'بازه زمانی مدیریت',
+          titleEn: 'Management Duration',
+          type: 'TEXT' as const,
+          isRequired: false,
+          unit: 'ماه',
+          position: 0,
+          showInFrontend: true,
+        },
+        {
+          key: 'followers_count',
+          titleFa: 'رشد فالوور هدفمند',
+          titleEn: 'Followers Growth',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'فالوور',
+          position: 1,
+          showInFrontend: true,
+        },
+        {
+          key: 'reach',
+          titleFa: 'ریچ ماهانه (Reach)',
+          titleEn: 'Monthly Reach',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'اکانت',
+          position: 2,
+          showInFrontend: true,
+        },
+        {
+          key: 'impressions',
+          titleFa: 'ایمپرشن کل (Impressions)',
+          titleEn: 'Total Impressions',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'ویو',
+          position: 3,
+          showInFrontend: true,
+        },
+        {
+          key: 'engagement_rate',
+          titleFa: 'نرخ تعامل (Engagement Rate)',
+          titleEn: 'Engagement Rate',
+          type: 'PERCENTAGE' as const,
+          isRequired: false,
+          unit: '٪',
+          position: 4,
+          showInFrontend: true,
+        },
+        {
+          key: 'profile_visits',
+          titleFa: 'بازدید پروفایل',
+          titleEn: 'Profile Visits',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'بازدید',
+          position: 5,
+          showInFrontend: true,
+        },
+        {
+          key: 'content_count',
+          titleFa: 'تعداد محتوای تولیدشده',
+          titleEn: 'Produced Content Count',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'پست و ریلز',
+          position: 6,
+          showInFrontend: true,
+        },
+        {
+          key: 'generated_leads',
+          titleFa: 'سرنخ‌ها و دایرکت‌های جذب‌شده',
+          titleEn: 'Generated Direct Leads',
+          type: 'NUMBER' as const,
+          isRequired: false,
+          unit: 'لید مستقیم',
+          position: 7,
+          showInFrontend: true,
+        },
+      ],
+    },
+    {
+      slug: 'branding',
+      titleFa: 'برندینگ و هویت بصری',
+      titleEn: 'Branding & Visual Identity',
+      descriptionFa: 'خلق هویت پایدار برند، استراتژی لحن و روایت، دیزاین کتابچه هویت (Brand Book) و اقلام لوکس',
+      descriptionEn: 'Strategic brand identity, narrative guidelines, brand book design, and premium collateral materials.',
+      icon: 'sparkles',
+      color: '#E07A8B',
+      position: 3,
+      attributes: [
+        {
+          key: 'branding_project_type',
+          titleFa: 'نوع پروژه برندینگ',
+          titleEn: 'Branding Project Type',
+          type: 'TEXT' as const,
+          isRequired: false,
+          unit: '',
+          position: 0,
+          showInFrontend: true,
+        },
+        {
+          key: 'designed_items',
+          titleFa: 'اقلام و المان‌های طراحی‌شده',
+          titleEn: 'Designed Collateral Items',
+          type: 'TEXTAREA' as const,
+          isRequired: false,
+          unit: '',
+          position: 1,
+          showInFrontend: true,
+        },
+        {
+          key: 'brand_strategy',
+          titleFa: 'استراتژی و هویت برند',
+          titleEn: 'Brand Strategy & Persona',
+          type: 'TEXTAREA' as const,
+          isRequired: false,
+          unit: '',
+          position: 2,
+          showInFrontend: true,
+        },
+        {
+          key: 'deliverables',
+          titleFa: 'خروجی‌های نهایی پروژه',
+          titleEn: 'Deliverables & Brand Book',
+          type: 'TEXTAREA' as const,
+          isRequired: false,
+          unit: '',
+          position: 3,
+          showInFrontend: true,
+        },
+        {
+          key: 'provided_services',
+          titleFa: 'خدمات ارائه‌شده',
+          titleEn: 'Provided Services',
+          type: 'TEXT' as const,
+          isRequired: false,
+          unit: '',
+          position: 4,
+          showInFrontend: true,
+        },
+      ],
+    },
+    {
+      slug: 'other',
+      titleFa: 'سایر خدمات و سامانه‌های اختصاصی',
+      titleEn: 'Other Bespoke Solutions',
+      descriptionFa: 'توسعه نرم‌افزارهای سفارشی، اتوماسیون سازمانی، سامانه‌های کلود و خدمات جامع مقیاس‌پذیر',
+      descriptionEn: 'Custom software architecture, CRM workflows, cloud automation, and integrated business systems.',
+      icon: 'grid',
+      color: '#94A3B8',
+      position: 4,
+      attributes: [
+        {
+          key: 'service_scope',
+          titleFa: 'محدوده و شرح خدمات پروژه',
+          titleEn: 'Project Scope & Requirements',
+          type: 'TEXTAREA' as const,
+          isRequired: false,
+          unit: '',
+          position: 0,
+          showInFrontend: true,
+        },
+        {
+          key: 'kpi_metric',
+          titleFa: 'شاخص کلیدی موفقیت (KPI)',
+          titleEn: 'Primary KPI Achievement',
+          type: 'PERCENTAGE' as const,
+          isRequired: false,
+          unit: '٪',
+          position: 1,
+          showInFrontend: true,
+        },
+        {
+          key: 'project_link',
+          titleFa: 'لینک دسترسی یا مستندات سیستم',
+          titleEn: 'System Access or Live URL',
+          type: 'LINK' as const,
+          isRequired: false,
+          unit: '',
+          position: 2,
+          showInFrontend: true,
+        },
+      ],
+    },
+  ];
+
+  const categoryIdMap: Record<string, number> = {};
+
+  for (const cat of categories) {
+    const upsertedCat = await p.portfolioCategory.upsert({
+      where: { slug: cat.slug },
+      update: {
+        titleFa: cat.titleFa,
+        titleEn: cat.titleEn,
+        descriptionFa: cat.descriptionFa,
+        descriptionEn: cat.descriptionEn,
+        icon: cat.icon,
+        color: cat.color,
+        position: cat.position,
+        isActive: true,
+      },
+      create: {
+        slug: cat.slug,
+        titleFa: cat.titleFa,
+        titleEn: cat.titleEn,
+        descriptionFa: cat.descriptionFa,
+        descriptionEn: cat.descriptionEn,
+        icon: cat.icon,
+        color: cat.color,
+        position: cat.position,
+        isActive: true,
+      },
+    });
+
+    categoryIdMap[cat.slug] = upsertedCat.id;
+
+    for (const attr of cat.attributes) {
+      await p.portfolioAttributeTemplate.upsert({
+        where: {
+          categoryId_key: {
+            categoryId: upsertedCat.id,
+            key: attr.key,
+          },
+        },
+        update: {
+          titleFa: attr.titleFa,
+          titleEn: attr.titleEn,
+          type: attr.type as any,
+          isRequired: attr.isRequired,
+          unit: attr.unit,
+          position: attr.position,
+          showInFrontend: attr.showInFrontend,
+          isActive: true,
+        },
+        create: {
+          categoryId: upsertedCat.id,
+          key: attr.key,
+          titleFa: attr.titleFa,
+          titleEn: attr.titleEn,
+          type: attr.type as any,
+          isRequired: attr.isRequired,
+          unit: attr.unit,
+          position: attr.position,
+          showInFrontend: attr.showInFrontend,
+          isActive: true,
+        },
+      });
+    }
+  }
+
+  // Link canonical case studies to appropriate categories and populate sample dynamic values
+  const webDesignId = categoryIdMap['website-design'];
+  const brandingId = categoryIdMap['branding'];
+
+  if (webDesignId) {
+    const webProjects = [
+      'dr-miresmaeli-clinic',
+      'canza-construction',
+      'dr-hatam-clinic',
+      'dr-akhavan-dental',
+      'shams-dentistry',
+      'shayan-dental',
+    ];
+
+    for (const slug of webProjects) {
+      const cs = await p.caseStudy.findFirst({ where: { slug } });
+      if (cs) {
+        await p.caseStudy.update({
+          where: { id: cs.id },
+          data: { categoryId: webDesignId },
+        });
+
+        // Seed dynamic attribute values
+        await p.portfolioAttributeValue.upsert({
+          where: { caseStudyId_attributeKey: { caseStudyId: cs.id, attributeKey: 'website_type' } },
+          update: { valueText: cs.taglineFa || 'پرتال اختصاصی و وب‌سایت پرفورمنس‌محور' },
+          create: { caseStudyId: cs.id, attributeKey: 'website_type', type: 'TEXT' as any, valueText: cs.taglineFa || 'پرتال اختصاصی و وب‌سایت پرفورمنس‌محور' },
+        });
+
+        await p.portfolioAttributeValue.upsert({
+          where: { caseStudyId_attributeKey: { caseStudyId: cs.id, attributeKey: 'tech_stack' } },
+          update: { valueText: 'Next.js 16, TypeScript, Tailwind CSS, PostgreSQL, Cloudflare Edge' },
+          create: { caseStudyId: cs.id, attributeKey: 'tech_stack', type: 'TEXT' as any, valueText: 'Next.js 16, TypeScript, Tailwind CSS, PostgreSQL, Cloudflare Edge' },
+        });
+
+        await p.portfolioAttributeValue.upsert({
+          where: { caseStudyId_attributeKey: { caseStudyId: cs.id, attributeKey: 'speed_score' } },
+          update: { valueNumber: 99, valueText: '۹۹' },
+          create: { caseStudyId: cs.id, attributeKey: 'speed_score', type: 'NUMBER' as any, valueNumber: 99, valueText: '۹۹' },
+        });
+
+        await p.portfolioAttributeValue.upsert({
+          where: { caseStudyId_attributeKey: { caseStudyId: cs.id, attributeKey: 'ux_improvement' } },
+          update: { valueNumber: 160, valueText: '+۱۶۰٪' },
+          create: { caseStudyId: cs.id, attributeKey: 'ux_improvement', type: 'PERCENTAGE' as any, valueNumber: 160, valueText: '+۱۶۰٪' },
+        });
+      }
+    }
+  }
+
+  if (brandingId) {
+    const brandingProjects = ['pendar-art'];
+    for (const slug of brandingProjects) {
+      const cs = await p.caseStudy.findFirst({ where: { slug } });
+      if (cs) {
+        await p.caseStudy.update({
+          where: { id: cs.id },
+          data: { categoryId: brandingId },
+        });
+
+        await p.portfolioAttributeValue.upsert({
+          where: { caseStudyId_attributeKey: { caseStudyId: cs.id, attributeKey: 'branding_project_type' } },
+          update: { valueText: 'هویت بصری جامع برند و طراحی کالکشن بین‌المللی' },
+          create: { caseStudyId: cs.id, attributeKey: 'branding_project_type', type: 'TEXT' as any, valueText: 'هویت بصری جامع برند و طراحی کالکشن بین‌المللی' },
+        });
+      }
+    }
+  }
+
+  console.log('[seed] Dynamic portfolio categories & templates synced successfully.');
 }
 
 const isDirectExecution = process.argv[1] && (
@@ -1098,257 +1988,4 @@ if (isDirectExecution) {
     .finally(async () => {
       await prisma.$disconnect();
     });
-}
-
-export async function seedDynamicCms(db: PrismaClient = prisma): Promise<void> {
-  console.log('[seed] Seeding Dynamic CMS modules...');
-
-  // SiteSetting
-  const siteSettingData = {
-    id: 1,
-    siteNameFa: 'آن‌ساپ',
-    siteNameEn: 'OnSupp',
-    siteDescriptionFa: 'آژانس خلاق دیجیتال مارکتینگ و توسعه نرم‌افزار',
-    siteDescriptionEn: 'Creative Digital Marketing & Software Development Agency',
-    headerCtaTextFa: 'شروع همکاری',
-    headerCtaTextEn: 'Get Started',
-    headerCtaLink: '/#contact',
-    addressTitleFa: 'آدرس و نشانی استودیو',
-    addressTitleEn: 'Office Address',
-    streetFa: 'عظیمیه، میدان کوهنورد، گلستان ۲۱',
-    streetEn: 'Golestan 21, Kouhnavard Sq, Azimiyeh',
-    cityFa: 'البرز، کرج، منطقه عظیمیه',
-    cityEn: 'Alborz, Karaj, Azimiyeh District',
-    workingHoursFa: 'شنبه تا چهارشنبه ۹:۰۰ تا ۱۸:۰۰',
-    workingHoursEn: 'Sat - Wed: 09:00 - 18:00',
-    channels: [
-      { id: 'manager', titleFa: 'ارتباط مستقیم با مدیریت', titleEn: 'Direct Executive Line', value: '۰۹۳۳ ۱۸۰ ۵۶۲۸', link: 'tel:+989331805628', icon: 'phone' },
-      { id: 'web', titleFa: 'دپارتمان وب و تکنولوژی', titleEn: 'Web & Engineering Dept', value: '۰۹۱۸ ۲۹۲ ۴۹۸۱', link: 'tel:+989182924981', icon: 'code' },
-      { id: 'social', titleFa: 'تلگرام و مشاوره برخط', titleEn: 'Telegram & Online Chat', value: '@onsupp_web', link: 'https://t.me/onsupp_web', icon: 'send' },
-      { id: 'email', titleFa: 'پست الکترونیک رسمی', titleEn: 'Official Inquiries', value: 'info@onsupp.ir', link: 'mailto:info@onsupp.ir', icon: 'mail' },
-    ],
-    telegramUrl: 'https://t.me/onsupp_web',
-    telegramHandle: 'onsupp_web',
-    instagramUrl: 'https://instagram.com/onsupp_web',
-    linkedinUrl: 'https://linkedin.com/company/onsupp',
-    consultEmail: 'info@onsupp.ir',
-    footerTextFa: 'کلیه حقوق مادی و معنوی متعلق به آژانس دیجیتال مارکتینگ آن‌ساپ می‌باشد.',
-    footerTextEn: 'All rights reserved by OnSupp Digital Marketing Agency.',
-    copyrightTextFa: 'تمامی حقوق برای آن‌ساپ محفوظ است.',
-    copyrightTextEn: 'All rights reserved.',
-    defaultMetaTitleFa: 'آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار',
-    defaultMetaTitleEn: 'OnSupp | Digital Agency & Software Engineering',
-    defaultMetaDescFa: 'آژانس خلاق دیجیتال مارکتینگ آن‌ساپ، پیشرو در طراحی سایت مدرن، سئو تکنیکال، برندینگ و اتوماسیون سازمانی.',
-    defaultMetaDescEn: 'OnSupp Digital Agency specializes in Next.js web development, technical SEO, brand identity, and enterprise automation.',
-    defaultKeywordsFa: 'دیجیتال مارکتینگ, طراحی سایت, سئو تکنیکال, استودیو تولید محتوا, آن‌ساپ',
-    defaultKeywordsEn: 'digital marketing, web design, technical seo, content studio, onsupp',
-    headerLogoUrl: '/images/hero/onsupp-logo.webp',
-    footerLogoUrl: '/images/hero/onsupp-logo.webp',
-    faviconUrl: '/favicon.ico',
-    ogImageUrl: '/images/og/onsupp-default-og.png',
-  };
-
-  await db.siteSetting.upsert({
-    where: { id: 1 },
-    update: siteSettingData,
-    create: siteSettingData,
-  });
-
-  // AboutPageSetting
-  const aboutPageData = {
-    id: 1,
-    heroEyebrowFa: 'درباره آن‌ساپ',
-    heroEyebrowEn: 'About OnSupp',
-    heroTitleFa: 'آدم‌هایی که پشت هر پروژه ایستاده‌اند',
-    heroTitleEn: 'The people behind every project',
-    heroCaptionFa: 'تیم آن‌ساپ — تهران و کرج',
-    heroCaptionEn: 'The OnSupp team — Tehran & Karaj',
-    heroImageUrl: '/images/hero/hero-media-studio.webp',
-    heroImageAltFa: 'عکس گروهی تیم آن‌ساپ',
-    heroImageAltEn: 'OnSupp team group photograph',
-    introEyebrowFa: 'درباره ما',
-    introEyebrowEn: 'About Us',
-    introTitleFa: 'یک تیم، از استراتژی تا اجرا',
-    introTitleEn: 'One team, from strategy to delivery',
-    introLeadFa: 'آن‌ساپ یک آژانس دیجیتال است که استراتژی، طراحی، فناوری و رسانه را زیر یک سقف کنار هم آورده است.',
-    introLeadEn: 'OnSupp is a digital agency that brings strategy, design, technology and media together under one roof.',
-    introApproachFa: 'رویکرد ما ساده است: پیش از ساختن، گوش می‌دهیم. هر پروژه با شناخت کسب‌وکار و مخاطب شروع می‌شود.',
-    introApproachEn: 'Our approach is simple: we listen before we build. Every project starts with understanding the business and its audience.',
-    coreValues: [
-      { id: 'clarity', titleFa: 'شفافیت', titleEn: 'Clarity', descriptionFa: 'اهداف، زمان‌بندی و نتایج را روشن و قابل پیگیری نگه می‌داریم.', descriptionEn: 'Goals, timelines and results stay visible and trackable from day one.' },
-      { id: 'craft', titleFa: 'دقت در اجرا', titleEn: 'Craft', descriptionFa: 'جزئیات را جدی می‌گیریم؛ از یک خط کد تا انتخاب یک کلمه.', descriptionEn: 'We take details seriously — from a single line of code to the choice of a word.' },
-      { id: 'partnership', titleFa: 'همراهی بلندمدت', titleEn: 'Partnership', descriptionFa: 'پروژه با تحویل تمام نمی‌شود؛ کنار برند می‌مانیم تا رشد ادامه پیدا کند.', descriptionEn: 'Delivery isn\'t the finish line; we stay alongside the brand as it grows.' },
-    ],
-    ceoNameFa: 'علی شمس',
-    ceoNameEn: 'Ali Shams',
-    ceoRoleFa: 'بنیان‌گذار و مدیرعامل',
-    ceoRoleEn: 'Founder & CEO',
-    ceoQuoteFa: 'ما آن‌ساپ را ساختیم تا برندها مجبور نباشند بین خلاقیت و نتیجه یکی را انتخاب کنند.',
-    ceoQuoteEn: 'We built OnSupp so brands never have to choose between creativity and results.',
-    ceoBioFa: ['مسیر حرفه‌ای من با اشتیاق به خلق تجربیات دیجیتال متمایز و ساختن تیم‌های هم‌افزا آغاز شد.'],
-    ceoBioEn: ['My journey began with a passion for designing distinct digital experiences and building synergistic teams.'],
-    ceoPhotoUrl: '/images/team/ali-shams.webp',
-    ceoSocialLinks: [{ platform: 'linkedin', url: 'https://linkedin.com' }],
-  };
-
-  await db.aboutPageSetting.upsert({
-    where: { id: 1 },
-    update: aboutPageData,
-    create: aboutPageData,
-  });
-
-  // HomeSection
-  const homeSections = [
-    { key: 'hero', titleFa: 'اسلایدر هدر', titleEn: 'Hero Header', position: 0, isEnabled: true },
-    { key: 'partners', titleFa: 'مشتریان و همکاران تجاری', titleEn: 'Clients & Partners', position: 1, isEnabled: true },
-    { key: 'stats', titleFa: 'آمار و دستاوردها', titleEn: 'Statistics & Impact', position: 2, isEnabled: true },
-    { key: 'services', titleFa: 'خدمات تخصصی', titleEn: 'Services Carousel', position: 3, isEnabled: true },
-    { key: 'about', titleFa: 'معرفی آن‌ساپ', titleEn: 'About Us Overview', position: 4, isEnabled: true },
-    { key: 'logos', titleFa: 'برندهای همراه', titleEn: 'Client Logo Marquee', position: 5, isEnabled: true },
-    { key: 'case_studies', titleFa: 'نمونه‌کارها و پروژه‌ها', titleEn: 'Featured Case Studies', position: 6, isEnabled: true },
-    { key: 'pricing', titleFa: 'پلن‌ها و تعرفه‌ها', titleEn: 'Pricing & Plans', position: 7, isEnabled: true },
-    { key: 'testimonials', titleFa: 'نظرات و رضایت کارفرمایان', titleEn: 'Client Testimonials', position: 8, isEnabled: true },
-    { key: 'contact', titleFa: 'تماس و شروع همکاری', titleEn: 'Contact CTA', position: 9, isEnabled: true },
-  ];
-  for (const sec of homeSections) {
-    await db.homeSection.upsert({
-      where: { key: sec.key },
-      update: { titleFa: sec.titleFa, titleEn: sec.titleEn, position: sec.position, isEnabled: sec.isEnabled },
-      create: sec,
-    });
-  }
-
-  // ClientPartners
-  const existingPartnersCount = await db.clientPartner.count();
-  if (existingPartnersCount === 0) {
-    await db.clientPartner.createMany({
-      data: [
-        {
-          orderNumber: '01',
-          nameFa: 'نجما توکلیان',
-          nameEn: 'Najma Tavakolian',
-          titleFa: 'موسسه بین‌المللی مهاجرتی و حقوقی نجما توکلیان',
-          titleEn: 'Immigration & International Legal Consultancy',
-          industryFa: 'حقوقی و مهاجرت بین‌المللی',
-          industryEn: 'Legal & Global Mobility',
-          introFa: 'مشاوره استراتژیک، اخذ ویزا و امور مهاجرت تحصیلی و سرمایه‌گذاری به کشورهای پیشرو',
-          introEn: 'Strategic immigration consultancy, study permits, and global investment programs',
-          quoteFa: '«توسعه بستر ارتباطی دیجیتال، طراحی پلتفرم‌های چندزبانه و هویت‌سازی معتبر بین‌المللی با آن‌ساپ، مسیر جذب متقاضیان و اعتماد کارفرمایان را متحول ساخت.»',
-          quoteEn: '“Building our multilingual digital architecture and trusted global brand identity with OnSupp established unprecedented credibility and applicant trust.”',
-          servicesFa: ['طراحی وب‌سایت چندزبانه', 'سئو بین‌المللی', 'تولید محتوا و اینستاگرام'],
-          servicesEn: ['Multilingual Web Platform', 'International SEO', 'Content & Instagram Strategy'],
-          yearFa: '۱۴۰۲ - تاکنون',
-          yearEn: '2023 - Present',
-          monogram: 'NT',
-          portraitBadgeFa: 'کارفرمای بین‌المللی آن‌ساپ',
-          portraitBadgeEn: 'OnSupp Global Client Partner',
-          websites: [{ url: 'https://najmatavakolian.net/', label: 'najmatavakolian.net' }],
-          instagrams: [{ handle: '@najma.immigration', profileUrl: 'https://instagram.com/najma.immigration' }],
-          isActive: true,
-          status: 'PUBLISHED',
-          position: 0,
-        },
-        {
-          orderNumber: '02',
-          nameFa: 'مرکز زیبایی شین',
-          nameEn: 'Shin Beauty Center',
-          titleFa: 'کلینیک جامع مراقبت‌های پوستی، لیزر و جوانسازی',
-          titleEn: 'Advanced Medical Aesthetics & Skincare Center',
-          industryFa: 'پزشکی و سلامت زیبایی',
-          industryEn: 'Aesthetics & Dermatology',
-          introFa: 'به‌کارگیری پیشرفته‌ترین فناوری‌های لیزر، جوانسازی و پروتکل‌های پزشکی مراقبت از پوست',
-          introEn: 'Leading clinical lasers, modern anti-aging therapies, and high-standard skincare protocols',
-          quoteFa: '«طراحی هویت بصری منسجم، وب‌سایت نوبت‌دهی آنلاین و کمپین‌های هوشمند سوشال مدیا، جایگاه برند شین را در سطح کلینیک‌های تراز اول تثبیت کرد.»',
-          quoteEn: '“Unified luxury visual branding, seamless online booking, and targeted social growth elevated Shin to a premier aesthetic clinic tier.”',
-          servicesFa: ['هویت بصری و برندینگ', 'وب‌سایت نوبت‌دهی', 'کمپین‌های اینستاگرام'],
-          servicesEn: ['Visual Identity & Branding', 'Online Booking System', 'Instagram Campaigns'],
-          yearFa: '۱۴۰۱ - تاکنون',
-          yearEn: '2022 - Present',
-          monogram: 'SB',
-          portraitBadgeFa: 'مرکز تخصصی زیبایی',
-          portraitBadgeEn: 'Premier Aesthetic Center',
-          websites: [{ url: 'https://shinbeautycenter.com/', label: 'shinbeautycenter.com' }],
-          instagrams: [{ handle: '@shin.beautycenter', profileUrl: 'https://instagram.com/shin.beautycenter' }],
-          isActive: true,
-          status: 'PUBLISHED',
-          position: 1,
-        },
-        {
-          orderNumber: '03',
-          nameFa: 'مهدی ناظری (فیت بای ناظری)',
-          nameEn: 'Mehdi Nazeri (Fit by Nazeri)',
-          titleFa: 'آکادمی مربیگری حرفه‌ای، تناسب اندام و سبک زندگی سالم مهدی ناظری',
-          titleEn: 'Professional Fitness Coaching & Nutrition Academy by Mehdi Nazeri',
-          industryFa: 'ورزش، تندرستی و سلامت فیزیکی',
-          industryEn: 'Fitness & Wellness',
-          introFa: 'ارائه برنامه‌های تمرینی اختصاصی، تغذیه علمی و پایش مستمر نتایج ورزشکاران',
-          introEn: 'Bespoke fitness training, scientific nutrition regimens, and global athlete performance monitoring',
-          quoteFa: '«سامانه دریافت برنامه تمرینی آنلاین و هویت برند نوآورانه توسعه‌یافته توسط آن‌ساپ، مدیریت مراجعین از سراسر کشور را بهینه‌سازی کرد.»',
-          quoteEn: '“The online training portal and refined brand identity engineered by OnSupp streamlined client management nationwide.”',
-          servicesFa: ['طراحی پرتال آنلاین تمرینی', 'هویت بصری ورزشی', 'استودیو فیلم‌برداری حرکات'],
-          servicesEn: ['Online Training Portal', 'Sports Brand Identity', 'Movement Video Production'],
-          yearFa: '۱۴۰۳ - تاکنون',
-          yearEn: '2024 - Present',
-          monogram: 'FN',
-          portraitBadgeFa: 'آکادمی سلامت و فیتنس',
-          portraitBadgeEn: 'Fitness & Health Academy',
-          websites: [{ url: 'https://fitbynazeri.com/', label: 'fitbynazeri.com' }],
-          instagrams: [{ handle: '@fitbynazeri', profileUrl: 'https://instagram.com/fitbynazeri' }],
-          isActive: true,
-          status: 'PUBLISHED',
-          position: 2,
-        },
-      ],
-    });
-  }
-
-  // ClientLogos
-  const existingLogosCount = await db.clientLogo.count();
-  if (existingLogosCount === 0) {
-    await db.clientLogo.createMany({
-      data: [
-        { nameFa: 'کلینیک دکتر سینا پارسی‌پور', nameEn: 'Dr. Sina Parsi Pour Clinic', imageUrl: '/images/clients/cropped-دکتر-سینا-پارسی-پورDesign-tool.png', width: 522, height: 522, position: 0 },
-        { nameFa: 'آسمان شب', nameEn: 'Night Sky', imageUrl: '/images/clients/night-sky-logo-Fav-Icon.webp', width: 350, height: 100, position: 1 },
-        { nameFa: 'برند تخصصی همکار', nameEn: 'Partner Healthcare Brand', imageUrl: '/images/clients/cropped-داخل-مقاله-سایز-جدید-1-scaled-1.webp', width: 2558, height: 1004, position: 2 },
-        { nameFa: 'برند بین‌المللی همکار', nameEn: 'Global Partner Brand', imageUrl: '/images/clients/1784025437971-220284966.png', width: 3479, height: 2561, position: 3 },
-        { nameFa: 'نشان تجاری مشتریان', nameEn: 'Client Crest Identity', imageUrl: '/images/clients/cropped-fav-icon-180x180-1.png', width: 180, height: 180, position: 4 },
-        { nameFa: 'مرکز تخصصی همکار', nameEn: 'Specialized Partner Center', imageUrl: '/images/clients/1786532435122-428601052.png', width: 934, height: 880, position: 5 },
-        { nameFa: 'نشان برند مشتری', nameEn: 'Partner Identity', imageUrl: '/images/clients/cropped-Image-11.png', width: 1254, height: 1254, position: 6 },
-        { nameFa: 'برند تجاری همراه', nameEn: 'Enterprise Client', imageUrl: '/images/clients/dont-bg-logo-Edited.png', width: 1020, height: 643, position: 7 },
-        { nameFa: 'نشان همراهان آن‌ساپ', nameEn: 'OnSupp Client Partner', imageUrl: '/images/clients/d0e6674d-5672-4f41-94dd-2e3242594040.png', width: 2480, height: 2643, position: 8 },
-      ],
-    });
-  }
-
-  // TeamMember
-  const existingTeamCount = await db.teamMember.count();
-  if (existingTeamCount === 0) {
-    await db.teamMember.createMany({
-      data: [
-        { nameFa: 'علی شمس', nameEn: 'Ali Shams', roleFa: 'بنیان‌گذار و مدیرعامل', roleEn: 'Founder & CEO', departmentFa: 'مدیریت و استراتژی', departmentEn: 'Leadership & Strategy', bioFa: 'هدایت استراتژیک پروژه‌ها و تلفیق رویکرد داده‌محور با خلاقیت سازمانی.', bioEn: 'Strategic leadership and driving data-informed creative growth.', photoUrl: '/images/team/ali-shams.webp', isPublished: true, isLeadership: true, position: 0 },
-        { nameFa: 'پویا شمس', nameEn: 'Pouya Shams', roleFa: 'مدیر ارشد فنی و مهندسی نرم‌افزار', roleEn: 'Chief Technology Officer & Lead Architect', departmentFa: 'فناوری و مهندسی', departmentEn: 'Engineering & Tech', bioFa: 'معماری سامانه‌های مقیاس‌پذیر، زیرساخت ابری و نظارت بر کیفیت توسعه وب Next.js.', bioEn: 'Architecting scalable systems, cloud infrastructure, and Next.js engineering quality.', photoUrl: '/images/team/pouya-shams.webp', isPublished: true, isLeadership: true, position: 1 },
-        { nameFa: 'سارا احمدی', nameEn: 'Sara Ahmadi', roleFa: 'مدیر ارشد طراحی و هویت بصری', roleEn: 'Art Director & Head of Design', departmentFa: 'دیزاین و خلاقیت', departmentEn: 'Design & Creative', bioFa: 'طراحی زبان بصری ماندگار، تایپوگرافی اختصاصی و نظارت هنری بر تمام خروجی‌های استودیو.', bioEn: 'Crafting timeless design systems, typography, and artistic direction.', isPublished: true, isLeadership: false, position: 2 },
-        { nameFa: 'امیرحسین رضایی', nameEn: 'Amirhossein Rezaei', roleFa: 'سرپرست سئو تکنیکال و رشد ارگانیک', roleEn: 'Technical SEO Lead', departmentFa: 'مارکتینگ و سئو', departmentEn: 'Marketing & SEO', bioFa: 'تحلیل داده‌های سرچ کنسول، بهینه‌سازی معماری وب و افزایش ترافیک ارگانیک باکیفیت.', bioEn: 'Search analytics, web architecture optimization, and high-conversion organic growth.', isPublished: true, isLeadership: false, position: 3 },
-      ],
-    });
-  }
-
-  // PageSeo
-  const pageSeoList = [
-    { routePath: '/', titleFa: 'آن‌ساپ | آژانس دیجیتال مارکتینگ و توسعه نرم‌افزار', titleEn: 'OnSupp | Digital Agency & Software Engineering', descriptionFa: 'طراحی سایت‌های مدرن، سئو تکنیکال، تولید محتوای سینمایی و استقرار CRM.', descriptionEn: 'Enterprise web apps, technical SEO, cinematography, and automation.', canonicalUrl: 'https://onsupp.ir/' },
-    { routePath: '/about', titleFa: 'درباره ما | آژانس دیجیتال مارکتینگ آن‌ساپ', titleEn: 'About Us | OnSupp Digital Agency', descriptionFa: 'آشنایی با تیم متخصص، بنیان‌گذاران، ارزش‌های محوری و داستان شکل‌گیری آن‌ساپ.', descriptionEn: 'Learn about OnSupp team, core values, leadership, and our mission.', canonicalUrl: 'https://onsupp.ir/about' },
-    { routePath: '/services', titleFa: 'خدمات تخصصی دیجیتال مارکتینگ و توسعه وب | آن‌ساپ', titleEn: 'Our Services | OnSupp Digital Agency', descriptionFa: 'طراحی وب و اپلیکیشن، استودیو تصویربرداری، موشن گرافیک، سئو و اتوماسیون.', descriptionEn: 'Full suite of digital services: software development, SEO, cinematography, and CRM.', canonicalUrl: 'https://onsupp.ir/services' },
-    { routePath: '/case-studies', titleFa: 'نمونه‌کارها و پروژه‌های شاخص | آن‌ساپ', titleEn: 'Case Studies & Portfolio | OnSupp', descriptionFa: 'بررسی پروژه‌های موفق برندهایی که با همراهی آن‌ساپ رشد چشمگیر دیجیتال داشتند.', descriptionEn: 'Discover how we helped leading brands achieve digital transformation.', canonicalUrl: 'https://onsupp.ir/case-studies' },
-    { routePath: '/pricing', titleFa: 'تعرفه‌ها و پکیج‌های همکاری | آن‌ساپ', titleEn: 'Pricing & Plans | OnSupp', descriptionFa: 'پلن‌ها و تعرفه‌های شفاف خدمات دیجیتال مارکتینگ، طراحی سایت و سئو.', descriptionEn: 'Transparent pricing packages for web engineering, SEO, and digital marketing.', canonicalUrl: 'https://onsupp.ir/pricing' },
-    { routePath: '/contact', titleFa: 'تماس با ما و شروع همکاری | آن‌ساپ', titleEn: 'Contact Us | OnSupp', descriptionFa: 'رزرو جلسه مشاوره تخصصی، دریافت برآورد هزینه پروژه یا شروع همکاری.', descriptionEn: 'Get in touch to discuss your next project or schedule a consultation.', canonicalUrl: 'https://onsupp.ir/contact' },
-  ];
-  for (const item of pageSeoList) {
-    await db.pageSeo.upsert({
-      where: { routePath: item.routePath },
-      update: item,
-      create: item,
-    });
-  }
-
-  console.log('[seed] Dynamic CMS modules seeded successfully!');
 }

@@ -2,23 +2,24 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
-import { CaseStudyItem, SHOWCASE_PROJECTS, getAllCaseStudies, normalizeCaseStudy } from "@/lib/case-studies";
+import { CaseStudyItem, SHOWCASE_PROJECTS, getAllCaseStudies } from "@/lib/case-studies";
 import { BACKEND_URL } from "@/config/api";
-import PortfolioHero from "./PortfolioHero";
-import PortfolioAsymmetricSwiper from "./PortfolioAsymmetricSwiper";
 import PortfolioCategoryFilter, {
   PortfolioCategoryKey,
+  CategoryTab,
   PORTFOLIO_CATEGORY_TABS,
   matchesCategory,
 } from "./PortfolioCategoryFilter";
-import ScrollableProjectFrame from "./ScrollableProjectFrame";
 import PortfolioCreativeApproach from "./PortfolioCreativeApproach";
 import PortfolioIndustriesSection from "./PortfolioIndustriesSection";
 import PortfolioCTASection from "./PortfolioCTASection";
+import PortfolioCardImagePreview from "./PortfolioCardImagePreview";
+import PortfolioHero from "./PortfolioHero";
 
 export default function PortfolioPageView({
   allProjects,
@@ -28,12 +29,39 @@ export default function PortfolioPageView({
   const { lang } = useLanguage();
   const isRtl = lang === "fa";
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [projectList, setProjectList] = useState<CaseStudyItem[]>(allProjects);
+  const [categoryTabs, setCategoryTabs] = useState<CategoryTab[]>(PORTFOLIO_CATEGORY_TABS);
 
   // Sync with backend API if available
   useEffect(() => {
     const controller = new AbortController();
+
+    // 1. Fetch Dynamic Categories
+    fetch(`${BACKEND_URL}/api/v1/portfolio/categories`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((cats) => {
+        if (Array.isArray(cats) && cats.length > 0) {
+          const dynamicTabs: CategoryTab[] = [
+            { id: "all", labelFa: "همه پروژه‌ها", labelEn: "All Projects" },
+            ...cats.map((c: any) => ({
+              id: c.slug,
+              labelFa: c.titleFa,
+              labelEn: c.titleEn,
+              color: c.color,
+              icon: c.icon,
+            })),
+          ];
+          setCategoryTabs(dynamicTabs);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch Dynamic Case Studies
     fetch(`${BACKEND_URL}/api/v1/casestudies`, {
       signal: controller.signal,
       cache: "no-store",
@@ -45,22 +73,70 @@ export default function PortfolioPageView({
             const match = SHOWCASE_PROJECTS.find(
               (p) => p.slug === item.slug || p.titleFa === item.titleFa || p.id === item.slug
             );
-            const normalized = normalizeCaseStudy(item, idx);
             if (match) {
               return {
                 ...match,
-                ...normalized,
-                servicesFa: (Array.isArray(item.servicesFa) && item.servicesFa.length > 0) ? item.servicesFa : match.servicesFa,
-                servicesEn: (Array.isArray(item.servicesEn) && item.servicesEn.length > 0) ? item.servicesEn : match.servicesEn,
-                metricsFa: (Array.isArray(item.metricsFa) && item.metricsFa.length > 0) ? item.metricsFa : match.metricsFa,
-                metricsEn: (Array.isArray(item.metricsEn) && item.metricsEn.length > 0) ? item.metricsEn : match.metricsEn,
-                colorGradient: item.colorGradient || match.colorGradient,
-                accentColor: item.accentColor || match.accentColor,
-                glowColor: item.glowColor || match.glowColor,
-                previewType: item.previewType || match.previewType,
+                titleFa: item.titleFa || match.titleFa,
+                titleEn: item.titleEn || match.titleEn,
+                client: item.client || match.client,
+                clientEn: item.clientEn || match.clientEn,
+                taglineFa: item.taglineFa || match.taglineFa,
+                taglineEn: item.taglineEn || match.taglineEn,
+                categoryFa: item.categoryFa || match.categoryFa,
+                categoryEn: item.categoryEn || match.categoryEn,
+                image: item.imageUrl || match.image,
+                secondaryImage: item.secondaryImage || match.secondaryImage,
+                gallery: match.gallery,
+                liveUrl: item.liveUrl || match.liveUrl,
+                position: item.position ?? match.position ?? idx,
+                featured: item.featured ?? match.featured,
+                year: item.year || match.year,
+                category: item.category || match.category,
+                categoryId: item.categoryId ?? match.categoryId,
+                categories: Array.isArray(item.categories) ? item.categories : match.categories,
+                categoryIds: Array.isArray(item.categoryIds) ? item.categoryIds : match.categoryIds,
+                attributeValues: Array.isArray(item.attributeValues) ? item.attributeValues : (match.attributeValues || []),
               };
             }
-            return normalized;
+
+            const previewType: "mobile" | "web" | "platform" =
+              item.projectType === "app"
+                ? "mobile"
+                : item.projectType === "instagram"
+                ? "platform"
+                : "web";
+
+            return {
+              id: item.slug || `project-${item.id}`,
+              slug: item.slug || `project-${item.id}`,
+              client: item.client || item.titleFa || "مشتری سازمانی",
+              clientEn: item.clientEn || item.titleEn || "Enterprise Client",
+              titleFa: item.titleFa || "",
+              titleEn: item.titleEn || "",
+              taglineFa: item.taglineFa || item.descriptionFa || "",
+              taglineEn: item.taglineEn || item.descriptionEn || "",
+              categoryFa: item.categoryFa || "دیجیتال",
+              categoryEn: item.categoryEn || "Digital",
+              servicesFa: [item.categoryFa || "توسعه محصول"],
+              servicesEn: [item.categoryEn || "Product Development"],
+              metricsFa: [{ value: "۱۰۰٪", label: "رضایت کارفرما" }],
+              metricsEn: [{ value: "100%", label: "Client Satisfaction" }],
+              colorGradient: "from-[#0d1620] via-[#112338] to-[#081018]",
+              accentColor: "#38bdf8",
+              glowColor: "rgba(56, 189, 248, 0.15)",
+              previewType,
+              image: item.imageUrl || "/case_study_1.jpg",
+              secondaryImage: item.secondaryImage || undefined,
+              liveUrl: item.liveUrl || "#",
+              featured: item.featured !== false,
+              position: item.position ?? idx,
+              year: item.year || "۲۰۲۵",
+              category: item.category || null,
+              categoryId: item.categoryId ?? null,
+              categories: Array.isArray(item.categories) ? item.categories : [],
+              categoryIds: Array.isArray(item.categoryIds) ? item.categoryIds : [],
+              attributeValues: Array.isArray(item.attributeValues) ? item.attributeValues : [],
+            };
           });
 
           setProjectList(getAllCaseStudies(merged));
@@ -77,9 +153,7 @@ export default function PortfolioPageView({
 
   // Initialize category from URL query param if present
   const initialCategory = (searchParams.get("category") as PortfolioCategoryKey) || "all";
-  const [activeCategory, setActiveCategory] = useState<PortfolioCategoryKey>(
-    PORTFOLIO_CATEGORY_TABS.some((t) => t.id === initialCategory) ? initialCategory : "all"
-  );
+  const [activeCategory, setActiveCategory] = useState<PortfolioCategoryKey>(initialCategory);
 
   // Sync category changes with URL query parameter without full-page reload
   const handleSelectCategory = (catId: PortfolioCategoryKey) => {
@@ -96,10 +170,10 @@ export default function PortfolioPageView({
 
   // Synchronize if user navigates back/forward
   useEffect(() => {
-    const cat = searchParams.get("category") as PortfolioCategoryKey;
-    if (cat && PORTFOLIO_CATEGORY_TABS.some((t) => t.id === cat)) {
+    const cat = searchParams.get("category");
+    if (cat) {
       setActiveCategory(cat);
-    } else if (!cat) {
+    } else {
       setActiveCategory("all");
     }
   }, [searchParams]);
@@ -108,24 +182,16 @@ export default function PortfolioPageView({
   const categoryCounts = useMemo(() => {
     const counts: Record<PortfolioCategoryKey, number> = {
       all: projectList.length,
-      "web-design": 0,
-      instagram: 0,
-      coding: 0,
-      video: 0,
-      animation: 0,
-      seo: 0,
     };
 
-    projectList.forEach((proj) => {
-      PORTFOLIO_CATEGORY_TABS.forEach((tab) => {
-        if (tab.id !== "all" && matchesCategory(proj, tab.id)) {
-          counts[tab.id] = (counts[tab.id] || 0) + 1;
-        }
-      });
+    categoryTabs.forEach((tab) => {
+      if (tab.id !== "all") {
+        counts[tab.id] = projectList.filter((p) => matchesCategory(p, tab.id)).length;
+      }
     });
 
     return counts;
-  }, [projectList]);
+  }, [projectList, categoryTabs]);
 
   // Filtered projects for the showcase
   const filteredProjects = useMemo(() => {
@@ -134,60 +200,44 @@ export default function PortfolioPageView({
     return matched.length > 0 ? matched : projectList;
   }, [projectList, activeCategory]);
 
-  // Featured flagship projects for Swiper stage
-  const featuredProjects = useMemo(() => {
-    return projectList.filter((p) => p.featured);
-  }, [projectList]);
-
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-[#F4F5F2] dark:bg-[#121413] text-[#1F1F1E] dark:text-[#EAEAEA] antialiased selection:bg-[#38534A] selection:text-white transition-colors"
+      className="min-h-screen bg-[#F8F9FA] dark:bg-[#111416] text-[#1F1F1E] dark:text-[#EAEAEA] antialiased selection:bg-[#B7FF00] selection:text-black transition-colors"
     >
       <Header />
 
       <main className="relative flex flex-col w-full overflow-hidden">
-        {/* ── 1. Editorial Hero ── */}
+        {/* ── Dedicated Hero Section ── */}
         <PortfolioHero isRtl={isRtl} />
 
-        {/* ── 2. Asymmetric Swiper Stage (Curated Flagship Spotlight) ── */}
-        <section
-          aria-label={isRtl ? "ویترین پروژه‌های شاخص" : "Curated Project Stage"}
-          className="relative w-full py-14 sm:py-20 border-b border-[#1F1F1E]/10 dark:border-white/10 overflow-hidden"
-        >
-          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-14">
-            <PortfolioAsymmetricSwiper
-              isRtl={isRtl}
-              projects={featuredProjects.length >= 3 ? featuredProjects : projectList}
-            />
-          </div>
-        </section>
-
-        {/* ── 3. Showcase & Projects Archive Directory (Filtered by Category) ── */}
+        {/* ── 1. Showcase & Projects Archive Directory (Filtered by Category) ── */}
         <section
           id="showcase"
           aria-label={isRtl ? "آرشیو پروژه‌ها و نمونه‌کارها" : "Projects Archive & Portfolio Directory"}
-          className="relative w-full py-16 sm:py-24 border-b border-[#1F1F1E]/10 dark:border-white/10"
+          className="relative w-full pt-12 sm:pt-16 pb-16 sm:pb-24 border-b border-black/[0.06] dark:border-white/[0.08]"
         >
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-14">
-            {/* Category Filter Tabs (Sharp Rectangular Geometry) */}
+            {/* Category Filter Pills */}
             <PortfolioCategoryFilter
               isRtl={isRtl}
               activeCategory={activeCategory}
               onSelectCategory={handleSelectCategory}
               counts={categoryCounts}
+              tabs={categoryTabs}
             />
 
             {/* Editorial Projects Archive Directory */}
             <div className="mt-12 sm:mt-16">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12">
                 <div>
+                  {/* Section Eyebrow - Matching About Us Pattern */}
                   <div className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold tracking-widest text-[#38534A] dark:text-[#8AB3A0] uppercase mb-2">
-                    <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50 shrink-0" />
+                    <span className="h-px w-10 bg-[#38534A]/50 dark:bg-[#8AB3A0]/50" />
                     <span>{isRtl ? "آرشیو مطالعات موردی و پروژه‌ها" : "CASE STUDY ARCHIVES & PORTFOLIO"}</span>
                   </div>
-                  <h3
-                    className={`text-xl sm:text-3xl font-black text-foreground ${
+                  <h2
+                    className={`text-xl sm:text-3xl lg:text-[32px] lg:whitespace-nowrap font-black text-foreground ${
                       isRtl
                         ? "font-[family-name:var(--font-vazirmatn)]"
                         : "font-[family-name:var(--font-gendy)]"
@@ -196,7 +246,7 @@ export default function PortfolioPageView({
                     {isRtl
                       ? "مرور مستقیم پروژه‌ها و جزئیات دستاوردها"
                       : "Direct Case Study Deep-Dives"}
-                  </h3>
+                  </h2>
                 </div>
                 <p className="text-xs sm:text-sm text-foreground/60 max-w-md">
                   {isRtl
@@ -205,111 +255,82 @@ export default function PortfolioPageView({
                 </p>
               </div>
 
-              {/* ── Editorial Asymmetrical Cards Grid ── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-                {filteredProjects.map((project, idx) => {
-                  const cardImage = project.secondaryImage || project.image || "/case_study_1.jpg";
-                  // Make the first item span 2 columns on large screens for an editorial magazine rhythm
-                  const isLargeSpan = idx === 0 && filteredProjects.length > 2;
+              {/* Editorial List / Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => (
+                  <Link
+                    key={project.slug || project.id}
+                    href={`/portfolio/${project.slug}`}
+                    className="group relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl bg-white/70 dark:bg-[#1A1A19]/80 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] hover:border-[#38534A]/50 dark:hover:border-[#8AB3A0]/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                  >
+                    <div>
+                      {/* Media Thumbnail with Interactive Hover-to-Scroll & Multi-Image Carousel */}
+                      <PortfolioCardImagePreview project={project} isRtl={isRtl} />
 
-                  return (
-                    <article
-                      key={project.slug || project.id}
-                      className={`group relative flex flex-col justify-between p-6 sm:p-7 rounded-none bg-[#EAEBE7] dark:bg-[#1A1D1C] border border-[#1F1F1E]/12 dark:border-white/10 hover:border-[#38534A]/50 dark:hover:border-[#8AB3A0]/50 transition-all duration-300 hover:shadow-md ${
-                        isLargeSpan ? "md:col-span-2 lg:col-span-2" : "col-span-1"
-                      }`}
-                    >
-                      <div>
-                        {/* Media Frame with Hover Scroll */}
-                        <div className="mb-5">
-                          <ScrollableProjectFrame
-                            src={cardImage}
-                            alt={isRtl ? project.titleFa : project.titleEn}
-                            isRtl={isRtl}
-                            className={
-                              isLargeSpan
-                                ? "h-[320px] sm:h-[400px] lg:h-[440px]"
-                                : "h-[260px] sm:h-[300px] lg:h-[320px]"
-                            }
-                            previewType={project.previewType}
-                            liveUrl={project.liveUrl}
-                          />
-                        </div>
-
-                        {/* Top Category & Year Row */}
-                        <div className="flex items-center justify-between gap-3 mb-2.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#38534A] dark:text-[#8AB3A0]">
-                            {isRtl ? project.categoryFa : project.categoryEn}
-                          </span>
-                          <span className="font-mono text-[11px] text-foreground/50">
-                            {project.year || "۲۰۲۵"}
-                          </span>
-                        </div>
-
-                        {/* Client & Title */}
-                        <span className="text-xs font-semibold text-foreground/60 block mb-1">
-                          {isRtl ? project.client : project.clientEn}
-                        </span>
-                        <h4
-                          className={`font-bold text-foreground mb-2 group-hover:text-[#38534A] dark:group-hover:text-[#8AB3A0] transition-colors leading-snug ${
-                            isLargeSpan ? "text-lg sm:text-2xl" : "text-base sm:text-lg"
-                          }`}
-                        >
-                          <Link href={`/portfolio/${project.slug}`}>
-                            {isRtl ? project.titleFa : project.titleEn}
-                          </Link>
-                        </h4>
-                        <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed mb-4">
-                          {isRtl ? project.taglineFa : project.taglineEn}
-                        </p>
-                      </div>
-
-                      {/* Card Bottom: Metric Highlight + Detail Link */}
-                      <div className="pt-4 border-t border-[#1F1F1E]/10 dark:border-white/10 flex items-center justify-between">
-                        {project.metricsFa && project.metricsFa[0] ? (
-                          <div className="flex items-center gap-1.5 text-xs">
-                            <span className="font-bold text-[#38534A] dark:text-[#8AB3A0] font-mono">
-                              {isRtl ? project.metricsFa[0].value : project.metricsEn?.[0]?.value || project.metricsFa[0].value}
+                      {/* Client, Categories & Title */}
+                      <span className="text-[11px] font-semibold text-[#38534A] dark:text-[#8AB3A0] block mb-1">
+                        {isRtl ? project.client : project.clientEn}
+                      </span>
+                      {Array.isArray(project.categories) && project.categories.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          {project.categories.map((cat) => (
+                            <span
+                              key={cat.id}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#38534A]/10 dark:bg-[#8AB3A0]/10 text-[#38534A] dark:text-[#8AB3A0] border border-[#38534A]/15 dark:border-[#8AB3A0]/20"
+                            >
+                              {isRtl ? cat.titleFa : cat.titleEn}
                             </span>
-                            <span className="text-[10px] text-foreground/60">
-                              {isRtl ? project.metricsFa[0].label : project.metricsEn?.[0]?.label || project.metricsFa[0].label}
-                            </span>
-                          </div>
-                        ) : (
-                          <span />
-                        )}
+                          ))}
+                        </div>
+                      )}
+                      <h3 className="text-base sm:text-lg font-bold text-foreground mb-2 group-hover:text-[#38534A] dark:group-hover:text-[#8AB3A0] transition-colors leading-snug">
+                        {isRtl ? project.titleFa : project.titleEn}
+                      </h3>
+                      <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed mb-4">
+                        {isRtl ? project.taglineFa : project.taglineEn}
+                      </p>
+                    </div>
 
-                        <Link
-                          href={`/portfolio/${project.slug}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#38534A] dark:text-[#8AB3A0] group-hover:underline cursor-pointer"
+                    {/* Card Bottom: Metric Highlight + Explore Link */}
+                    <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
+                      {project.metricsFa && project.metricsFa[0] && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="font-bold text-foreground font-mono">
+                            {isRtl ? project.metricsFa[0].value : project.metricsEn?.[0]?.value || project.metricsFa[0].value}
+                          </span>
+                          <span className="text-[10px] text-foreground/50">
+                            {isRtl ? project.metricsFa[0].label : project.metricsEn?.[0]?.label || project.metricsFa[0].label}
+                          </span>
+                        </div>
+                      )}
+
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#38534A] dark:text-[#8AB3A0] group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
+                        <span>{isRtl ? "مطالعه پروژه" : "View Case"}</span>
+                        <svg
+                          className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
                         >
-                          <span>{isRtl ? "مطالعه پروژه" : "View Case"}</span>
-                          <svg
-                            className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                          </svg>
-                        </Link>
-                      </div>
-                    </article>
-                  );
-                })}
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 4. Creative Philosophy & Engineering Pillars ── */}
+        {/* ── 2. Creative Philosophy & Engineering Pillars ── */}
         <PortfolioCreativeApproach isRtl={isRtl} />
 
-        {/* ── 5. Sector & Industries Breakdown ── */}
+        {/* ── 3. Sector & Industries Breakdown ── */}
         <PortfolioIndustriesSection isRtl={isRtl} />
 
-        {/* ── 6. Closing Consultation CTA ── */}
+        {/* ── 4. Closing Consultation CTA ── */}
         <PortfolioCTASection isRtl={isRtl} />
       </main>
 

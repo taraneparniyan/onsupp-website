@@ -1,470 +1,395 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { adminFetch } from "@/lib/adminApi";
 import MediaPickerModal, { type MediaItem } from "@/components/admin/MediaPickerModal";
 
-export type ClientLogo = {
-  id: number;
+export interface ClientLogoItem {
+  id?: number;
+  key: string;
   nameFa: string;
   nameEn: string;
   logoUrl: string;
-  websiteUrl?: string | null;
+  darkLogoUrl?: string | null;
+  altFa: string;
+  altEn: string;
   width: number;
   height: number;
+  linkUrl?: string | null;
   position: number;
-  status: "PUBLISHED" | "DRAFT" | "ARCHIVED";
-};
+  isPublished: boolean;
+  status: "DRAFT" | "PUBLISHED";
+}
 
-const EMPTY_FORM: Omit<ClientLogo, "id"> = {
+const EMPTY_LOGO: ClientLogoItem = {
+  key: "",
   nameFa: "",
   nameEn: "",
   logoUrl: "",
-  websiteUrl: "",
-  width: 140,
-  height: 48,
+  darkLogoUrl: null,
+  altFa: "",
+  altEn: "",
+  width: 300,
+  height: 120,
+  linkUrl: "#",
   position: 0,
+  isPublished: true,
   status: "PUBLISHED",
 };
 
 export default function ClientLogosAdminPage() {
-  const [items, setItems] = useState<ClientLogo[]>([]);
+  const [items, setItems] = useState<ClientLogoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [form, setForm] = useState<ClientLogoItem>(EMPTY_LOGO);
   const [saving, setSaving] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<"logo" | "darkLogo" | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const fetchItems = () => {
-    adminFetch("/api/v1/client-logos", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setItems(data.sort((a, b) => a.position - b.position));
-        }
-      })
-      .catch(() => setMessage({ type: "err", text: "خطا در دریافت لوگوها" }))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchItems();
+  const notify = useCallback((type: "ok" | "err", text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => {
+      setMessage((cur) => (cur?.text === text ? null : cur));
+    }, 4500);
   }, []);
 
-  const openCreateModal = () => {
-    setEditingId(null);
-    setFormData({ ...EMPTY_FORM, position: items.length });
-    setIsModalOpen(true);
+  const loadLogos = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminFetch("/api/v1/client-logos/all", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0)));
+      } else {
+        notify("err", "خطا در دریافت لوگوهای مشتریان");
+      }
+    } catch {
+      notify("err", "خطای شبکه هنگام ارتباط با سرور");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify]);
+
+  useEffect(() => {
+    loadLogos();
+  }, [loadLogos]);
+
+  const handleEdit = (logo: ClientLogoItem) => {
+    setEditingId(logo.id ?? null);
+    setForm({ ...logo });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openEditModal = (item: ClientLogo) => {
-    setEditingId(item.id);
-    setFormData({
-      nameFa: item.nameFa || "",
-      nameEn: item.nameEn || "",
-      logoUrl: item.logoUrl || "",
-      websiteUrl: item.websiteUrl || "",
-      width: item.width || 140,
-      height: item.height || 48,
-      position: item.position ?? 0,
-      status: item.status || "PUBLISHED",
-    });
-    setIsModalOpen(true);
+  const handleCancel = () => {
+    setEditingId(null);
+    setForm(EMPTY_LOGO);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nameFa || !formData.logoUrl) {
-      setMessage({ type: "err", text: "نام فارسی و تصویر لوگو الزامی هستند." });
+    if (!form.nameFa.trim()) {
+      notify("err", "نام برند/لوگو الزامی است");
+      return;
+    }
+    if (!form.logoUrl.trim()) {
+      notify("err", "تصویر لوگو الزامی است");
       return;
     }
 
     setSaving(true);
-    setMessage(null);
+    const key = form.key.trim() || form.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-") || `logo-${Date.now()}`;
+    const payload = {
+      ...form,
+      key,
+      altFa: form.altFa.trim() || `لوگوی ${form.nameFa}`,
+      altEn: form.altEn.trim() || `${form.nameEn || form.nameFa} Logo`,
+    };
 
     try {
-      const url = editingId ? `/api/v1/client-logos/${editingId}` : "/api/v1/client-logos";
+      const endpoint = editingId ? `/api/v1/client-logos/${editingId}` : "/api/v1/client-logos";
       const method = editingId ? "PUT" : "POST";
-
-      const res = await adminFetch(url, {
+      const res = await adminFetch(endpoint, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        setMessage({ type: "ok", text: editingId ? "لوگو با موفقیت ویرایش شد." : "لوگوی جدید افزوده شد." });
-        setIsModalOpen(false);
-        fetchItems();
+        notify("ok", `لوگو "${form.nameFa}" با موفقیت ذخیره شد`);
+        handleCancel();
+        loadLogos();
       } else {
-        const err = await res.json().catch(() => null);
-        setMessage({ type: "err", text: err?.error || "خطا در ذخیره سازی." });
+        const err = await res.json();
+        notify("err", err.error || "خطا در ذخیره لوگو");
       }
     } catch {
-      setMessage({ type: "err", text: "خطا در اتصال به سرور." });
+      notify("err", "خطای ارتباط با سرور");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("آیا از حذف این لوگو اطمینان دارید؟")) return;
-
+  const handleDelete = async (id?: number) => {
+    if (!id || !confirm("آیا از حذف این لوگو اطمینان دارید؟")) return;
     try {
       const res = await adminFetch(`/api/v1/client-logos/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setMessage({ type: "ok", text: "لوگو حذف شد." });
-        fetchItems();
+        notify("ok", "لوگو حذف شد");
+        loadLogos();
       } else {
-        setMessage({ type: "err", text: "خطا در حذف لوگو." });
+        notify("err", "خطا در حذف لوگو");
       }
     } catch {
-      setMessage({ type: "err", text: "خطا در اتصال به سرور." });
+      notify("err", "خطای ارتباط با سرور");
     }
   };
 
-  const movePosition = async (index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-
-    const currentItem = items[index];
-    const targetItem = items[targetIndex];
-
-    try {
-      await adminFetch(`/api/v1/client-logos/${currentItem.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ position: targetItem.position }),
-      });
-      await adminFetch(`/api/v1/client-logos/${targetItem.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ position: currentItem.position }),
-      });
-      fetchItems();
-    } catch {
-      setMessage({ type: "err", text: "خطا در تغییر ترتیب لوگوها." });
+  const resolveImgSrc = (url?: string | null) => {
+    if (!url) return "";
+    const normalized = url.startsWith("/images/logos/")
+      ? url.replace("/images/logos/", "/images/client-logos/")
+      : url;
+    if (normalized.startsWith("http")) return normalized;
+    if (normalized.startsWith("/")) {
+      return normalized
+        .split("/")
+        .map((seg, i) => (i === 0 ? "" : encodeURIComponent(decodeURIComponent(seg))))
+        .join("/");
     }
+    if (normalized.startsWith("uploads/")) return `/${normalized}`;
+    return `/images/client-logos/${encodeURIComponent(decodeURIComponent(normalized))}`;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8" dir="rtl">
+    <div className="max-w-6xl mx-auto space-y-8 pb-16" dir="rtl">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#232c27] pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">لوگوهای برند همکار (Client Logo Marquee)</h1>
-          <p className="text-sm text-[#8fa397]">
-            مدیریت لوگوهای چرخان نوار متحرک صفحه اصلی (نمادهای اعتماد و مشتریان فعال)
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            لوگوهای مشتریان (Client Logo Marquee)
+          </h1>
+          <p className="text-sm text-muted mt-1">
+            مدیریت لوگوهای نوار متحرک بی‌نهایت برندهایی که به آن‌ساپ اعتماد کرده‌اند.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-primary to-primary-hover text-white shadow-lg hover:shadow-primary/20 transition-all"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>افزودن لوگوی جدید</span>
-        </button>
       </div>
 
       {/* ── Notification Banner ── */}
       {message && (
         <div
-          className={`p-4 rounded-xl text-sm font-medium border flex items-center justify-between transition-all ${
+          className={`p-4 rounded-xl border text-sm flex items-center justify-between transition-all ${
             message.type === "ok"
-              ? "bg-emerald-950/50 border-emerald-500/40 text-emerald-200"
-              : "bg-red-950/50 border-red-500/40 text-red-200"
+              ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+              : "bg-rose-500/15 border-rose-500/40 text-rose-700 dark:text-rose-300"
           }`}
         >
           <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-xs opacity-70 hover:opacity-100">
+          <button
+            type="button"
+            onClick={() => setMessage(null)}
+            className="text-xs opacity-70 hover:opacity-100"
+          >
             بستن
           </button>
         </div>
       )}
 
-      {/* ── Logos Table ── */}
-      <div className="bg-[#131615] border border-[#1f2623] rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-[#181d1a] text-[#8fa397] text-xs font-semibold uppercase border-b border-[#232c27]">
-              <tr>
-                <th className="px-6 py-4">ترتیب</th>
-                <th className="px-6 py-4">تصویر لوگو</th>
-                <th className="px-6 py-4">نام برند</th>
-                <th className="px-6 py-4">ابعاد (پیکسل)</th>
-                <th className="px-6 py-4">وضعیت</th>
-                <th className="px-6 py-4 text-center">عملیات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1f2623]">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-[#8fa397]">
-                    در حال بارگذاری لیست لوگوها...
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-[#8fa397]">
-                    هیچ لوگویی ثبت نشده است. از دکمه بالا برای افزودن لوگوی جدید استفاده کنید.
-                  </td>
-                </tr>
-              ) : (
-                items.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 font-mono text-xs">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => movePosition(idx, "up")}
-                          className="p-1 rounded bg-[#1a221e] hover:bg-[#28322d] text-gray-400 hover:text-white disabled:opacity-30"
-                          title="انتقال به بالا"
-                        >
-                          ▲
-                        </button>
-                        <span className="w-6 text-center">{item.position}</span>
-                        <button
-                          type="button"
-                          disabled={idx === items.length - 1}
-                          onClick={() => movePosition(idx, "down")}
-                          className="p-1 rounded bg-[#1a221e] hover:bg-[#28322d] text-gray-400 hover:text-white disabled:opacity-30"
-                          title="انتقال به پایین"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="relative w-24 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                        {item.logoUrl ? (
-                          <Image src={item.logoUrl} alt={item.nameFa} fill className="object-contain p-2" />
-                        ) : (
-                          <span className="text-xs text-gray-500">بدون لوگو</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-white">
-                      <div>{item.nameFa}</div>
-                      <div className="text-xs text-[#8fa397] font-mono mt-0.5" dir="ltr">
-                        {item.nameEn}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-[#8fa397]" dir="ltr">
-                      {item.width} × {item.height}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          item.status === "PUBLISHED"
-                            ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
-                            : item.status === "DRAFT"
-                            ? "bg-amber-950/70 text-amber-300 border border-amber-500/30"
-                            : "bg-gray-800 text-gray-400 border border-gray-700"
-                        }`}
-                      >
-                        {item.status === "PUBLISHED" ? "فعال در نوار" : item.status === "DRAFT" ? "پیش‌نویس" : "آرشیو"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(item)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1a221e] hover:bg-[#232f29] text-emerald-400 border border-[#2a3831] transition-colors"
-                        >
-                          ویرایش
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-950/30 hover:bg-red-950/60 text-red-400 border border-red-500/20 transition-colors"
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* ── Form Card ── */}
+      <div className="bg-panel border border-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <h2 className="text-lg font-bold text-foreground">
+            {editingId ? "ویرایش لوگو" : "افزودن لوگوی جدید به نوار متحرک"}
+          </h2>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-xs text-muted hover:text-foreground"
+            >
+              انصراف و لغو ویرایش
+            </button>
+          )}
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">نام برند یا کلینیک (فارسی) *</label>
+              <input
+                type="text"
+                required
+                value={form.nameFa}
+                onChange={(e) => setForm({ ...form, nameFa: e.target.value })}
+                className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                placeholder="کلینیک دکتر سینا پارسی‌پور"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">نام برند (انگلیسی)</label>
+              <input
+                type="text"
+                dir="ltr"
+                value={form.nameEn}
+                onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+                className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                placeholder="Dr. Sina Parsi Pour Clinic"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">شناسه اختصاصی (Key)</label>
+              <input
+                type="text"
+                dir="ltr"
+                value={form.key}
+                onChange={(e) => setForm({ ...form, key: e.target.value })}
+                className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none font-mono"
+                placeholder="sina-parsipour"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-foreground block">فایل لوگو (پیش‌فرض) *</span>
+              <div
+                onClick={() => setMediaTarget("logo")}
+                className="relative h-24 border-2 border-dashed border-border hover:border-primary/50 rounded-xl flex items-center justify-center cursor-pointer bg-raised"
+              >
+                {form.logoUrl ? (
+                  <img
+                    src={resolveImgSrc(form.logoUrl)}
+                    alt="Logo preview"
+                    className="h-16 w-auto max-w-[90%] object-contain p-2"
+                  />
+                ) : (
+                  <span className="text-xs text-muted">کلیک برای انتخاب فایل لوگو</span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-foreground block">لوگوی تم تاریک (اختیاری)</span>
+              <div
+                onClick={() => setMediaTarget("darkLogo")}
+                className="relative h-24 border-2 border-dashed border-border hover:border-primary/50 rounded-xl flex items-center justify-center cursor-pointer bg-raised"
+              >
+                {form.darkLogoUrl ? (
+                  <img
+                    src={resolveImgSrc(form.darkLogoUrl)}
+                    alt="Dark logo preview"
+                    className="h-16 w-auto max-w-[90%] object-contain p-2"
+                  />
+                ) : (
+                  <span className="text-xs text-muted">انتخاب نسخه سفید/تم تاریک</span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">وضعیت نمایش در مارکی</label>
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    status: e.target.value as any,
+                    isPublished: e.target.value === "PUBLISHED",
+                  })
+                }
+                className="w-full bg-raised border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+              >
+                <option value="PUBLISHED">فعال در مارکی</option>
+                <option value="DRAFT">غیرفعال (مخفی)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-5 py-2.5 rounded-xl border border-border text-foreground text-sm hover:bg-raised"
+              >
+                لغو
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2.5 rounded-xl bg-lime text-ink font-bold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {saving ? "در حال ذخیره..." : editingId ? "ثبت ویرایش لوگو" : "افزودن لوگو به مارکی"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ── Logos Grid ── */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-foreground">لوگوهای فعال در نوار متحرک ({items.length})</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {items.map((logo) => (
+            <div
+              key={logo.id}
+              className="bg-panel border border-border rounded-2xl p-4 flex flex-col items-center justify-between gap-3 text-center shadow-xs"
+            >
+              <div className="h-20 w-full flex items-center justify-center p-2 bg-raised rounded-xl border border-border">
+                <img
+                  src={resolveImgSrc(logo.logoUrl)}
+                  alt={logo.nameFa}
+                  className="max-h-14 max-w-full object-contain"
+                />
+              </div>
+
+              <div className="space-y-1 w-full">
+                <h4 className="font-bold text-xs text-foreground truncate" title={logo.nameFa}>
+                  {logo.nameFa}
+                </h4>
+                <span className="font-mono text-[10px] text-muted block truncate">
+                  {logo.key}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between w-full pt-2 border-t border-border text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleEdit(logo)}
+                  className="text-mint hover:underline font-bold"
+                >
+                  ویرایش
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(logo.id)}
+                  className="text-burgundy hover:underline"
+                >
+                  حذف
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── Add / Edit Modal ── */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-[#131615] border border-[#232c27] rounded-2xl w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#232c27] pb-4">
-              <h2 className="text-xl font-bold text-white">
-                {editingId ? "ویرایش لوگوی برند" : "افزودن لوگوی جدید به نوار متحرک"}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white text-lg p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">نام فارسی برند *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.nameFa}
-                  onChange={(e) => setFormData({ ...formData, nameFa: e.target.value })}
-                  className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  placeholder="مثال: دیجی‌کالا"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">Brand Name (English)</label>
-                <input
-                  type="text"
-                  value={formData.nameEn}
-                  onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                  className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  dir="ltr"
-                  placeholder="e.g. Digikala"
-                />
-              </div>
-
-              {/* Logo Picker */}
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">فایل لوگو (PNG/SVG شفاف) *</label>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-24 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                    {formData.logoUrl ? (
-                      <Image src={formData.logoUrl} alt="Logo" fill className="object-contain p-2" />
-                    ) : (
-                      <span className="text-xs text-gray-500">انتخاب نشده</span>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    <input
-                      type="text"
-                      required
-                      value={formData.logoUrl}
-                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                      className="w-full bg-[#101413] border border-[#232c27] text-white text-xs rounded-lg px-3 py-2 focus:border-primary focus:outline-none"
-                      dir="ltr"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setPickerOpen(true)}
-                      className="text-xs text-emerald-400 hover:underline"
-                    >
-                      انتخاب از رسانه‌ها...
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">آدرس وب‌سایت همکار (اختیاری)</label>
-                <input
-                  type="url"
-                  value={formData.websiteUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  dir="ltr"
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">عرض استاندارد (Width)</label>
-                  <input
-                    type="number"
-                    value={formData.width}
-                    onChange={(e) => setFormData({ ...formData, width: parseInt(e.target.value, 10) || 140 })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none font-mono"
-                    dir="ltr"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">ارتفاع استاندارد (Height)</label>
-                  <input
-                    type="number"
-                    value={formData.height}
-                    onChange={(e) => setFormData({ ...formData, height: parseInt(e.target.value, 10) || 48 })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none font-mono"
-                    dir="ltr"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">ترتیب نمایش</label>
-                  <input
-                    type="number"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) || 0 })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3.5 py-2.5 focus:border-primary focus:outline-none font-mono"
-                    dir="ltr"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#8fa397] mb-1.5">وضعیت</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full bg-[#101413] border border-[#232c27] text-white text-sm rounded-xl px-3 py-2.5 focus:border-primary focus:outline-none"
-                  >
-                    <option value="PUBLISHED">فعال در نوار (PUBLISHED)</option>
-                    <option value="DRAFT">پیش‌نویس (DRAFT)</option>
-                    <option value="ARCHIVED">آرشیو (ARCHIVED)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#232c27]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1f2623] text-gray-300 hover:text-white"
-                >
-                  انصراف
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-primary to-primary-hover text-white shadow-lg disabled:opacity-50"
-                >
-                  {saving ? "در حال ذخیره..." : "ذخیره لوگو"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Media Picker */}
-      {pickerOpen && (
-        <MediaPickerModal
-          open={true}
-          onClose={() => setPickerOpen(false)}
-          onSelect={(item: MediaItem) => {
-            setFormData((prev) => ({ ...prev, logoUrl: item.url }));
-            setPickerOpen(false);
-          }}
-          
-        />
-      )}
+      <MediaPickerModal
+        open={mediaTarget !== null}
+        onClose={() => setMediaTarget(null)}
+        onSelect={(media) => {
+          const url = media.url.startsWith("http") || media.url.startsWith("/") ? media.url : `/${media.url}`;
+          if (mediaTarget === "logo") setForm((prev) => ({ ...prev, logoUrl: url }));
+          if (mediaTarget === "darkLogo") setForm((prev) => ({ ...prev, darkLogoUrl: url }));
+          setMediaTarget(null);
+        }}
+      />
     </div>
   );
 }

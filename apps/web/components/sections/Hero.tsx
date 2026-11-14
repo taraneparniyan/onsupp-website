@@ -11,6 +11,7 @@ import { BACKEND_URL } from "@/config/api";
 export interface HeroSlideItem {
   id?: number | string;
   src: string;
+  mobileSrc?: string;
   altEn: string;
   altFa: string;
   titleFa: string;
@@ -23,6 +24,7 @@ export interface HeroSlideItem {
   ctaText2Fa?: string;
   ctaText2En?: string;
   ctaLink2?: string;
+  cta2Enabled?: boolean;
   position?: number;
 }
 
@@ -130,6 +132,7 @@ export default function Hero() {
                   ctaText2Fa: item.ctaText2?.trim(),
                   ctaText2En: item.ctaText2En?.trim(),
                   ctaLink2: item.ctaLink2?.trim() || "/about",
+                  cta2Enabled: item.cta2Enabled !== false,
                   position: item.position ?? idx,
                 };
               });
@@ -178,9 +181,9 @@ export default function Hero() {
     <section
       aria-label={isRtl ? "نمایشگاه پروژه‌های منتخب آن‌ساپ" : "OnSupp Portfolio Showcase"}
       aria-roledescription="carousel"
-      className="relative w-full h-[85vh] sm:h-[90vh] lg:h-[100dvh] min-h-[560px] max-h-[1080px] overflow-hidden bg-[#38534A] dark:bg-[#17221E] select-none"
+      className="relative w-full min-h-[85vh] min-h-[85svh] sm:min-h-[90vh] sm:min-h-[90svh] lg:min-h-[100vh] lg:min-h-[100dvh] h-[85vh] h-[85svh] sm:h-[90vh] sm:h-[90svh] lg:h-[100dvh] max-h-[1080px] overflow-hidden bg-[#38534A] dark:bg-[#17221E] select-none"
     >
-      {/* ─── Immersive Slideshow Imagery (Full bleed, object-cover) ─── */}
+      {/* ─── Immersive Slideshow Imagery (Dual Mobile/Desktop Architecture) ─── */}
       <div className="absolute inset-0 w-full h-full">
         {slides.map((slide, index) => {
           const isActive = index === safeCurrentIndex;
@@ -193,6 +196,7 @@ export default function Hero() {
                 isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
+              {/* Desktop / Default Image (or sole image if mobileSrc not explicitly set) */}
               <Image
                 src={slide.src}
                 alt={isRtl ? slide.altFa : slide.altEn}
@@ -200,23 +204,39 @@ export default function Hero() {
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 sizes="100vw"
-                className="object-cover object-center w-full h-full"
+                className={`object-cover object-center w-full h-full ${
+                  slide.mobileSrc ? "hidden sm:block" : "block"
+                }`}
                 quality={90}
               />
+
+              {/* Dedicated Mobile Image (Activated automatically when mobileSrc is configured) */}
+              {slide.mobileSrc && (
+                <Image
+                  src={slide.mobileSrc}
+                  alt={isRtl ? slide.altFa : slide.altEn}
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  sizes="100vw"
+                  className="block sm:hidden object-cover object-center w-full h-full"
+                  quality={90}
+                />
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* ─── Atmospheric Bottom Gradient Overlay ─── */}
+      {/* ─── Atmospheric Bottom Gradient Overlay (Upward Gradient for Perfect Legibility in Mobile & Desktop) ─── */}
       <div
         aria-hidden="true"
-        className="hero-bottom-scrim absolute inset-x-0 bottom-0 h-72 sm:h-88 lg:h-[440px] pointer-events-none z-20 transition-all duration-500 bg-gradient-to-t from-[#38534A] via-[#38534A]/75 via-35% to-transparent dark:from-[#17221E] dark:via-[#17221E]/82 dark:via-40% dark:to-transparent"
+        className="hero-bottom-scrim absolute inset-x-0 bottom-0 h-[68%] sm:h-88 lg:h-[440px] pointer-events-none z-20 transition-all duration-500 bg-gradient-to-t from-[#38534A] via-[#38534A]/85 via-50% to-transparent dark:from-[#17221E] dark:via-[#17221E]/90 dark:via-50% dark:to-transparent"
       />
 
-      {/* ─── Animated Text Overlay (Vertically Centered, Language-Responsive Alignment) ─── */}
+      {/* ─── Animated Text Overlay (Bottom-Aligned on Mobile, Vertically Centered on Desktop) ─── */}
       <div
-        className="absolute inset-0 z-30 pointer-events-none flex items-center"
+        className="absolute inset-0 z-30 pointer-events-none flex items-end sm:items-center pb-16 sm:pb-0"
         dir={isRtl ? "rtl" : "ltr"}
       >
         <div
@@ -227,7 +247,7 @@ export default function Hero() {
           }`}
         >
           <div
-            className={`max-w-2xl lg:max-w-3xl w-full transition-transform duration-500 ease-out ${
+            className={`max-w-2xl lg:max-w-6xl w-full transition-transform duration-500 ease-out ${
               isRtl ? "text-right me-auto" : "text-left me-auto"
             } ${
               isRtl && isTechSlide
@@ -255,7 +275,7 @@ export default function Hero() {
                     duration: 0.7,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-[44px] xl:text-5xl font-display font-bold text-white leading-[1.25] sm:leading-[1.22] tracking-tight [text-shadow:_0_2px_14px_rgba(0,0,0,0.55)]"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-[36px] xl:text-[42px] lg:whitespace-nowrap font-display font-bold text-white leading-[1.25] sm:leading-[1.22] tracking-tight [text-shadow:_0_2px_14px_rgba(0,0,0,0.55)]"
                 >
                   {isRtl ? currentSlide.titleFa : currentSlide.titleEn}
                 </motion.h1>
@@ -295,73 +315,125 @@ export default function Hero() {
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
                 className="shrink-0"
               >
-                <Link
-                  href={currentSlide.ctaLink || "/services"}
-                  className={`group inline-flex items-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/35 shadow-[0_12px_28px_-6px_rgba(56,83,74,0.5),_inset_0_1px_1px_rgba(255,255,255,0.2)] text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
+                {(() => {
+                  const cta1Href = currentSlide.ctaLink || "/services";
+                  const isExternal1 = /^https?:\/\//i.test(cta1Href);
+                  const cta1Class = `group inline-flex items-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#38534A] hover:bg-[#2C423B] text-[#F8F9FA] border border-[#8AB3A0]/35 shadow-[0_12px_28px_-6px_rgba(56,83,74,0.5),_inset_0_1px_1px_rgba(255,255,255,0.2)] text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
                     isRtl
                       ? "font-[family-name:var(--font-vazirmatn)]"
                       : "font-[family-name:var(--font-gendy)]"
-                  }`}
-                >
-                  <span>
-                    {isRtl
-                      ? currentSlide.ctaTextFa || "مشاهده خدمات"
-                      : currentSlide.ctaTextEn || "Explore Services"}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      isRtl ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                  }`;
+                  const cta1Inner = (
+                    <>
+                      <span>
+                        {isRtl
+                          ? currentSlide.ctaTextFa || "مشاهده خدمات"
+                          : currentSlide.ctaTextEn || "Explore Services"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isRtl ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  );
+                  return isExternal1 ? (
+                    <a
+                      href={cta1Href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="hero-cta-1"
+                      className={cta1Class}
+                    >
+                      {cta1Inner}
+                    </a>
+                  ) : (
+                    <Link
+                      href={cta1Href}
+                      data-testid="hero-cta-1"
+                      onClick={(e) => {
+                        if (cta1Href.startsWith("#") || cta1Href.startsWith("/#")) {
+                          const id = cta1Href.replace(/^\/?#/, "");
+                          if (scrollToSection(id)) e.preventDefault();
+                        }
+                      }}
+                      className={cta1Class}
+                    >
+                      {cta1Inner}
+                    </Link>
+                  );
+                })()}
               </motion.div>
 
-              {/* Secondary CTA: Dynamic text or default "درباره ما" */}
-              <motion.div
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -2 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                className="shrink-0"
-              >
-                <Link
-                  href={currentSlide.ctaLink2 || "/about"}
-                  onClick={(e) => {
-                    const targetLink = currentSlide.ctaLink2 || "/about";
-                    if (targetLink === "#about" || targetLink === "/about" || targetLink === "/#about") {
-                      if (scrollToSection("about")) {
-                        e.preventDefault();
-                      }
-                    }
-                  }}
-                  className={`group inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-[#F8F9FA] border border-white/22 hover:border-white/40 backdrop-blur-md shadow-sm text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
-                    isRtl
-                      ? "font-[family-name:var(--font-vazirmatn)]"
-                      : "font-[family-name:var(--font-gendy)]"
-                  }`}
+              {/* Secondary CTA: Rendered only when cta2Enabled !== false */}
+              {currentSlide.cta2Enabled !== false && (
+                <motion.div
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -2 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                  className="shrink-0"
                 >
-                  <span>
-                    {isRtl
-                      ? currentSlide.ctaText2Fa || "درباره ما"
-                      : currentSlide.ctaText2En || "About Us"}
-                  </span>
-                  <svg
-                    className={`w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all duration-300 ${
-                      isRtl ? "rotate-180 group-hover:-translate-x-0.5" : "group-hover:translate-x-0.5"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </motion.div>
+                  {(() => {
+                    const cta2Href = currentSlide.ctaLink2 || "/about";
+                    const isExternal2 = /^https?:\/\//i.test(cta2Href);
+                    const cta2Class = `group inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-[#F8F9FA] border border-white/22 hover:border-white/40 backdrop-blur-md shadow-sm text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
+                      isRtl
+                        ? "font-[family-name:var(--font-vazirmatn)]"
+                        : "font-[family-name:var(--font-gendy)]"
+                    }`;
+                    const cta2Inner = (
+                      <>
+                        <span>
+                          {isRtl
+                            ? currentSlide.ctaText2Fa || "درباره ما"
+                            : currentSlide.ctaText2En || "About Us"}
+                        </span>
+                        <svg
+                          className={`w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all duration-300 ${
+                            isRtl ? "rotate-180 group-hover:-translate-x-0.5" : "group-hover:translate-x-0.5"
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    );
+                    return isExternal2 ? (
+                      <a
+                        href={cta2Href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="hero-cta-2"
+                        className={cta2Class}
+                      >
+                        {cta2Inner}
+                      </a>
+                    ) : (
+                      <Link
+                        href={cta2Href}
+                        data-testid="hero-cta-2"
+                        onClick={(e) => {
+                          if (cta2Href.startsWith("#") || cta2Href.startsWith("/#")) {
+                            const id = cta2Href.replace(/^\/?#/, "");
+                            if (scrollToSection(id)) e.preventDefault();
+                          }
+                        }}
+                        className={cta2Class}
+                      >
+                        {cta2Inner}
+                      </Link>
+                    );
+                  })()}
+                </motion.div>
+              )}
             </motion.div>
           </div>
         </div>
@@ -370,7 +442,7 @@ export default function Hero() {
       {/* ─── Slide Progress Indicators (Only rendered when > 1 slide) ─── */}
       {slides.length > 1 && (
         <div
-          className={`absolute bottom-6 sm:bottom-8 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto ${
+          className={`absolute bottom-4 sm:bottom-8 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto ${
             isRtl ? "start-6 sm:start-12 lg:start-20" : "end-6 sm:end-12 lg:end-20"
           }`}
           aria-label={isRtl ? "ناوبری اسلایدهای هیرو" : "Hero slides navigation"}

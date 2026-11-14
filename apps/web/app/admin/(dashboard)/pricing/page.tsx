@@ -353,7 +353,7 @@ export default function AdminPricingPage() {
             </div>
 
             {planFormData.priceType === "numeric" && (
-              <div className="space-y-4 p-4 rounded-lg bg-[#0f201b] border border-foreground/10">
+              <div className="space-y-4 p-4 rounded-xl bg-raised/50 border border-border">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-semibold text-mint mb-2">قیمت اصلی (فارسی)</label>
@@ -514,7 +514,7 @@ export default function AdminPricingPage() {
             </button>
             <button
               type="submit"
-              className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-primary to-primary-hover text-white font-black text-sm border border-primary/40 shadow-md hover:scale-105 transition-all"
+              className="px-8 py-3.5 rounded-lg bg-lime text-ink font-black text-sm border border-primary/40 shadow-md hover:scale-105 transition-all cursor-pointer"
             >
               {editingPlanId ? "ذخیره تغییرات پلن" : "ایجاد پلن جدید"}
             </button>
@@ -543,7 +543,7 @@ export default function AdminPricingPage() {
 
         <button
           onClick={() => handleOpenCatModal()}
-          className="px-5 py-3 rounded-lg bg-gradient-to-r from-primary to-primary-hover text-white font-bold text-sm border border-primary/40 hover:scale-105 shadow-lg transition-all"
+          className="px-5 py-3 rounded-lg bg-lime text-ink font-bold text-sm border border-primary/40 hover:scale-105 shadow-lg transition-all cursor-pointer"
         >
           + دسته‌بندی جدید
         </button>
@@ -573,10 +573,10 @@ export default function AdminPricingPage() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveTabCatId(cat.id)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
-                        ? "bg-gradient-to-r from-primary to-primary-hover text-white border border-primary/40 shadow-md"
-                        : "bg-raised text-mint hover:text-white hover:bg-[#162e28]"
+                        ? "bg-lime text-ink border border-primary/40 shadow-md"
+                        : "bg-raised text-mint hover:text-foreground hover:bg-subtle"
                     }`}
                   >
                     {cat.titleFa || cat.titleEn}
@@ -619,7 +619,7 @@ export default function AdminPricingPage() {
 
                 <button
                   onClick={() => handleOpenPlanForm(currentCategory.id)}
-                  className="px-5 py-3 rounded-lg bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-[#1f4236] transition-all shadow-md flex items-center gap-1.5"
+                  className="px-5 py-3 rounded-lg bg-raised border border-primary/25 text-mint text-xs font-bold hover:bg-primary/15 transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>+ تعریف پلن جدید (صفحه کامل)</span>
                 </button>
@@ -691,7 +691,7 @@ export default function AdminPricingPage() {
                     <div className="pt-4 border-t border-foreground/10 flex items-center gap-2">
                       <button
                         onClick={() => handleOpenPlanForm(currentCategory.id, plan)}
-                        className="flex-1 py-2.5 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-[#1f4236]"
+                        className="flex-1 py-2.5 rounded-xl bg-raised border border-primary/20 text-mint text-xs font-bold hover:bg-primary/15 cursor-pointer"
                       >
                         ویرایش در صفحه اختصاصی
                       </button>
@@ -766,7 +766,7 @@ export default function AdminPricingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white font-bold text-xs"
+                  className="px-5 py-2.5 rounded-xl bg-lime text-ink font-bold text-xs cursor-pointer"
                 >
                   ذخیره دسته‌بندی
                 </button>

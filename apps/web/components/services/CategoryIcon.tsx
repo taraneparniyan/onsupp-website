@@ -4,7 +4,7 @@ export function CategoryIcon({
   type,
   className = "w-5 h-5",
 }: {
-  type: "social" | "studio" | "motion" | "web" | "seo" | "crm" | "software";
+  type: "social" | "studio" | "motion" | "web" | "seo" | "crm" | "software" | string;
   className?: string;
 }) {
   switch (type) {

@@ -48,7 +48,7 @@ export default function TeamSection({ team, isRtl }: Props) {
                 as="h2"
                 text={isRtl ? team.titleFa : team.titleEn}
                 delay={0.1}
-                className="mt-5 sm:mt-6 font-display font-bold text-foreground text-3xl sm:text-4xl lg:text-5xl leading-[1.3] lg:leading-[1.25] tracking-tight"
+                className="mt-5 sm:mt-6 font-display font-bold text-foreground text-3xl sm:text-4xl lg:text-4xl xl:text-[44px] lg:whitespace-nowrap leading-[1.3] lg:leading-[1.25] tracking-tight"
               />
             </div>
           </div>
